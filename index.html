@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árbol Genealógico Interactivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        /* --- ESTILOS MEJORADOS PARA EL ÁRBOL GENEALÓGICO --- */
+        .tree-container {
+            width: 100%;
+            overflow-x: auto;
+            padding: 1em;
+        }
+
+        .tree {
+            display: inline-flex; /* Clave para que el contenedor se ajuste al contenido y permita scroll */
+            flex-direction: column;
+            align-items: center;
+            min-width: 100%;
+        }
+
+        .tree ul {
+            position: relative;
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tree li {
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- Conectores --- */
+        /* Línea vertical hacia abajo desde el nodo */
+        .tree li::before, .tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-top: 2px solid #ccc;
+            width: 50%;
+            height: 20px;
+        }
+
+        /* Línea horizontal */
+        .tree li::after {
+            right: auto;
+            left: 50%;
+            border-left: 2px solid #ccc;
+        }
+
+        /* Ocultar conectores innecesarios para nodos únicos */
+        .tree li:only-child::after, .tree li:only-child::before {
+            display: none;
+        }
+
+        .tree li:only-child {
+            padding-top: 0;
+        }
+
+        /* Eliminar borde izquierdo del primer hijo y derecho del último */
+        .tree li:first-child::before, .tree li:last-child::after {
+            border: 0 none;
+        }
+
+        /* Conector derecho para el último hijo */
+        .tree li:last-child::before {
+            border-right: 2px solid #ccc;
+            border-radius: 0 5px 0 0;
+        }
+
+        /* Conector izquierdo para el primer hijo */
+        .tree li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
+
+        /* Conector vertical para la lista de hijos */
+        .tree ul ul::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: 2px solid #ccc;
+            width: 0;
+            height: 20px;
+        }
+        
+        /* Ocultar líneas que suben desde los nodos raíz */
+        .tree > ul > li::before, .tree > ul > li::after {
+             display: none;
+        }
+
+        .node-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative; /* Para la línea del cónyuge */
+        }
+
+        .member {
+            border: 2px solid #ccc;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+            background-color: #fff;
+            min-width: 140px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .tree li .member:hover, .tree li .member.selected {
+            background-color: #e0f2fe;
+            border-color: #0ea5e9;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        .member .name {
+            font-weight: 600;
+        }
+
+        .member .relationship {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        /* Nuevo estilo para la edad en el nodo del árbol */
+        .member .age {
+            font-size: 0.7em; /* Un poco más pequeña que la relación */
+            color: #999;
+            margin-top: 0.2em; /* Pequeño margen superior */
+        }
+
+        /* Línea que une a los cónyuges */
+        .spouse-line {
+            height: 2px;
+            width: 20px; /* Ancho de la línea */
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold text-gray-800">Árbol Genealógico Familiar</h1>
+            <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <main class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
+                <div id="family-tree-container" class="tree-container">
+                    <div class="tree">
+                        </div>
+                </div>
+            </main>
+
+            <aside class="w-full lg:w-1/4">
+                <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky top-8">
+                    <h2 class="text-2xl font-bold mb-4 border-b pb-2">Detalles de la Persona</h2>
+                    <div id="details-content" class="text-center">
+                        <p class="text-gray-500">Selecciona una persona para ver su información.</p>
+                    </div>
+                    <div id="edit-buttons" class="mt-6 hidden">
+                        <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Agregar Descendencia</button>
+                        <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Agregar Ascendencia</button>
+                        <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Gestionar Relaciones</button> 
+                        <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block">Editar Persona</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <div id="person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+      <div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Agregar Persona</h3>
+          <form id="person-form">
+            <input type="hidden" id="person-id"> 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="name" placeholder="Nombre Completo*" required>
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="relationship" placeholder="Relación (Ej: Tío, Prima)">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="rut" placeholder="RUT">
+              <select id="gender" class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline">
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dob" placeholder="Fecha de Nacimiento">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dom" placeholder="Fecha de Matrimonio">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dod" placeholder="Fecha de Fallecimiento">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="photo" placeholder="URL de la Foto">
+            </div>
+            
+            <div class="mt-6 flex justify-end gap-4">
+              <button type="button" id="cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="relationships-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Gestionar Relaciones de <span id="relationship-person-name" class="font-bold"></span></h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-md font-semibold mb-2">Cónyuge</h4>
+                        <div id="current-spouse-display" class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                            <p class="text-gray-500">No hay cónyuge asignado.</p>
+                        </div>
+                        <div class="mt-2 flex gap-2">
+                            <button id="add-new-spouse-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
+                            <button id="link-existing-spouse-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-md font-semibold mb-2">Padres</h4>
+                        <div id="current-parents-list" class="space-y-2">
+                            <p class="text-gray-500">No hay padres asignados.</p>
+                        </div>
+                        <div class="mt-2 flex gap-2">
+                            <button id="add-new-parent-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
+                            <button id="link-existing-parent-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-md font-semibold mb-2">Hijos/as</h4>
+                        <div id="current-children-list" class="space-y-2">
+                            <p class="text-gray-500">No hay hijos/as asignados.</p>
+                        </div>
+                        <div class="mt-2 flex gap-2">
+                            <button id="add-new-child-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
+                            <button id="link-existing-child-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="button" id="close-relationships-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="select-person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="select-modal-title">Seleccionar Persona</h3>
+                <input type="text" id="person-search-input" placeholder="Buscar por nombre..." class="w-full bg-gray-100 text-gray-900 p-2 rounded-lg focus:outline-none focus:shadow-outline mb-4">
+                <div id="person-list-container" class="max-h-60 overflow-y-auto border border-gray-200 rounded-md">
+                    </div>
+                <div class="mt-4 flex justify-end">
+                    <button type="button" id="cancel-select-person-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        let familyData = new Map();
+        let selectedPersonId = null;
+        let modalMode = ''; 
+        let relatedPersonId = null; 
+        let relatedPersonSpouseId = null; 
+
+        let selectPersonMode = ''; 
+        let personToLinkToId = null; 
+
+
+        const API_URL = 'api.php';
+
+       
+        async function loadFamilyData() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                familyData.clear();
+                data.forEach(person => {
+                    person.id = parseInt(person.id);
+                    person.spouseId = person.spouse_id !== null ? parseInt(person.spouse_id) : null;
+                    
+                    person.childrenIds = Array.isArray(person.children_ids) ? person.children_ids.map(id => parseInt(id)) : [];
+                    person.parentIds = Array.isArray(person.parent_ids) ? person.parent_ids.map(id => parseInt(id)) : [];
+
+                    familyData.set(person.id, person);
+                });
+
+                console.log('Datos cargados en familyData (con IDs parseados):', familyData);
+                renderTree();
+                if (selectedPersonId && familyData.has(selectedPersonId)) {
+                    showPersonDetails(selectedPersonId);
+                } else if (familyData.size > 0) {
+                    const firstPersonId = Array.from(familyData.keys())[0]; 
+                    showPersonDetails(firstPersonId);
+                } else {
+                    document.getElementById('details-content').innerHTML = '<p class="text-gray-500">No hay datos en el árbol. ¡Añade la primera persona!</p>';
+                    document.getElementById('edit-buttons').classList.add('hidden');
+                }
+
+            } catch (error) {
+                console.error('Error al cargar los datos de la familia:', error);
+                document.getElementById('details-content').innerHTML = '<p class="text-red-500">Error al cargar los datos. Intenta de nuevo más tarde.</p>';
+            }
+        }
+
+
+        async function sendDataToAPI(actionData) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(actionData),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Operación exitosa:', result.message);
+                    await loadFamilyData(); 
+                    return result; 
+                } else {
+                    console.error('Error en la operación en la base de datos:', result.message);
+                    alert('Error al guardar: ' + result.message + (result.error ? `\nDetalles: ${result.error}` : ''));
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error de red o servidor al guardar:', error);
+                alert('Error de conexión o servidor al guardar los datos.');
+                return null;
+            }
+        }
+
+
+        function renderTree() {
+            const container = document.querySelector('.tree');
+            if (!container) return;
+
+            console.log('Iniciando renderTree. Total de personas en familyData:', familyData.size);
+
+            let potentialRoots = [];
+            const allPersonIds = Array.from(familyData.keys());
+
+            familyData.forEach(person => {
+                let hasParentsInLoadedData = false;
+                if (Array.isArray(person.parentIds) && person.parentIds.length > 0) {
+                    hasParentsInLoadedData = person.parentIds.some(pId => allPersonIds.includes(pId));
+                }
+                
+                if (!hasParentsInLoadedData) {
+                    potentialRoots.push(person);
+                }
+            });
+
+            console.log('Paso 1: Personas con parentIds vacíos o padres no cargados (potentialRoots):', potentialRoots.map(p => p.name + ' (ID: ' + p.id + ')'));
+
+            let rootsToRender = []; 
+            const processedIds = new Set(); 
+
+            potentialRoots.sort((a, b) => a.id - b.id);
+
+            potentialRoots.forEach(person => {
+                if (processedIds.has(person.id)) {
+                    return; 
+                }
+
+                if (person.spouseId && familyData.has(person.spouseId)) {
+                    const spouse = familyData.get(person.spouseId);
+                    let spouseHasParentsInLoadedData = false;
+                    if (Array.isArray(spouse.parentIds) && spouse.parentIds.length > 0) {
+                        spouseHasParentsInLoadedData = spouse.parentIds.some(pId => allPersonIds.includes(pId));
+                    }
+
+                    if (!spouseHasParentsInLoadedData && !processedIds.has(spouse.id) && spouse.spouseId === person.id) {
+                        rootsToRender.push(person);
+                        processedIds.add(person.id);
+                        processedIds.add(spouse.id); 
+                        return;
+                    }
+                }
+                
+                if (!processedIds.has(person.id)) {
+                     rootsToRender.push(person);
+                     processedIds.add(person.id);
+                }
+            });
+
+            rootsToRender.sort((a, b) => {
+                const getGenerationRank = (p) => {
+                    if (p.relationship && p.relationship.includes('Bisabuelo')) return 1;
+                    if (p.relationship && p.relationship.includes('Abuelo')) return 2;
+                    if (p.relationship && (p.relationship.includes('Padre') || p.relationship.includes('Madre'))) return 3;
+                    return 99; 
+                };
+                const rankA = getGenerationRank(a);
+                const rankB = getGenerationRank(b);
+
+                if (rankA !== rankB) {
+                    return rankA - rankB;
+                }
+                return a.name.localeCompare(b.name); 
+            });
+
+            console.log('Paso 2: Personas seleccionadas para el renderizado principal (rootsToRender):', rootsToRender.map(p => p.name + ' (ID: ' + p.id + ')'));
+
+            if (rootsToRender.length > 0) {
+                container.innerHTML = '<ul>' + rootsToRender.map(person => generatePersonHtml(person)).join('') + '</ul>';
+            } else {
+                container.innerHTML = '<p class="text-gray-500 text-center">No se pudieron encontrar personas raíz para renderizar el árbol. Considera agregar una primera persona.</p>';
+            }
+            addClickListeners();
+        }
+
+        // --- FUNCIÓN DE RENDERIZADO RECURSIVA ---
+        function generatePersonHtml(person) {
+            if (!person) return '';
+
+            // Lógica para calcular la edad en el nodo del árbol
+            let ageInTree = '';
+            if (person.dob && person.dob !== '0000-00-00' && (!person.dod || person.dod === '0000-00-00')) {
+                try {
+                    const birthDate = new Date(person.dob);
+                    const today = new Date();
+                    if(!isNaN(birthDate.getTime())){
+                        let ageDiff = today.getFullYear() - birthDate.getFullYear();
+                        const m = today.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            ageDiff--;
+                        }
+                        if (ageDiff >= 0) { // Asegurar que la edad no sea negativa
+                            ageInTree = `<div class="age">${ageDiff} años</div>`;
+                        }
+                    }
+                } catch(e) { console.error("Error calculating age for tree node", e); }
+            }
+
+            // --- 1. Crear el contenido del nodo (persona y cónyuge si existe) ---
+            let nodeContent = '<div class="node-content">';
+            const mainPersonHtml = `
+                <div class="member" data-id="${person.id}">
+                    <div class="name">${person.name}</div>
+                    <div class="relationship">${person.relationship || ''}
+                    </div>${ageInTree} </div>
+            `;
+
+            if (person.spouseId && familyData.has(person.spouseId)) {
+                const spouse = familyData.get(person.spouseId);
+                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id) {
+                    // Lógica para calcular la edad del cónyuge en el nodo del árbol
+                    let spouseAgeInTree = '';
+                    if (spouse.dob && spouse.dob !== '0000-00-00' && (!spouse.dod || spouse.dod === '0000-00-00')) {
+                        try {
+                            const birthDate = new Date(spouse.dob);
+                            const today = new Date();
+                            if(!isNaN(birthDate.getTime())){
+                                let ageDiff = today.getFullYear() - birthDate.getFullYear();
+                                const m = today.getMonth() - birthDate.getMonth();
+                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                    ageDiff--;
+                                }
+                                if (ageDiff >= 0) {
+                                    spouseAgeInTree = `<div class="age">${ageDiff} años</div>`;
+                                }
+                            }
+                        } catch(e) { console.error("Error calculating spouse age for tree node", e); }
+                    }
+
+                    const spouseHtml = `
+                        <div class="member" data-id="${spouse.id}">
+                            <div class="name">${spouse.name}</div>
+                            <div class="relationship">${spouse.relationship || ''}</div>
+                            ${spouseAgeInTree} </div>
+                    `;
+                    const spouseLine = '<div class="spouse-line"></div>';
+
+                    if (person.id < spouse.id) {
+                        nodeContent += mainPersonHtml + spouseLine + spouseHtml;
+                    } else {
+                        nodeContent += spouseHtml + spouseLine + mainPersonHtml;
+                    }
+                } else {
+                    nodeContent += mainPersonHtml; 
+                }
+            } else {
+                nodeContent += mainPersonHtml;
+            }
+            nodeContent += '</div>';
+
+            // --- 2. Recursivamente agregar los hijos ---
+            let childrenHtml = '';
+            let combinedChildrenIds = new Set();
+            if (person.childrenIds) {
+                person.childrenIds.forEach(id => combinedChildrenIds.add(id));
+            }
+            
+            if (person.spouseId && familyData.has(person.spouseId)) {
+                const spouse = familyData.get(person.spouseId);
+                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id) {
+                    if (spouse.childrenIds) {
+                        spouse.childrenIds.forEach(id => combinedChildrenIds.add(id));
+                    }
+                }
+            }
+            
+            const childrenToRender = Array.from(combinedChildrenIds)
+                                            .filter(childId => familyData.has(childId)) 
+                                            .map(childId => familyData.get(childId))
+                                            .filter(child => {
+                                                const childParents = child.parentIds || [];
+                                                const isChildOfThisPerson = childParents.includes(person.id);
+                                                
+                                                let isChildOfSpouse = false;
+                                                if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                                                    isChildOfSpouse = childParents.includes(person.spouseId);
+                                                }
+                                                return isChildOfThisPerson || isChildOfSpouse;
+                                            })
+                                            .sort((a,b) => a.name.localeCompare(b.name)); 
+
+            if (childrenToRender.length > 0) {
+                childrenHtml += '<ul>';
+                const renderedChildrenInThisBranch = new Set();
+                childrenToRender.forEach(child => {
+                    if (!renderedChildrenInThisBranch.has(child.id)) {
+                        childrenHtml += generatePersonHtml(child);
+                        renderedChildrenInThisBranch.add(child.id);
+                    }
+                });
+                childrenHtml += '</ul>';
+            }
+
+            return `<li>${nodeContent}${childrenHtml}</li>`;
+        }
+
+
+        function showPersonDetails(personId) {
+            selectedPersonId = personId;
+            const person = familyData.get(personId);
+            const detailsContent = document.getElementById('details-content');
+            const editButtons = document.getElementById('edit-buttons');
+            const editPersonLink = document.getElementById('edit-person-link');
+
+            if (!person || !detailsContent || !editButtons || !editPersonLink) {
+                detailsContent.innerHTML = '<p class="text-gray-500">Selecciona una persona para ver su información.</p>';
+                editButtons.classList.add('hidden');
+                editPersonLink.href = '#'; 
+                return;
+            }
+            
+            document.querySelectorAll('.member').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.member[data-id="${personId}"]`)?.classList.add('selected');
+
+            let age = '';
+            let ageAtDeath = '';
+            if(person.dob){
+                try {
+                    const birthDate = new Date(person.dob);
+                    const endDate = person.dod && person.dod !== '0000-00-00' ? new Date(person.dod) : new Date();
+                    if(!isNaN(birthDate.getTime())){
+                        let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
+                        const m = endDate.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
+                            ageDiff--;
+                        }
+                        if(person.dod && person.dod !== '0000-00-00') {
+                            ageAtDeath = `(falleció a los ${ageDiff} años)`;
+                        } else if (endDate.getFullYear() >= birthDate.getFullYear()) {
+                            age = `${ageDiff} años`;
+                        }
+                    }
+                } catch(e) { console.error("Error calculating age", e); }
+            }
+            
+            const formatDate = (dateString) => {
+                if (!dateString || dateString === '0000-00-00') return 'No disponible';
+                try {
+                    const date = new Date(dateString);
+                    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000); 
+                    if(isNaN(adjustedDate.getTime())) return 'Fecha inválida';
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    return adjustedDate.toLocaleDateString('es-ES', options);
+                } catch(e) {
+                    return 'Fecha inválida';
+                }
+            };
+
+            detailsContent.innerHTML = `
+                <img src="${person.photo || 'https://placehold.co/120x120/E2E8F0/333333?text=Foto'}" alt="Foto de ${person.name}" class="w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/120x120/E2E8F0/333333?text=Foto';">
+                <h3 class="text-xl font-bold">${person.name}</h3>
+                <p class="text-sm text-gray-500 mb-4">${person.relationship || ''}</p>
+                <div class="text-left space-y-2">
+                    <p><strong>Género:</strong> ${person.gender || 'No disponible'}</p>
+                    <p><strong>RUT:</strong> ${person.rut || 'No disponible'}</p>
+                    <p><strong>Nacimiento:</strong> ${formatDate(person.dob)}</p>
+                    ${age ? `<p><strong>Edad:</strong> ${age}</p>` : ''}
+                    <p><strong>Matrimonio:</strong> ${formatDate(person.dom)}</p>
+                    <p><strong>Fallecimiento:</strong> ${formatDate(person.dod)} ${ageAtDeath}</p>
+                </div>
+            `;
+            editButtons.classList.remove('hidden');
+
+            editPersonLink.href = `editar.php?id=${personId}`;
+        }
+
+        const modal = document.getElementById('person-modal');
+        const form = document.getElementById('person-form');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const relationshipsModal = document.getElementById('relationships-modal');
+        const relationshipPersonNameSpan = document.getElementById('relationship-person-name');
+        const currentSpouseDisplay = document.getElementById('current-spouse-display');
+        const currentParentsList = document.getElementById('current-parents-list');
+        const currentChildrenList = document.getElementById('current-children-list');
+        const addNewSpouseBtn = document.getElementById('add-new-spouse-btn'); 
+        const linkExistingSpouseBtn = document.getElementById('link-existing-spouse-btn');
+        const addNewParentBtn = document.getElementById('add-new-parent-btn'); 
+        const linkExistingParentBtn = document.getElementById('link-existing-parent-btn');
+        const addNewChildBtn = document.getElementById('add-new-child-btn'); 
+        const linkExistingChildBtn = document.getElementById('link-existing-child-btn');
+
+        const closeRelationshipsModalBtn = document.getElementById('close-relationships-modal-btn');
+
+        const selectPersonModal = document.getElementById('select-person-modal');
+        const selectModalTitle = document.getElementById('select-modal-title');
+        const personSearchInput = document.getElementById('person-search-input');
+        const personListContainer = document.getElementById('person-list-container');
+        const cancelSelectPersonBtn = document.getElementById('cancel-select-person-btn');
+
+
+        function openPersonModal(mode, personId = null) {
+            modalMode = mode; 
+            relatedPersonId = personId; 
+            relatedPersonSpouseId = null; 
+            
+            const formTitle = document.getElementById('modal-title');
+            const personIdField = form.querySelector('#person-id'); 
+
+            form.reset();
+            personIdField.value = ''; 
+
+            if (mode.startsWith('add_') && personId !== null) {
+                const selectedPerson = familyData.get(personId);
+                if (!selectedPerson) return; 
+                relatedPersonSpouseId = selectedPerson.spouseId; 
+                
+                if (mode === 'add_descendant') {
+                    formTitle.innerText = `Agregar Hijo/a a ${selectedPerson.name}`;
+                    form.querySelector('#relationship').value = 'Hijo/a'; 
+                } else if (mode === 'add_ancestor') {
+                    formTitle.innerText = `Agregar Padre/Madre a ${selectedPerson.name}`;
+                    form.querySelector('#relationship').value = 'Padre/Madre'; 
+                } else if (mode === 'add_spouse') {
+                    formTitle.innerText = `Agregar Cónyuge a ${selectedPerson.name}`;
+                    form.querySelector('#relationship').value = 'Cónyuge'; 
+                }
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        async function openRelationshipsModal(personId) {
+            selectedPersonId = personId; 
+            const person = familyData.get(personId);
+            if (!person) return;
+
+            relationshipPersonNameSpan.innerText = person.name;
+
+            currentSpouseDisplay.innerHTML = '';
+            currentParentsList.innerHTML = '';
+            currentChildrenList.innerHTML = '';
+
+            if (person.spouseId && familyData.has(person.spouseId)) {
+                const spouse = familyData.get(person.spouseId);
+                if (spouse.spouseId === person.id) {
+                    currentSpouseDisplay.innerHTML = `
+                        <span class="font-semibold">${spouse.name}</span>
+                        <button class="remove-relationship-btn text-red-500 hover:text-red-700 text-sm" 
+                                data-action="remove_spouse" 
+                                data-person-id="${person.id}">Eliminar Vínculo</button>
+                    `;
+                } else {
+                    currentSpouseDisplay.innerHTML = '<p class="text-gray-500">No hay cónyuge recíproco asignado.</p>';
+                }
+            } else {
+                currentSpouseDisplay.innerHTML = '<p class="text-gray-500">No hay cónyuge asignado.</p>';
+            }
+
+            if (person.parentIds && person.parentIds.length > 0) {
+                person.parentIds.sort((a,b) => familyData.get(a)?.name.localeCompare(familyData.get(b)?.name) || 0).forEach(parentId => {
+                    const parent = familyData.get(parentId);
+                    if (parent) {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center justify-between p-2 bg-gray-50 rounded-md';
+                        div.innerHTML = `
+                            <span class="font-semibold">${parent.name}</span>
+                            <button class="remove-relationship-btn text-red-500 hover:text-red-700 text-sm" 
+                                    data-action="remove_parent_child" 
+                                    data-parent-id="${parentId}" 
+                                    data-child-id="${person.id}">Eliminar Vínculo</button>
+                        `;
+                        currentParentsList.appendChild(div);
+                    }
+                });
+            } else {
+                currentParentsList.innerHTML = '<p class="text-gray-500">No hay padres asignados.</p>';
+            }
+
+            let childrenOfThisPersonAndSpouse = new Set();
+            if (person.childrenIds) {
+                person.childrenIds.forEach(childId => childrenOfThisPersonAndSpouse.add(childId));
+            }
+            if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                const spouse = familyData.get(person.spouseId);
+                if (spouse.childrenIds) {
+                    spouse.childrenIds.forEach(childId => childrenOfThisPersonAndSpouse.add(childId));
+                }
+            }
+
+            const childrenToShow = Array.from(childrenOfThisPersonAndSpouse)
+                                        .map(id => familyData.get(id))
+                                        .filter(child => child !== undefined) 
+                                        .filter(child => {
+                                            const childParents = child.parentIds || [];
+                                            const isChildOfThisPerson = childParents.includes(person.id);
+                                            
+                                            let isChildOfSpouse = false;
+                                            if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                                                isChildOfSpouse = childParents.includes(person.spouseId);
+                                            }
+                                            return isChildOfThisPerson || isChildOfSpouse;
+                                        })
+                                        .sort((a,b) => a.name.localeCompare(b.name));
+            
+            if (childrenToShow.length > 0) {
+                currentChildrenList.innerHTML = ''; 
+                childrenToShow.forEach(child => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between p-2 bg-gray-50 rounded-md';
+                    div.innerHTML = `
+                        <span class="font-semibold">${child.name}</span>
+                        <button class="remove-relationship-btn text-red-500 hover:text-red-700 text-sm" 
+                                data-action="remove_parent_child" 
+                                data-parent-id="${person.id}" 
+                                data-child-id="${child.id}">Eliminar Vínculo</button>
+                    `;
+                    currentChildrenList.appendChild(div);
+                });
+            } else {
+                 currentChildrenList.innerHTML = '<p class="text-gray-500">No hay hijos/as asignados.</p>';
+            }
+
+            relationshipsModal.classList.remove('hidden');
+        }
+
+         function openSelectPersonModal(mode, currentPersonId) {
+            selectPersonMode = mode;
+            personToLinkToId = currentPersonId; 
+
+            if (mode === 'link_spouse') {
+                selectModalTitle.innerText = `Seleccionar Cónyuge para ${familyData.get(currentPersonId)?.name}`;
+            } else if (mode === 'link_parent') {
+                selectModalTitle.innerText = `Seleccionar Padre/Madre para ${familyData.get(currentPersonId)?.name}`;
+            } else if (mode === 'link_child') {
+                selectModalTitle.innerText = `Seleccionar Hijo/a para ${familyData.get(currentPersonId)?.name}`;
+            }
+
+            renderSelectablePeopleList(personSearchInput.value, currentPersonId); 
+            personSearchInput.value = ''; 
+            personSearchInput.focus();
+
+            selectPersonModal.classList.remove('hidden');
+        }
+
+        function renderSelectablePeopleList(searchTerm = '', excludeId = null) {
+            personListContainer.innerHTML = '';
+            const filteredPeople = Array.from(familyData.values()).filter(p => 
+                p.id !== excludeId && 
+                p.name.toLowerCase().includes(searchTerm.toLowerCase())
+            ).sort((a,b) => a.name.localeCompare(b.name));
+
+            if (filteredPeople.length === 0) {
+                personListContainer.innerHTML = '<p class="p-3 text-gray-500 text-center">No se encontraron personas.</p>';
+                return;
+            }
+
+            filteredPeople.forEach(person => {
+                const div = document.createElement('div');
+                div.className = 'p-3 border-b border-gray-100 cursor-pointer hover:bg-blue-50';
+                div.dataset.personId = person.id; 
+                div.innerText = `${person.name} (${person.relationship || 'sin relación'})`;
+                personListContainer.appendChild(div);
+            });
+        }
+        
+        document.getElementById('manage-relationships-btn').addEventListener('click', () => {
+            if (selectedPersonId) {
+                openRelationshipsModal(selectedPersonId);
+            } else {
+                alert('Selecciona una persona para gestionar sus relaciones.');
+            }
+        });
+
+        closeRelationshipsModalBtn.addEventListener('click', () => {
+            relationshipsModal.classList.add('hidden');
+            showPersonDetails(selectedPersonId);
+            loadFamilyData(); 
+        });
+
+        addNewSpouseBtn.addEventListener('click', () => {
+            if (selectedPersonId) {
+                relationshipsModal.classList.add('hidden'); 
+                openPersonModal('add_spouse', selectedPersonId); 
+            }
+        });
+
+        addNewParentBtn.addEventListener('click', () => {
+            if (selectedPersonId) {
+                relationshipsModal.classList.add('hidden'); 
+                openPersonModal('add_ancestor', selectedPersonId); 
+            }
+        });
+
+        addNewChildBtn.addEventListener('click', () => {
+            if (selectedPersonId) {
+                relationshipsModal.classList.add('hidden'); 
+                openPersonModal('add_descendant', selectedPersonId); 
+            }
+        });
+
+        linkExistingSpouseBtn.addEventListener('click', () => {
+            if (selectedPersonId) {
+                openSelectPersonModal('link_spouse', selectedPersonId);
+            }
+        });
+
+        linkExistingParentBtn.addEventListener('click', () => {
+            if (selectedPersonId) {
+                openSelectPersonModal('link_parent', selectedPersonId); 
+            }
+        });
+
+        linkExistingChildBtn.addEventListener('click', () => {
+            if (selectedPersonId) {
+                openSelectPersonModal('link_child', selectedPersonId); 
+            }
+        });
+
+        relationshipsModal.addEventListener('click', async (event) => {
+            if (event.target.classList.contains('remove-relationship-btn')) {
+                const button = event.target;
+                const action = button.dataset.action;
+                let dataToSend = { _action: action };
+
+                if (action === 'remove_parent_child') {
+                    dataToSend.parent_id = parseInt(button.dataset.parentId);
+                    dataToSend.child_id = parseInt(button.dataset.childId);
+                    if (!confirm(`¿Estás seguro de que quieres eliminar el vínculo de padre/madre entre ${familyData.get(dataToSend.parent_id)?.name} y ${familyData.get(dataToSend.child_id)?.name}?`)) {
+                        return;
+                    }
+                } else if (action === 'remove_spouse') {
+                    dataToSend.person_id = parseInt(button.dataset.person_id);
+                    if (!confirm(`¿Estás seguro de que quieres eliminar el vínculo de cónyuge de ${familyData.get(dataToSend.person_id)?.name}? Esto también desvinculará a su cónyuge.`)) {
+                        return;
+                    }
+                } else {
+                    return; 
+                }
+
+                const result = await sendDataToAPI(dataToSend);
+                if (result && result.success) {
+                    openRelationshipsModal(selectedPersonId); 
+                    loadFamilyData();
+                }
+            }
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const personData = {
+                name: form.querySelector('#name').value,
+                relationship: form.querySelector('#relationship').value,
+                rut: form.querySelector('#rut').value,
+                gender: form.querySelector('#gender').value,
+                dob: form.querySelector('#dob').value,
+                dom: form.querySelector('#dom').value,
+                dod: form.querySelector('#dod').value,
+                photo: form.querySelector('#photo').value,
+                spouseId: null 
+            };
+
+            let actionData = { _action: modalMode, personData: personData };
+
+            actionData.selectedPersonId = relatedPersonId;
+            if (modalMode === 'add_descendant') {
+                actionData.selectedPersonSpouseId = relatedPersonSpouseId;
+            }
+            
+            const result = await sendDataToAPI(actionData);
+            if (result && result.success) {
+                modal.classList.add('hidden');
+                if (result.new_person_id) {
+                    showPersonDetails(result.new_person_id);
+                } else if (relatedPersonId) {
+                    showPersonDetails(relatedPersonId);
+                }
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+             modal.classList.add('hidden');
+        });
+
+        personSearchInput.addEventListener('input', (event) => {
+            renderSelectablePeopleList(event.target.value, personToLinkToId); 
+        });
+
+        personListContainer.addEventListener('click', async (event) => {
+            const selectedElement = event.target.closest('div[data-person-id]');
+            if (selectedElement) {
+                const targetPersonId = parseInt(selectedElement.dataset.personId);
+                let dataToSend = {};
+
+                if (selectPersonMode === 'link_spouse') {
+                    dataToSend = {
+                        _action: 'link_existing_spouse',
+                        person1_id: personToLinkToId,
+                        person2_id: targetPersonId
+                    };
+                } else if (selectPersonMode === 'link_parent') {
+                    dataToSend = {
+                        _action: 'link_existing_parent_child',
+                        parent_id: targetPersonId,
+                        child_id: personToLinkToId
+                    };
+                } else if (selectPersonMode === 'link_child') {
+                    dataToSend = {
+                        _action: 'link_existing_parent_child',
+                        parent_id: personToLinkToId,
+                        child_id: targetPersonId
+                    };
+                }
+
+                const result = await sendDataToAPI(dataToSend);
+                if (result && result.success) {
+                    selectPersonModal.classList.add('hidden');
+                    relationshipsModal.classList.add('hidden'); 
+                    showPersonDetails(selectedPersonId); 
+                    loadFamilyData(); 
+                }
+            }
+        });
+
+        cancelSelectPersonBtn.addEventListener('click', () => {
+            selectPersonModal.classList.add('hidden');
+        });
+
+
+        function addClickListeners() {
+            document.querySelectorAll('.member').forEach(element => {
+                element.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const personId = parseInt(event.currentTarget.dataset.id);
+                    showPersonDetails(personId);
+                });
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFamilyData();
+        });
+
+    </script>
+</body>
+</html>

@@ -443,25 +443,63 @@
             }
         }
 
-        // Función auxiliar para obtener todos los ancestros de una persona
-        function getAllAncestors(personId) {
-            const ancestors = new Set();
-            let queue = [personId];
+        // Función auxiliar para obtener todos los ancestros de una persona y su distancia generacional
+        // Retorna un Map<personId, distance> donde distance es 0 para la persona original, 1 para padres, etc.
+        function getAncestorsWithDistance(personId) {
+            const ancestors = new Map(); // Map<id, distance>
+            let queue = [{id: personId, dist: 0}];
             let head = 0;
+
             while(head < queue.length) {
-                const currentId = queue[head++];
+                const { id: currentId, dist: currentDist } = queue[head++];
+                // Si ya lo visitamos, solo actualiza si encontramos un camino más corto
+                if (ancestors.has(currentId) && ancestors.get(currentId) <= currentDist) {
+                    continue; 
+                }
+                ancestors.set(currentId, currentDist);
+
                 const person = familyData.get(currentId);
                 if (person && person.parentIds) {
                     person.parentIds.forEach(parentId => {
-                        if (familyData.has(parentId)) { // Solo añadir si el padre existe en los datos cargados
-                            ancestors.add(parentId);
-                            queue.push(parentId);
+                        // Solo añadir si el padre existe en los datos cargados y no se ha visitado o se encontró a mayor distancia
+                        if (familyData.has(parentId) && (!ancestors.has(parentId) || ancestors.get(parentId) > currentDist + 1)) {
+                            queue.push({id: parentId, dist: currentDist + 1});
                         }
                     });
                 }
             }
-            return Array.from(ancestors);
+            return ancestors;
         }
+
+        // Función auxiliar para obtener todos los descendientes de una persona y su distancia generacional
+        // Retorna un Map<personId, distance> donde distance es 0 para la persona original, 1 para hijos, etc.
+        function getDescendantsWithDistance(personId) {
+            const descendants = new Map(); // Map<id, distance>
+            let queue = [{id: personId, dist: 0}];
+            let head = 0;
+
+            while(head < queue.length) {
+                const { id: currentId, dist: currentDist } = queue[head++];
+                // Si ya lo visitamos, solo actualiza si encontramos un camino más corto
+                if (descendants.has(currentId) && descendants.get(currentId) <= currentDist) {
+                    continue; 
+                }
+                descendants.set(currentId, currentDist);
+
+                const person = familyData.get(currentId);
+                // Necesitamos encontrar personas que tengan a 'currentId' como uno de sus padres
+                const children = Array.from(familyData.values()).filter(p => p.parentIds && p.parentIds.includes(currentId));
+
+                children.forEach(child => {
+                    // Solo añadir si el hijo existe y no se ha visitado o se encontró a mayor distancia
+                    if (familyData.has(child.id) && (!descendants.has(child.id) || descendants.get(child.id) > currentDist + 1)) {
+                        queue.push({id: child.id, dist: currentDist + 1});
+                    }
+                });
+            }
+            return descendants;
+        }
+
 
         // --- INICIO DE CAMBIOS EN renderTree ---
         function renderTree() {
@@ -476,100 +514,78 @@
             }
 
             const centralPerson = familyData.get(selectedPersonId);
-            let rootPersonForDisplay = centralPerson;
+            let finalRootsToRender = new Set(); 
 
-            // Encontrar la(s) persona(s) raíz del árbol a renderizar
-            // Estrategia: Empezar con los padres de la persona central.
-            // Si tiene padres, la raíz del árbol será esa pareja de padres.
-            // Si no tiene padres, la persona central es la raíz.
-            // Esto permite que ambas líneas ancestrales (paterna y materna) se dibujen.
+            // Obtener todos los ancestros de la persona central y sus distancias
+            const centralAncestorsWithDist = getAncestorsWithDistance(selectedPersonId);
 
-            let potentialRoots = []; // Aquí guardaremos las personas de la generación más alta a renderizar
+            // Identificar las raíces potenciales: personas que no tienen padres en la base de datos
+            // PERO que son ancestros de la persona central (o la persona central misma).
+            let currentPathQueue = [selectedPersonId];
+            let processedForRootDiscovery = new Set();
 
-            if (centralPerson.parentIds && centralPerson.parentIds.length > 0) {
-                // Obtener todos los IDs de los padres de la persona central
-                const centralParentsIds = centralPerson.parentIds.filter(pId => familyData.has(pId));
+            while(currentPathQueue.length > 0) {
+                const currentId = currentPathQueue.shift();
+                if (processedForRootDiscovery.has(currentId)) continue;
+                processedForRootDiscovery.add(currentId);
 
-                // Para cada padre de la persona central, encontrar su ancestro más alto
-                const highestAncestorsOfCentralParents = new Set();
-                centralParentsIds.forEach(parentId => {
-                    let currentAncestor = familyData.get(parentId);
-                    while (currentAncestor) {
-                        let hasParentsInLoadedData = false;
-                        if (Array.isArray(currentAncestor.parentIds) && currentAncestor.parentIds.length > 0) {
-                            const parentsAvailable = currentAncestor.parentIds.filter(pId => familyData.has(pId));
-                            if (parentsAvailable.length > 0) {
-                                hasParentsInLoadedData = true;
-                                currentAncestor = familyData.get(parentsAvailable[0]); // Sube por el primer padre
-                            } else {
-                                break; 
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                    if (currentAncestor) {
-                        highestAncestorsOfCentralParents.add(currentAncestor.id);
-                    }
-                });
+                const currentPerson = familyData.get(currentId);
+                if (!currentPerson) continue;
 
-                // Si se encontraron ancestros más altos para los padres de la persona central,
-                // esas serán nuestras raíces a renderizar.
-                if (highestAncestorsOfCentralParents.size > 0) {
-                    highestAncestorsOfCentralParents.forEach(id => potentialRoots.push(familyData.get(id)));
-                } else {
-                    // Si los padres de la persona central no tienen ancestros más altos (son raíces),
-                    // entonces los padres mismos son las raíces.
-                    centralParentsIds.forEach(id => potentialRoots.push(familyData.get(id)));
+                // Si esta persona NO tiene padres cargados en familyData, es una raíz.
+                let hasParentsInLoadedData = false;
+                if (Array.isArray(currentPerson.parentIds) && currentPerson.parentIds.length > 0) {
+                    hasParentsInLoadedData = currentPerson.parentIds.some(pId => familyData.has(pId));
                 }
-            } else {
-                // Si la persona central no tiene padres, ella misma es la raíz del árbol
-                potentialRoots.push(centralPerson);
+
+                if (!hasParentsInLoadedData) {
+                    finalRootsToRender.add(currentPerson.id);
+                } else {
+                    // Si tiene padres, los añade para seguir subiendo en el camino
+                    currentPerson.parentIds.forEach(pId => {
+                        if (familyData.has(pId) && !processedForRootDiscovery.has(pId)) {
+                            currentPathQueue.push(pId);
+                        }
+                    });
+                }
+                 // También considerar el cónyuge de la persona actual, si es parte de un ancestro común de la persona seleccionada
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouse = familyData.get(currentPerson.spouseId);
+                    if (spouse && spouse.spouseId === currentPerson.id && !processedForRootDiscovery.has(spouse.id)) {
+                        // Si el cónyuge es una "raíz" (no tiene padres o sus padres no están en familyData)
+                        let spouseHasParentsInLoadedData = false;
+                        if (Array.isArray(spouse.parentIds) && spouse.parentIds.length > 0) {
+                            spouseHasParentsInLoadedData = spouse.parentIds.some(pId => familyData.has(pId));
+                        }
+                        if (!spouseHasParentsInLoadedData) {
+                             finalRootsToRender.add(spouse.id);
+                        }
+                        // No añadimos el cónyuge a currentPathQueue, porque solo rastreamos la ascendencia directa de la línea principal
+                        // Los cónyuges se dibujarán como parte de sus parejas en generatePersonHtml.
+                    }
+                }
+            }
+
+            // Si por alguna razón no se encontró ninguna raíz (ej. persona aislada sin padres), usar la persona central.
+            if (finalRootsToRender.size === 0) {
+                finalRootsToRender.add(centralPerson.id);
             }
             
-            // Ordenar las raíces potenciales para una visualización consistente
-            potentialRoots.sort((a, b) => {
-                // Puedes refinar esta lógica de ordenación si tienes preferencias
-                // por ejemplo, si quieres que el lado paterno vaya antes que el materno, etc.
-                // Por ahora, simplemente por ID o nombre.
-                return a.id - b.id; // O a.name.localeCompare(b.name);
+            // Convertir el Set de IDs a un array de objetos Persona y ordenar
+            let displayRoots = Array.from(finalRootsToRender)
+                                .map(id => familyData.get(id))
+                                .filter(p => p !== undefined)
+                                .sort((a,b) => a.id - b.id); 
+            
+            let treeHtmlContent = '';
+            const renderedIdsForWholeTree = new Set(); 
+
+            displayRoots.forEach(root => {
+                treeHtmlContent += generatePersonHtml(root, renderedIdsForWholeTree);
             });
 
-            // Preparar el HTML del árbol. Queremos una única lista <ul> en el nivel superior
-            // que contenga todas las ramas raíz de los ancestros.
-            let treeHtml = '<ul>';
-            const renderedRootNodes = new Set(); // Para evitar duplicados si una persona se considera raíz por dos caminos
-
-            potentialRoots.forEach(root => {
-                if (!renderedRootNodes.has(root.id)) {
-                    treeHtml += generatePersonHtml(root, renderedRootNodes); // Pasar el set de IDs ya renderizados
-                    // Si el nodo raíz tiene un cónyuge y el cónyuge no ha sido renderizado como parte de otra raíz,
-                    // y el cónyuge no tiene padres propios (es también una raíz)
-                    if (root.spouseId && familyData.has(root.spouseId)) {
-                        const spouse = familyData.get(root.spouseId);
-                        if (spouse && spouse.spouseId === root.id && !renderedRootNodes.has(spouse.id)) {
-                             // Si el cónyuge también es una "raíz" (no tiene padres que lo unan a una rama superior ya renderizada)
-                             // Y si no tiene padres cargados
-                            let spouseHasParentsInLoadedData = false;
-                            if (Array.isArray(spouse.parentIds) && spouse.parentIds.length > 0) {
-                                spouseHasParentsInLoadedData = spouse.parentIds.some(pId => familyData.has(pId));
-                            }
-                            if (!spouseHasParentsInLoadedData) {
-                                // Aquí podrías ajustar si quieres que el cónyuge se renderice directamente
-                                // como un nodo hermano en el nivel superior, o si siempre se dibuja al lado del 'root' en generatePersonHtml
-                                // Para evitar duplicar el nodo si ya lo dibuja generatePersonHtml, este bloque es delicado.
-                                // La estrategia actual de generatePersonHtml ya debería dibujar el cónyuge si existe.
-                                // La idea es que `rootPersonForDisplay` sea el único punto de entrada a `generatePersonHtml`.
-                                // Por lo tanto, `potentialRoots` debería contener solo la verdadera raíz o raíces más altas del sub-árbol.
-                            }
-                        }
-                    }
-                }
-            });
-            treeHtml += '</ul>';
-
-            container.innerHTML = treeHtml;
-            addClickListeners();
+            container.innerHTML = '<ul>' + treeHtmlContent + '</ul>';
+            addClickListeners(); 
             
             setTimeout(() => {
                 const selectedMemberElement = document.querySelector(`.member[data-id="${selectedPersonId}"]`);
@@ -586,15 +602,22 @@
         // --- FIN DE CAMBIOS EN renderTree ---
 
 
-        // --- FUNCIÓN DE RENDERIZADO RECURSIVA ---
-        // Ahora `generatePersonHtml` también necesita un `renderedIds` Set para evitar dibujar duplicados
-        // y gestionar los hermanos correctamente en el mismo nivel.
+        // Función auxiliar para obtener el ordinal para los grados de primos, tíos, etc.
+        function getOrdinal(n) {
+            const s = [" ", "Segundo", "Tercer", "Cuarto", "Quinto", "Sexto", "Séptimo", "Octavo", "Noveno", "Décimo"];
+            if (n >= 1 && n <= s.length) {
+                return s[n - 1];
+            }
+            return `${n}º`; 
+        }
+
+
+        // --- FUNCIÓN PRINCIPAL PARA CALCULAR LA RELACIÓN DINÁMICA ---
         function generatePersonHtml(person, renderedIds = new Set()) {
-            if (!person || renderedIds.has(person.id)) return ''; // Si ya fue renderizada, no la dibujes de nuevo
+            if (!person || renderedIds.has(person.id)) return ''; 
 
-            renderedIds.add(person.id); // Marcar como renderizada
+            renderedIds.add(person.id); 
 
-            // Lógica para calcular la edad en el nodo del árbol (sin cambios)
             let ageInTree = '';
             if (person.dob && person.dob !== '0000-00-00' && (!person.dod || person.dod === '0000-00-00')) {
                 try {
@@ -615,23 +638,28 @@
 
             let nodeContent = '<div class="node-content">';
 
-            // Función auxiliar para acortar el nombre (sin cambios)
             const getShortName = (fullName) => {
                 if (!fullName) return '';
                 const parts = fullName.split(' ').filter(part => part.trim() !== '');
                 if (parts.length === 0) return '';
                 
-                let shortName = parts[0]; // Primer nombre
+                let shortName = parts[0]; 
                 if (parts.length > 1) {
-                    // Si hay más de una parte, intentamos encontrar el primer apellido
-                    // Suponemos que el primer apellido es la segunda palabra
-                    // Esto puede no ser infalible para todos los nombres, pero es un buen inicio.
-                    shortName += ' ' + parts[2];
+                    let foundLastName = false;
+                    for (let i = 1; i < parts.length; i++) {
+                        if (parts[i].length > 2 || i === parts.length -1) { 
+                            shortName += ' ' + parts[i];
+                            foundLastName = true;
+                            break;
+                        }
+                    }
+                    if (!foundLastName && parts.length > 1) { 
+                        shortName += ' ' + parts[1]; 
+                    }
                 }
                 return shortName;
             };
 
-            // Función auxiliar para la foto de perfil (sin cambios)
             const getProfilePicHtml = (photoUrl, name) => {
                 const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
                 if (photoUrl && photoUrl.trim() !== '') {
@@ -640,23 +668,205 @@
                 return `<img src="${defaultPhoto}" alt="Sin foto" class="profile-pic">`;
             };
 
+            const calculateDynamicRelationship = (currentPersonId, referencePersonId) => {
+                const currentPerson = familyData.get(currentPersonId);
+                const referencePerson = familyData.get(referencePersonId);
+
+                if (!currentPerson || !referencePerson) {
+                    return 'Desconocido';
+                }
+                
+                const currentIsMale = (currentPerson.gender === 'Masculino');
+                const currentIsFemale = (currentPerson.gender === 'Femenino');
+
+
+                // 0. La persona misma
+                if (currentPersonId === referencePersonId) {
+                    return 'Tú';
+                }
+
+                // 1. Cónyuge
+                if (currentPerson.spouseId === referencePersonId && referencePerson.spouseId === currentPersonId) {
+                    return 'Cónyuge';
+                }
+
+                // Caching de ancestros y descendientes para evitar recalcular
+                const refAncestorsWithDist = getAncestorsWithDistance(referencePersonId);
+                const refDescendantsWithDist = getDescendantsWithDistance(referencePersonId);
+                const currentAncestorsWithDist = getAncestorsWithDistance(currentPersonId);
+                const currentDescendantsWithDist = getDescendantsWithDistance(currentPersonId);
+
+
+                // 2. Relaciones Directas Ascendentes (Padres, Abuelos, Bisabuelos, etc.) - De más específicas a menos
+                const distToRefAnc = refAncestorsWithDist.get(currentPersonId);
+                if (distToRefAnc !== undefined) {
+                    if (distToRefAnc === 1) return currentIsMale ? 'Padre' : (currentIsFemale ? 'Madre' : 'Padre/Madre');
+                    if (distToRefAnc === 2) return currentIsMale ? 'Abuelo' : (currentIsFemale ? 'Abuela' : 'Abuelo/a');
+                    if (distToRefAnc === 3) return currentIsMale ? 'Bisabuelo' : (currentIsFemale ? 'Bisabuela' : 'Bisabuelo/a');
+                    if (distToRefAnc === 4) return currentIsMale ? 'Tatarabuelo' : (currentIsFemale ? 'Tatarabuela' : 'Tatarabuelo/a');
+                    if (distToRefAnc === 5) return currentIsMale ? 'Trastatarabuelo' : (currentIsFemale ? 'Trastatarabuela' : 'Trastatarabuelo/a');
+                }
+
+                // 3. Relaciones Directas Descendentes (Hijos, Nietos, Bisnietos, etc.) - De más específicas a menos
+                const distToRefDesc = refDescendantsWithDist.get(currentPersonId);
+                if (distToRefDesc !== undefined) {
+                    if (distToRefDesc === 1) return currentIsMale ? 'Hijo' : (currentIsFemale ? 'Hija' : 'Hijo/a');
+                    if (distToRefDesc === 2) return currentIsMale ? 'Nieto' : (currentIsFemale ? 'Nieta' : 'Nieto/a');
+                    if (distToRefDesc === 3) return currentIsMale ? 'Bisnieto' : (currentIsFemale ? 'Bisnieta' : 'Bisnieto/a');
+                    if (distToRefDesc === 4) return currentIsMale ? 'Tataranieto' : (currentIsFemale ? 'Tataranieta' : 'Tataranieto/a');
+                    if (distToRefDesc === 5) return currentIsMale ? 'Trastataranieto' : (currentIsFemale ? 'Trastataranieta' : 'Trastataranieto/a');
+                }
+
+                // 4. Relaciones Colaterales - Hermanos
+                // Son hermanos si comparten al menos un padre.
+                if (currentPerson.parentIds && referencePerson.parentIds) {
+                    const commonParents = currentPerson.parentIds.filter(pId => referencePerson.parentIds.includes(pId));
+                    if (commonParents.length > 0 && currentPersonId !== referencePersonId) { // Asegurarse que no sea la misma persona
+                        return currentIsMale ? 'Hermano' : (currentIsFemale ? 'Hermana' : 'Hermano/a');
+                    }
+                }
+                
+                // 5. Relaciones Políticas (Cuñados, Suegros, Nueras/Yernos, Abuelos Políticos)
+                // Cuñados: hermanao de cónyuge
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse && currentPerson.parentIds && refSpouse.parentIds) {
+                        const commonParentsWithSpouse = currentPerson.parentIds.filter(pId => refSpouse.parentIds.includes(pId));
+                        if (commonParentsWithSpouse.length > 0 && currentPersonId !== refSpouse.id) { // No es el cónyuge mismo
+                            return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
+                        }
+                    }
+                }
+
+                // Suegros: padre del cónyuge de referencePerson
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse && refSpouse.parentIds && refSpouse.parentIds.includes(currentPersonId)) {
+                        return currentIsMale ? 'Suegro' : (currentIsFemale ? 'Suegra' : 'Suegro/a');
+                    }
+                }
+                // Abuelos Políticos: abuelo del cónyuge de referencePerson
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse) {
+                        const refSpouseAncestors = getAncestorsWithDistance(refSpouse.id);
+                        if (refSpouseAncestors.has(currentPersonId) && refSpouseAncestors.get(currentPersonId) === 2) {
+                            return currentIsMale ? 'Abuelo Político' : (currentIsFemale ? 'Abuela Política' : 'Abuelo/a Político/a');
+                        }
+                    }
+                }
+                
+                // Yerno/Nuera: cónyuge de hijo/hija de referencePerson
+                if (referencePerson.childrenIds) {
+                    for (const childId of referencePerson.childrenIds) {
+                        const child = familyData.get(childId);
+                        if (child && child.spouseId === currentPersonId && currentPerson.spouseId === child.id) {
+                            return currentIsMale ? 'Yerno' : (currentIsFemale ? 'Nuera' : 'Yerno/Nuera');
+                        }
+                    }
+                }
+
+                // 6. Relaciones Colaterales con grados (Tíos, Sobrinos, Primos) - Se basa en el LCA
+                let lowestCommonAncestorId = null;
+                let minSumDistances = Infinity;
+
+                // Encontrar el LCA entre currentPerson y referencePerson
+                // Es importante que LCA no sea ni currentPerson ni referencePerson
+                // (ya que esos casos se cubren con relaciones directas o cónyuge)
+                for (let [idA, distA] of currentAncestorsWithDist.entries()) {
+                    if (refAncestorsWithDist.has(idA)) {
+                        const distB = refAncestorsWithDist.get(idA);
+                        // Asegurarse de que el LCA no es la persona de referencia ni la persona actual
+                        if (idA !== currentPersonId && idA !== referencePersonId) {
+                            if (distA + distB < minSumDistances) {
+                                minSumDistances = distA + distB;
+                                lowestCommonAncestorId = idA;
+                            }
+                        }
+                    }
+                }
+                
+                if (lowestCommonAncestorId !== null) {
+                    const distCurrentToLCA = currentAncestorsWithDist.get(lowestCommonAncestorId) || 0;
+                    const distRefToLCA = refAncestorsWithDist.get(lowestCommonAncestorId) || 0;
+
+                    // El grado colateral es la distancia a la que ambos están del LCA, menos 1 (porque el LCA es el "Tronco" común).
+                    // Si distancias al LCA son (X, Y)
+                    // Grado colateral = min(X, Y)
+                    // Diferencia generacional = |X - Y|
+
+                    // Para Tíos y Sobrinos (línea directa de un hermano del ancestro)
+                    // Si el LCA es un padre de A (distancia 1) y de B (distancia > 1)
+                    if (distCurrentToLCA === 1 && distRefToLCA > 1) { // CurrentPerson es hermano del padre del ReferencePerson
+                        return currentIsMale ? 'Tío' : (currentIsFemale ? 'Tía' : 'Tío/a');
+                    }
+                    if (distRefToLCA === 1 && distCurrentToLCA > 1) { // ReferencePerson es hermano del padre del CurrentPerson
+                        return currentIsMale ? 'Sobrino' : (currentIsFemale ? 'Sobrina' : 'Sobrino/a');
+                    }
+                    
+                    // Primos: misma distancia del LCA
+                    if (distCurrentToLCA === distRefToLCA && distCurrentToLCA > 1) {
+                        const degree = distCurrentToLCA - 1; // Grado del primo (Primo, Primo Segundo, etc.)
+                        return currentIsMale ? `Primo ${getOrdinal(degree)}` : (currentIsFemale ? `Prima ${getOrdinal(degree)}` : `Primo/a ${getOrdinal(degree)}`);
+                    }
+
+                    // Tíos Abuelos, Sobrinos Nietos, etc. (cuando LCA es más arriba)
+                    // CurrentPerson es más ancestro que referencePerson respecto al LCA
+                    if (distCurrentToLCA < distRefToLCA) {
+                        const collateralDegree = distCurrentToLCA - 1; // Distancia a la que se separan de la línea directa del LCA
+                        const generationalDiff = distRefToLCA - distCurrentToLCA; // Cuántas generaciones de diferencia
+
+                        if (generationalDiff === 1) { // Padres hermanos de padres
+                            return currentIsMale ? 'Tío Abuelo' : (currentIsFemale ? 'Tía Abuela' : 'Tío/a Abuelo/a');
+                        }
+                        if (generationalDiff === 2) {
+                            return currentIsMale ? 'Tío Bisabuelo' : (currentIsFemale ? 'Tía Bisabuela' : 'Tío/a Bisabuelo/a');
+                        }
+                         if (generationalDiff === 3) {
+                            return currentIsMale ? 'Tío Tatarabuelo' : (currentIsFemale ? 'Tía Tatarabuela' : 'Tío/a Tatarabuelo/a');
+                        }
+                    } 
+                    // CurrentPerson es más joven que referencePerson respecto al LCA
+                    else if (distCurrentToLCA > distRefToLCA) {
+                        const collateralDegree = distRefToLCA - 1;
+                        const generationalDiff = distCurrentToLCA - distRefToLCA;
+
+                        if (generationalDiff === 1) { // Hijos de sobrinos
+                            return currentIsMale ? 'Sobrino Nieto' : (currentIsFemale ? 'Sobrina Nieta' : 'Sobrino/a Nieto/a');
+                        }
+                        if (generationalDiff === 2) {
+                            return currentIsMale ? 'Sobrino Bisnieto' : (currentIsFemale ? 'Sobrina Bisnieta' : 'Sobrino/a Bisnieto/a');
+                        }
+                         if (generationalDiff === 3) {
+                            return currentIsMale ? 'Sobrino Tataranieto' : (currentIsFemale ? 'Sobrina Tataranieta' : 'Sobrino/a Tataranieto/a');
+                        }
+                    }
+                }
+                
+                // Fallback a la relación de la DB si no se encuentra algo específico, o 'Familiar'
+                return currentPerson.relationship || 'Familiar';
+            };
+            // --- FIN FUNCIÓN DE CALCULAR RELACIÓN DINÁMICA ---
+
+            const displayRelationship = calculateDynamicRelationship(person.id, selectedPersonId);
             const mainPersonShortName = getShortName(person.name);
-            const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name); 
+            const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name);
             const mainPersonHtml = `
                 <div class="member" data-id="${person.id}">
                     ${mainPersonProfilePic}
                     <div class="name">${mainPersonShortName}</div>
-                    <div class="relationship">${person.relationship || ''}</div>
+                    <div class="relationship">${displayRelationship}</div>
                     ${ageInTree}
                 </div>
             `;
 
-            // Lógica para el cónyuge (sin cambios funcionales, solo pasar `renderedIds`)
+            // Lógica para el cónyuge
             if (person.spouseId && familyData.has(person.spouseId)) {
                 const spouse = familyData.get(person.spouseId);
                 // Solo si el vínculo es bidireccional y el cónyuge no ha sido renderizado ya
                 if (spouse && spouse.id !== person.id && spouse.spouseId === person.id && !renderedIds.has(spouse.id)) { 
-                    renderedIds.add(spouse.id); // Marcar cónyuge como renderizado
+                    renderedIds.add(spouse.id); 
+                    
                     let spouseAgeInTree = '';
                     if (spouse.dob && spouse.dob !== '0000-00-00' && (!spouse.dod || spouse.dod === '0000-00-00')) {
                         try {
@@ -675,13 +885,14 @@
                         } catch(e) { console.error("Error calculating spouse age for tree node", e); }
                     }
 
+                    const spouseDisplayRelationship = calculateDynamicRelationship(spouse.id, selectedPersonId);
                     const spouseShortName = getShortName(spouse.name);
-                    const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name); 
+                    const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name);
                     const spouseHtml = `
                         <div class="member" data-id="${spouse.id}">
                             ${spouseProfilePic}
                             <div class="name">${spouseShortName}</div>
-                            <div class="relationship">${spouse.relationship || ''}</div>
+                            <div class="relationship">${spouseDisplayRelationship}</div>
                             ${spouseAgeInTree}
                         </div>
                     `;
@@ -693,39 +904,33 @@
                         nodeContent += spouseHtml + spouseLine + mainPersonHtml;
                     }
                 } else {
-                    nodeContent += mainPersonHtml; // Si el cónyuge ya se renderizó o no es recíproco/válido, solo muestra la persona principal
+                    nodeContent += mainPersonHtml; 
                 }
             } else {
                 nodeContent += mainPersonHtml;
             }
             nodeContent += '</div>';
 
-            // --- LÓGICA RECURSIVA PARA LOS HIJOS (modificada) ---
             let childrenHtml = '';
             
-            // Recopilar los IDs de los padres de la persona actual y su cónyuge
             const parentIdsOfCurrentUnit = new Set();
             parentIdsOfCurrentUnit.add(person.id);
             if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
                 parentIdsOfCurrentUnit.add(person.spouseId);
             }
 
-            // Encontrar a todos los hijos que tienen a *CUALQUIERA* de los IDs en `parentIdsOfCurrentUnit` como padre.
             const childrenOfThisFamilyUnit = Array.from(familyData.values())
                                                 .filter(child => {
                                                     const childParents = child.parentIds || [];
-                                                    // Comprueba si alguno de los padres de la unidad actual es padre del hijo
                                                     return Array.from(parentIdsOfCurrentUnit).some(pId => childParents.includes(pId));
                                                 })
-                                                // Excluir a los hijos que ya fueron renderizados por otra rama
                                                 .filter(child => !renderedIds.has(child.id))
                                                 .sort((a,b) => a.name.localeCompare(b.name));
 
             if (childrenOfThisFamilyUnit.length > 0) {
                 childrenHtml += '<ul>';
-                // Ahora, para cada hijo, llamamos a generatePersonHtml para que se dibuje
                 childrenOfThisFamilyUnit.forEach(child => {
-                    childrenHtml += generatePersonHtml(child, renderedIds); // Pasa el mismo `renderedIds`
+                    childrenHtml += generatePersonHtml(child, renderedIds); 
                 });
                 childrenHtml += '</ul>';
             }
@@ -748,23 +953,17 @@
                 return;
             }
             
-            // Re-renderizar el árbol para centrarlo en la persona seleccionada
-            // Esto es importante para que los "otros árboles" desaparezcan al seleccionar.
             renderTree(); 
 
-            // Eliminar resaltado anterior de todos los elementos ANTES de aplicar el nuevo
             document.querySelectorAll('.member').forEach(el => el.classList.remove('selected', 'highlighted', 'ancestor-spouse-highlight'));
             document.querySelectorAll('.tree li').forEach(li => li.classList.remove('highlighted-path'));
             document.querySelectorAll('.node-content').forEach(nc => nc.classList.remove('highlighted-path'));
 
-            // Resaltar la persona seleccionada
             const currentSelectedMemberElement = document.querySelector(`.member[data-id="${personId}"]`);
             if(currentSelectedMemberElement) {
                 currentSelectedMemberElement.classList.add('selected');
             }
 
-
-            // --- LÓGICA DE RESALTADO DE ANCESTROS DIRECTOS (MEJORADA PARA AMBAS RAMAS) ---
             let queue = [personId]; 
             const visitedForHighlight = new Set(); 
 
@@ -805,7 +1004,6 @@
                     liElement.classList.add('highlighted-path');
                 }
 
-                // Añadir los IDs de los padres a la cola para procesarlos en la siguiente iteración
                 const parentsOfCurrentPerson = Array.from(familyData.values())
                     .filter(p => p.childrenIds && p.childrenIds.includes(currentId));
 
@@ -826,7 +1024,7 @@
                     if(!isNaN(birthDate.getTime())){
                         let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
                         const m = endDate.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                             ageDiff--;
                         }
                         if(person.dod && person.dod !== '0000-00-00') {

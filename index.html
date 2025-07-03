@@ -745,44 +745,66 @@
             // Resaltar la persona seleccionada
             document.querySelector(`.member[data-id="${personId}"]`)?.classList.add('selected');
 
-            // --- LÓGICA DE RESALTADO DE ANCESTROS DIRECTOS ---
-            let currentPerson = person;
-            while (currentPerson) {
+            // --- LÓGICA DE RESALTADO DE ANCESTROS DIRECTOS (MEJORADA PARA AMBAS RAMAS) ---
+            let queue = [personId]; // Usaremos una cola para BFS (Breadth-First Search)
+            const visited = new Set(); // Para evitar bucles infinitos y duplicados
+
+            while (queue.length > 0) {
+                const currentId = queue.shift(); // Saca el primer ID de la cola
+                
+                if (visited.has(currentId)) {
+                    continue; // Si ya lo visitamos, omítelo
+                }
+                visited.add(currentId); // Marca como visitado
+
+                const currentPerson = familyData.get(currentId);
+                if (!currentPerson) {
+                    continue; // Si la persona no existe en los datos cargados, omítela
+                }
+
                 // Resaltar el nodo de la persona actual
                 const memberElement = document.querySelector(`.member[data-id="${currentPerson.id}"]`);
                 if (memberElement) {
                     memberElement.classList.add('highlighted');
                 }
 
-                // Si la persona actual tiene un cónyuge, resaltarlo también
+                // Si la persona actual tiene un cónyuge, resaltarlo también (y sus líneas)
                 if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
-                    const spouseElement = document.querySelector(`.member[data-id="${currentPerson.spouseId}"]`);
-                    if (spouseElement) {
-                        spouseElement.classList.add('ancestor-spouse-highlight');
+                    const spouse = familyData.get(currentPerson.spouseId);
+                    if (spouse.spouseId === currentPerson.id) { // Asegurarse que el vínculo es bidireccional
+                        const spouseElement = document.querySelector(`.member[data-id="${currentPerson.spouseId}"]`);
+                        if (spouseElement) {
+                            spouseElement.classList.add('ancestor-spouse-highlight');
+                        }
+                        // Resaltar la línea horizontal entre la persona y su cónyuge
+                        const nodeContentElement = memberElement.closest('.node-content');
+                        if (nodeContentElement) {
+                            nodeContentElement.classList.add('highlighted-path');
+                        }
                     }
                 }
-
-                // Resaltar la línea (LI y .node-content) que sube desde esta persona a sus padres
+                
+                // Resaltar las líneas (LI) que suben desde esta persona (y su cónyuge) a sus padres
                 const liElement = memberElement ? memberElement.closest('li') : null;
                 if (liElement) {
                     liElement.classList.add('highlighted-path');
-                    const nodeContentElement = memberElement.closest('.node-content');
-                    if (nodeContentElement) {
-                        nodeContentElement.classList.add('highlighted-path');
+                    // Si este LI tiene un UL padre (significa que hay un nivel superior), resalta la línea vertical
+                    const parentUl = liElement.parentNode;
+                    if (parentUl && parentUl.tagName === 'UL') {
+                        const parentLi = parentUl.closest('li');
+                        if (parentLi) {
+                            parentLi.classList.add('highlighted-path'); // Esto resalta la LI del padre
+                        }
                     }
                 }
-                
-                // Mover al siguiente nivel de ancestro
-                // Necesitamos los IDs de los padres que tienen a 'currentPerson.id' como hijo.
-                const parentsOfCurrentPerson = Array.from(familyData.values()).filter(p => p.childrenIds.includes(currentPerson.id));
-                
-                if (parentsOfCurrentPerson.length > 0) {
-                    // Si hay varios padres, por simplicidad, sigue el primer padre encontrado en la lista.
-                    // Esto puede no ser "el padre biológico" en un escenario de adopción o padres múltiples.
-                    // Para un "camino directo", es común seguir una línea.
-                    currentPerson = parentsOfCurrentPerson[0]; 
-                } else {
-                    currentPerson = null; // No hay más ancestros directos en el árbol cargado
+
+                // Añadir los padres a la cola para procesarlos en la siguiente iteración
+                if (currentPerson.parentIds && Array.isArray(currentPerson.parentIds)) {
+                    currentPerson.parentIds.forEach(parentId => {
+                        if (!visited.has(parentId) && familyData.has(parentId)) {
+                            queue.push(parentId);
+                        }
+                    });
                 }
             }
 

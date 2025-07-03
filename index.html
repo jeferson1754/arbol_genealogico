@@ -131,8 +131,10 @@
             background-color: #fff;
             min-width: 140px;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            display: flex; /* Usar flexbox para alinear contenido */
+            flex-direction: column; /* Apilar elementos verticalmente */
+            align-items: center; /* Centrar horizontalmente */
         }
-
         .tree li .member:hover, .tree li .member.selected {
             background-color: #e0f2fe;
             border-color: #0ea5e9;
@@ -142,7 +144,9 @@
 
         .member .name {
             font-weight: 600;
+            margin-top: 5px; /* Espacio entre la imagen y el nombre */
         }
+
 
         .member .relationship {
             font-size: 0.8em;
@@ -161,6 +165,44 @@
             height: 2px;
             width: 20px; /* Ancho de la línea */
             background-color: #ccc;
+        }
+
+         /* Estilos para el panel de detalles para que sea sticky y responsivo */
+        @media (min-width: 1024px) { /* lg breakpoint */
+            .sticky-lg {
+                position: sticky;
+                top: 2rem; /* Distancia desde la parte superior */
+            }
+        }
+
+        /* --- NUEVOS ESTILOS PARA RESALTADO DE ANCESTROS --- */
+        .member.highlighted {
+            background-color: #d1fae5; /* Un verde claro */
+            border-color: #10b981; /* Borde verde más oscuro */
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Resaltar las líneas de conexión de los ancestros */
+        .highlighted-path::before,
+        .highlighted-path::after {
+            border-color: #10b981 !important; /* Mismo verde que el nodo */
+        }
+        /* Para la línea vertical que une la lista de hijos (de la pareja resaltada) */
+        .tree li.highlighted-path ul::before {
+            border-left-color: #10b981 !important;
+        }
+
+        /* Asegurarse de que el cónyuge de un ancestro también tenga la línea resaltada */
+        .node-content.highlighted-path .spouse-line {
+            background-color: #10b981 !important;
+        }
+
+
+        /* Para asegurar que el cónyuge del ancestro directo también se vea resaltado visualmente */
+        .member.ancestor-spouse-highlight {
+            background-color: #d1fae5; /* Mismo verde para el cónyuge del ancestro */
+            border-color: #10b981;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
         }
     </style>
 </head>
@@ -351,8 +393,13 @@
                     showPersonDetails(selectedPersonId);
                 } else if (familyData.size > 0) {
                     // Si no hay ID en la URL o es inválido, selecciona la primera persona
-                    const firstPersonId = Array.from(familyData.keys())[0]; 
-                    showPersonDetails(firstPersonId);
+                    // Opcional: Puedes intentar seleccionar una persona "principal" si existe, como 'Jefferson' (ID 1)
+                    if (familyData.has(1)) { // Si existe una persona con ID 1 (ej. 'Jefferson')
+                        showPersonDetails(1);
+                    } else { // Si no, selecciona el primer elemento disponible
+                        const firstPersonId = Array.from(familyData.keys())[0]; 
+                        showPersonDetails(firstPersonId);
+                    }
                 } else {
                     document.getElementById('details-content').innerHTML = '<p class="text-gray-500">No hay datos en el árbol. ¡Añade la primera persona!</p>';
                     document.getElementById('edit-buttons').classList.add('hidden');
@@ -489,19 +536,26 @@
 
             // Ordenar las raíces finales para una visualización consistente (ej. bisabuelos primero)
             rootsToRender.sort((a, b) => {
-                const getRank = (p) => {
+                const getGenerationRank = (p) => {
+                    // Criterios de ordenación más específicos para generaciones
                     if (p.relationship && p.relationship.includes('Bisabuelo')) return 1;
+                    if (p.relationship && p.relationship.includes('Bisabuela')) return 1;
                     if (p.relationship && p.relationship.includes('Abuelo')) return 2;
-                    if (p.relationship && (p.relationship.includes('Papá') || p.relationship.includes('Mamá'))) return 3;
-                    return 99; // Otros
+                    if (p.relationship && p.relationship.includes('Abuela')) return 2;
+                    if (p.relationship && (p.relationship.includes('Padre') || p.relationship.includes('Madre'))) return 3;
+                    if (p.relationship && p.relationship.includes('Cónyuge')) return 4; // Cónyuges de la generación principal
+                    if (p.relationship && p.relationship.includes('Hijo/a')) return 5;
+                    if (p.relationship && p.relationship.includes('Nieto/a')) return 6;
+                    if (p.relationship && p.relationship.includes('Bisnieto/a')) return 7;
+                    return 99; // Otros, al final
                 };
-                const rankA = getRank(a);
-                const rankB = getRank(b);
+                const rankA = getGenerationRank(a);
+                const rankB = getGenerationRank(b);
 
                 if (rankA !== rankB) {
                     return rankA - rankB;
                 }
-                return a.id - b.id; // Fallback: ordenar por ID
+                return a.name.localeCompare(b.name); // Fallback: ordenar alfabéticamente por nombre
             });
 
             console.log('Paso 2: Personas seleccionadas para el renderizado principal (rootsToRender):', rootsToRender.map(p => p.name + ' (ID: ' + p.id + ')'));
@@ -637,24 +691,31 @@
                 }
             }
             
-            const childrenToRender = Array.from(combinedChildrenIds)
-                                            .filter(childId => familyData.has(childId)) // Asegurarse de que el hijo exista en los datos
+           const childrenToRender = Array.from(combinedChildrenIds)
+                                            .filter(childId => familyData.has(childId)) 
                                             .map(childId => familyData.get(childId))
-                                            // Filtra para incluir solo los hijos que tienen a *esta pareja* como padres
                                             .filter(child => {
-                                                if (!child.parentIds || child.parentIds.length === 0) return false;
-                                                const hasPersonAsParent = child.parentIds.includes(person.id);
-                                                const hasSpouseAsParent = person.spouseId && child.parentIds.includes(person.spouseId);
-                                                return hasPersonAsParent || hasSpouseAsParent;
+                                                const childParents = child.parentIds || [];
+                                                const isChildOfThisPerson = childParents.includes(person.id);
+                                                
+                                                let isChildOfSpouse = false;
+                                                if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                                                    isChildOfSpouse = childParents.includes(person.spouseId);
+                                                }
+                                                return isChildOfThisPerson || isChildOfSpouse;
                                             })
-                                            .sort((a,b) => a.name.localeCompare(b.name)); // Ordenar hijos alfabéticamente
+                                            .sort((a,b) => a.name.localeCompare(b.name)); 
 
             console.log(`Persona: ${person.name}, Hijos encontrados para renderizar:`, childrenToRender.map(c => c.name));
 
-            if (childrenToRender.length > 0) {
+          if (childrenToRender.length > 0) {
                 childrenHtml += '<ul>';
+                const renderedChildrenInThisBranch = new Set();
                 childrenToRender.forEach(child => {
-                    childrenHtml += generatePersonHtml(child);
+                    if (!renderedChildrenInThisBranch.has(child.id)) {
+                        childrenHtml += generatePersonHtml(child);
+                        renderedChildrenInThisBranch.add(child.id);
+                    }
                 });
                 childrenHtml += '</ul>';
             }
@@ -676,8 +737,54 @@
                 return;
             }
             
-            document.querySelectorAll('.member').forEach(el => el.classList.remove('selected'));
+             // Eliminar resaltado anterior
+            document.querySelectorAll('.member').forEach(el => el.classList.remove('selected', 'highlighted', 'ancestor-spouse-highlight'));
+            document.querySelectorAll('.tree li').forEach(li => li.classList.remove('highlighted-path'));
+            document.querySelectorAll('.node-content').forEach(nc => nc.classList.remove('highlighted-path'));
+
+            // Resaltar la persona seleccionada
             document.querySelector(`.member[data-id="${personId}"]`)?.classList.add('selected');
+
+            // --- LÓGICA DE RESALTADO DE ANCESTROS DIRECTOS ---
+            let currentPerson = person;
+            while (currentPerson) {
+                // Resaltar el nodo de la persona actual
+                const memberElement = document.querySelector(`.member[data-id="${currentPerson.id}"]`);
+                if (memberElement) {
+                    memberElement.classList.add('highlighted');
+                }
+
+                // Si la persona actual tiene un cónyuge, resaltarlo también
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseElement = document.querySelector(`.member[data-id="${currentPerson.spouseId}"]`);
+                    if (spouseElement) {
+                        spouseElement.classList.add('ancestor-spouse-highlight');
+                    }
+                }
+
+                // Resaltar la línea (LI y .node-content) que sube desde esta persona a sus padres
+                const liElement = memberElement ? memberElement.closest('li') : null;
+                if (liElement) {
+                    liElement.classList.add('highlighted-path');
+                    const nodeContentElement = memberElement.closest('.node-content');
+                    if (nodeContentElement) {
+                        nodeContentElement.classList.add('highlighted-path');
+                    }
+                }
+                
+                // Mover al siguiente nivel de ancestro
+                // Necesitamos los IDs de los padres que tienen a 'currentPerson.id' como hijo.
+                const parentsOfCurrentPerson = Array.from(familyData.values()).filter(p => p.childrenIds.includes(currentPerson.id));
+                
+                if (parentsOfCurrentPerson.length > 0) {
+                    // Si hay varios padres, por simplicidad, sigue el primer padre encontrado en la lista.
+                    // Esto puede no ser "el padre biológico" en un escenario de adopción o padres múltiples.
+                    // Para un "camino directo", es común seguir una línea.
+                    currentPerson = parentsOfCurrentPerson[0]; 
+                } else {
+                    currentPerson = null; // No hay más ancestros directos en el árbol cargado
+                }
+            }
 
             let age = '';
             let ageAtDeath = '';

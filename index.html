@@ -640,25 +640,19 @@
 
             const getShortName = (fullName) => {
                 if (!fullName) return '';
-                const parts = fullName.split(' ').filter(part => part.trim() !== '');
-                if (parts.length === 0) return '';
-                
-                let shortName = parts[0]; 
-                if (parts.length > 1) {
-                    let foundLastName = false;
-                    for (let i = 1; i < parts.length; i++) {
-                        if (parts[i].length > 2 || i === parts.length -1) { 
-                            shortName += ' ' + parts[i];
-                            foundLastName = true;
-                            break;
-                        }
-                    }
-                    if (!foundLastName && parts.length > 1) { 
-                        shortName += ' ' + parts[1]; 
-                    }
-                }
-                return shortName;
+
+                const parts = fullName.trim().split(/\s+/); // separa por espacios
+
+                if (parts.length === 1) return parts[0]; // solo un nombre
+                if (parts.length === 2) return `${parts[0]} ${parts[1]}`; // nombre + apellido
+
+                const firstName = parts[0];
+                const lastName = parts[parts.length - 2]; // penúltima palabra = primer apellido
+
+                return `${firstName} ${lastName}`;
             };
+
+
 
             const getProfilePicHtml = (photoUrl, name) => {
                 const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Persona en el Árbol Genealógico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        .person-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .person-item:last-child {
+            border-bottom: none;
+        }
+        .person-item:hover {
+            background-color: #f0f2f5;
+        }
+        .person-item .name {
+            font-weight: 600;
+        }
+        .person-item .details {
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">Buscar Persona</h1>
+        <div class="mb-4">
+            <input type="text" id="search-input" placeholder="Buscar por nombre..." class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div id="search-results" class="border border-gray-200 rounded-lg max-h-80 overflow-y-auto">
+            <p class="p-4 text-gray-500 text-center">Empieza a escribir para buscar personas.</p>
+        </div>
+        <div class="mt-6 text-center">
+            <a href="index.html" class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">Volver al Árbol</a>
+        </div>
+    </div>
+
+    <script type="module">
+        const API_URL = 'api.php';
+        const searchInput = document.getElementById('search-input');
+        const searchResultsDiv = document.getElementById('search-results');
+        let allPeople = new Map(); // Para almacenar todos los datos de personas
+
+        // Carga todas las personas al iniciar la página de búsqueda
+        async function loadAllPeople() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                allPeople.clear();
+                data.forEach(person => {
+                    person.id = parseInt(person.id);
+                    allPeople.set(person.id, person);
+                });
+                console.log('Personas cargadas para búsqueda:', allPeople);
+                displayResults(''); // Mostrar todos al inicio o mensaje de "escribe para buscar"
+            } catch (error) {
+                console.error('Error al cargar personas para búsqueda:', error);
+                searchResultsDiv.innerHTML = '<p class="p-4 text-red-500 text-center">Error al cargar personas.</p>';
+            }
+        }
+
+        // Muestra los resultados de la búsqueda
+        function displayResults(searchTerm) {
+            searchResultsDiv.innerHTML = '';
+            const filtered = Array.from(allPeople.values()).filter(person => 
+                person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (person.relationship && person.relationship.toLowerCase().includes(searchTerm.toLowerCase()))
+            ).sort((a, b) => a.name.localeCompare(b.name));
+
+            if (filtered.length === 0 && searchTerm.length > 0) {
+                searchResultsDiv.innerHTML = '<p class="p-4 text-gray-500 text-center">No se encontraron resultados para su búsqueda.</p>';
+            } else if (searchTerm.length === 0) {
+                searchResultsDiv.innerHTML = '<p class="p-4 text-gray-500 text-center">Empieza a escribir para buscar personas.</p>';
+            } else {
+                filtered.forEach(person => {
+                    const item = document.createElement('div');
+                    item.className = 'person-item';
+                    item.dataset.personId = person.id;
+                    item.innerHTML = `
+                        <div>
+                            <div class="name">${person.name}</div>
+                            <div class="details">${person.relationship || 'Persona'}</div>
+                        </div>
+                        <a href="index.html?personId=${person.id}" class="bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 px-3 rounded">Ver en Árbol</a>
+                    `;
+                    searchResultsDiv.appendChild(item);
+                });
+            }
+        }
+
+        // Event listener para el campo de búsqueda
+        searchInput.addEventListener('input', (event) => {
+            displayResults(event.target.value);
+        });
+
+        // Carga las personas al cargar la página
+        document.addEventListener('DOMContentLoaded', loadAllPeople);
+    </script>
+</body>
+</html>

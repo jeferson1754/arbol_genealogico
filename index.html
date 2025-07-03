@@ -32,6 +32,17 @@
             justify-content: center;
         }
 
+        .member .profile-pic {
+            width: 60px; /* Tamaño de la imagen */
+            height: 60px;
+            border-radius: 50%; /* Hacer la imagen redonda */
+            object-fit: cover; /* Asegurar que la imagen cubra el área sin distorsionarse */
+            border: 2px solid #ddd; /* Pequeño borde */
+            margin-bottom: 5px; /* Margen debajo de la imagen y el nombre */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra suave */
+            margin: 0 auto;
+        }
+
         .tree li {
             list-style-type: none;
             position: relative;
@@ -156,11 +167,20 @@
 <body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-8">
+<header class="mb-8 relative"> 
+    <div class="flex justify-between items-start"> 
+        <div class="flex-grow"></div> 
+        
+        <div class="text-center"> 
             <h1 class="text-3xl md:text-5xl font-bold text-gray-800">Árbol Genealógico Familiar</h1>
             <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
-        </header>
+        </div>
 
+        <div class="flex-grow text-right">
+            <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap">Buscar Personas</a>
+        </div>
+    </div>
+</header>
         <div class="flex flex-col lg:flex-row gap-8">
             <main class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
                 <div id="family-tree-container" class="tree-container">
@@ -293,7 +313,7 @@
         const API_URL = 'api.php';
 
        
-        async function loadFamilyData() {
+                async function loadFamilyData() {
             try {
                 const response = await fetch(API_URL, {
                     method: 'GET',
@@ -310,14 +330,9 @@
                 
                 familyData.clear();
                 data.forEach(person => {
-                    // Asegurar que los IDs y los arrays de IDs sean números
                     person.id = parseInt(person.id);
-                    if (person.spouse_id !== null) { // Asegurar que null no se convierta a 0
-                        person.spouseId = parseInt(person.spouse_id);
-                    } else {
-                        person.spouseId = null;
-                    }
-                    // IMPORTANTE: Tus campos se llaman children_ids_str y parent_ids_str en el PHP ahora
+                    person.spouseId = person.spouse_id !== null ? parseInt(person.spouse_id) : null;
+                    
                     person.childrenIds = Array.isArray(person.children_ids) ? person.children_ids.map(id => parseInt(id)) : [];
                     person.parentIds = Array.isArray(person.parent_ids) ? person.parent_ids.map(id => parseInt(id)) : [];
 
@@ -326,19 +341,20 @@
 
                 console.log('Datos cargados en familyData (con IDs parseados):', familyData);
                 renderTree();
-                if (selectedPersonId && familyData.has(selectedPersonId)) {
+                
+                // --- NUEVA LÓGICA PARA LEER EL ID DE LA URL ---
+                const urlParams = new URLSearchParams(window.location.search);
+                const idFromUrl = urlParams.get('personId');
+
+                if (idFromUrl && familyData.has(parseInt(idFromUrl))) {
+                    selectedPersonId = parseInt(idFromUrl); // Establece el selectedPersonId global
                     showPersonDetails(selectedPersonId);
                 } else if (familyData.size > 0) {
-                    // Intenta seleccionar a "Jefferson" (ID 1) si existe
-                    if (familyData.has(1)) {
-                        showPersonDetails(1);
-                    } else {
-                        // Si no, selecciona el primer elemento disponible
-                        const firstPersonId = Array.from(familyData.keys())[0];
-                        showPersonDetails(firstPersonId);
-                    }
+                    // Si no hay ID en la URL o es inválido, selecciona la primera persona
+                    const firstPersonId = Array.from(familyData.keys())[0]; 
+                    showPersonDetails(firstPersonId);
                 } else {
-                    document.getElementById('details-content').innerHTML = '<p class="text-gray-500">No hay datos en el árbol.</p>';
+                    document.getElementById('details-content').innerHTML = '<p class="text-gray-500">No hay datos en el árbol. ¡Añade la primera persona!</p>';
                     document.getElementById('edit-buttons').classList.add('hidden');
                 }
 
@@ -540,10 +556,20 @@
                 return shortName;
             };
 
-          const mainPersonShortName = getShortName(person.name); // <--- MODIFICACIÓN
+            // Obtener la URL de la foto y generar la etiqueta <img>
+            const getProfilePicHtml = (photoUrl, name) => {
+                if (photoUrl) {
+                    return `<img src="${photoUrl}" alt="Foto de ${name}" class="profile-pic" onerror="this.onerror=null;this.src='https://placehold.co/60x60/E2E8F0/333333?text=Foto';">`;
+                }
+                // Placeholder genérico si no hay foto
+                return `<img src="https://placehold.co/60x60/E2E8F0/333333?text=Foto" alt="Sin foto" class="profile-pic">`;
+            };
+
+            const mainPersonShortName = getShortName(person.name);
+            const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name); // <--- NUEVA LÍNEA
             const mainPersonHtml = `
                 <div class="member" data-id="${person.id}">
-                    <div class="name">${mainPersonShortName}</div>
+                    ${mainPersonProfilePic} <div class="name">${mainPersonShortName}</div>
                     <div class="relationship">${person.relationship || ''}</div>
                     ${ageInTree}
                 </div>
@@ -571,10 +597,11 @@
                         } catch(e) { console.error("Error calculating spouse age for tree node", e); }
                     }
 
-                    const spouseShortName = getShortName(spouse.name); // <--- MODIFICACIÓN
+                    const spouseShortName = getShortName(spouse.name);
+                    const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name); // <--- NUEVA LÍNEA
                     const spouseHtml = `
                         <div class="member" data-id="${spouse.id}">
-                            <div class="name">${spouseShortName}</div>
+                            ${spouseProfilePic} <div class="name">${spouseShortName}</div>
                             <div class="relationship">${spouse.relationship || ''}</div>
                             ${spouseAgeInTree}
                         </div>

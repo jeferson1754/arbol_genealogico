@@ -95,7 +95,7 @@ function handle_post_request($conn, $pdo)
     }
 
     switch ($data['_action']) {
-        case 'edit_person':
+        case 'edit_person': // Este caso podría eliminarse ya que se usa editar.php
             update_person($conn, $data);
             break;
         case 'add_descendant':
@@ -148,18 +148,11 @@ function insert_new_person($conn, $person_data)
     // spouseId viene de la data del formulario (si se está añadiendo un cónyuge a alguien pre-existente, o null)
     $spouse_id = isset($person_data['spouseId']) && $person_data['spouseId'] !== null ? (int)$person_data['spouseId'] : null;
 
-    // Usar 'i' para spouse_id si es un entero, 's' si es nulo (no tiene sentido, siempre es int o null)
-    // MySQLi bind_param requiere que el tipo 'i' siempre sea un entero. Para NULL, debemos pasar NULL.
-    // Esto es un problema conocido con mysqli si se quiere bindear un NULL a un 'i'.
-    // Una solución es cambiar la columna a VARCHAR y manejar la conversión, o usar PDO.
-    // Para simplificar, asumiremos que si viene como null se bindea como int(0) si no se especifica bien,
-    // o que la columna permite nulls y se maneja desde el script con un valor de 0 si es int.
-    // La forma más robusta con mysqli para nulls en enteros es así:
-    if ($spouse_id === null) {
-        $stmt->bind_param("sssssssss", $name, $relationship, $rut, $gender, $dob, $dom, $dod, $photo, $spouse_id);
-    } else {
-        $stmt->bind_param("ssssssssi", $name, $relationship, $rut, $gender, $dob, $dom, $dod, $photo, $spouse_id);
-    }
+    // Con mysqli, para bindear NULLs a tipos 'i' (integer), la variable DEBE ser realmente NULL.
+    // Si la columna spouse_id es INT y permite NULL, esto debería funcionar.
+    // El tipo 's' puede aceptar NULL, pero 'i' es más estricto.
+    $stmt->bind_param("ssssssssi", $name, $relationship, $rut, $gender, $dob, $dom, $dod, $photo, $spouse_id);
+   
 
     if ($stmt->execute()) {
         $new_id = $conn->insert_id;
@@ -208,123 +201,86 @@ function add_parent_child_link($conn, $pdo, $parent_id, $child_id)
 
 /**
  * Actualiza los datos de una persona existente en la tabla 'people'.
- */
-
-// ... (resto del código)
-
-/**
- * Actualiza los datos de una persona existente en la tabla 'people'.
+ * NOTA: Esta función es usada por el frontend si 'edit_person' es la acción.
+ * Si 'editar.php' maneja la edición de personas, esta función podría no ser necesaria
+ * o su lógica debería ser revisada para evitar duplicidades o conflictos.
  */
 function update_person($conn, $data)
 {
-    if (!isset($data['id'])) {
+    if (!isset($data['personData']['id'])) { // Se cambió el acceso a 'id' a personData.id
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'El ID de la persona es requerido para actualizar.']);
         return;
     }
-    $id = (int)$data['id'];
+    $id = (int)$data['personData']['id']; // Se cambió el acceso a 'id' a personData.id
 
     // Mapear los datos del frontend a variables PHP, convirtiendo vacíos a null
-    $name = !empty($data['name']) ? $data['name'] : null;
-    $relationship = !empty($data['relationship']) ? $data['relationship'] : null;
-    $rut = !empty($data['rut']) ? $data['rut'] : null;
-    $gender = !empty($data['gender']) ? $data['gender'] : null;
-    $dob = (!empty($data['dob']) && $data['dob'] !== '0000-00-00') ? $data['dob'] : null;
-    $dom = (!empty($data['dom']) && $data['dom'] !== '0000-00-00') ? $data['dom'] : null;
-    $dod = (!empty($data['dod']) && $data['dod'] !== '0000-00-00') ? $data['dod'] : null;
-    $photo = !empty($data['photo']) ? $data['photo'] : null;
-    $spouse_id = isset($data['spouseId']) && $data['spouseId'] !== null ? (int)$data['spouseId'] : null;
+    $name = !empty($data['personData']['name']) ? $data['personData']['name'] : null;
+    $relationship = !empty($data['personData']['relationship']) ? $data['personData']['relationship'] : null;
+    $rut = !empty($data['personData']['rut']) ? $data['personData']['rut'] : null;
+    $gender = !empty($data['personData']['gender']) ? $data['personData']['gender'] : null;
+    $dob = (!empty($data['personData']['dob']) && $data['personData']['dob'] !== '0000-00-00') ? $data['personData']['dob'] : null;
+    $dom = (!empty($data['personData']['dom']) && $data['personData']['dom'] !== '0000-00-00') ? $data['personData']['dom'] : null;
+    $dod = (!empty($data['personData']['dod']) && $data['personData']['dod'] !== '0000-00-00') ? $data['personData']['dod'] : null;
+    $photo = !empty($data['personData']['photo']) ? $data['personData']['photo'] : null;
+    // spouseId puede venir en la data de personData o ya existir en la base de datos
+    // Esta función no debería cambiar spouse_id si ya está asignado o si la lógica viene de editar.php
+    $spouse_id = isset($data['personData']['spouseId']) && $data['personData']['spouseId'] !== null ? (int)$data['personData']['spouseId'] : null;
 
 
     $set_clauses = [];
     $bind_params_values = [];
     $bind_params_types = '';
 
-    // Utiliza variables intermedias para asegurar que se pasen por referencia
-    // PHP 5.3+ permite pasar literales y resultados de funciones, pero bind_param es especial.
-    // Es más seguro usar una variable para cada valor.
-    // **NOTA**: Ya estas variables fueron declaradas al inicio de la función con los valores finales.
-    //          Las referencias a ellas son suficientes.
+    // Añadir solo los campos que no son nulos para evitar actualizar innecesariamente con NULL
+    // O si quieres permitir que se borren, entonces siempre inclúyelos.
+    // Para simplificar, asumiremos que todos los campos del formulario se deben actualizar.
+    // Si un campo es opcional y se envía vacío, se guarda como NULL.
 
-    // No necesitas redeclarar $bind_name, etc., si ya están definidas arriba con los valores.
-    // Solo necesitamos asegurarnos de que se añade la referencia al array.
+    $set_clauses[] = "name = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$name;
 
-    // Si ya tienes:
-    // $name = !empty($data['name']) ? $data['name'] : null;
-    // ...
-    // $spouse_id = isset($data['spouseId']) && $data['spouseId'] !== null ? (int)$data['spouseId'] : null;
-    // $id = (int)$data['id']; // esta ya es una variable
+    $set_clauses[] = "relationship = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$relationship;
 
+    $set_clauses[] = "rut = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$rut;
 
-    if ($name !== null) {
-        $set_clauses[] = "name = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$name;
-    } else {
-        $set_clauses[] = "name = NULL";
-    }
-    if ($relationship !== null) {
-        $set_clauses[] = "relationship = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$relationship;
-    } else {
-        $set_clauses[] = "relationship = NULL";
-    }
-    if ($rut !== null) {
-        $set_clauses[] = "rut = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$rut;
-    } else {
-        $set_clauses[] = "rut = NULL";
-    }
-    if ($gender !== null) {
-        $set_clauses[] = "gender = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$gender;
-    } else {
-        $set_clauses[] = "gender = NULL";
-    }
-    if ($dob !== null) {
-        $set_clauses[] = "dob = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$dob;
-    } else {
-        $set_clauses[] = "dob = NULL";
-    }
-    if ($dom !== null) {
-        $set_clauses[] = "dom = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$dom;
-    } else {
-        $set_clauses[] = "dom = NULL";
-    }
-    if ($dod !== null) {
-        $set_clauses[] = "dod = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$dod;
-    } else {
-        $set_clauses[] = "dod = NULL";
-    }
-    if ($photo !== null) {
-        $set_clauses[] = "photo = ?";
-        $bind_params_types .= 's';
-        $bind_params_values[] = &$photo;
-    } else {
-        $set_clauses[] = "photo = NULL";
-    }
+    $set_clauses[] = "gender = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$gender;
 
-    // Manejo especial para spouse_id que es INT
-    if ($spouse_id !== null) {
-        $set_clauses[] = "spouse_id = ?";
-        $bind_params_types .= 'i';
-        $bind_params_values[] = &$spouse_id; // ¡Asegúrate de que este & esté aquí!
-    } else {
-        $set_clauses[] = "spouse_id = NULL";
-    }
+    $set_clauses[] = "dob = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$dob;
+
+    $set_clauses[] = "dom = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$dom;
+
+    $set_clauses[] = "dod = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$dod;
+
+    $set_clauses[] = "photo = ?";
+    $bind_params_types .= 's';
+    $bind_params_values[] = &$photo;
+
+    // Solo actualiza spouse_id si el frontend lo envía explícitamente (ej: al vincular)
+    // Si viene de 'editar.php', el spouse_id ya se manejará allí o se mantendrá.
+    // Si esta función es usada por el modal "Agregar Persona" en modo "editar", entonces sí se necesita.
+    $set_clauses[] = "spouse_id = ?";
+    $bind_params_types .= 'i';
+    $bind_params_values[] = &$spouse_id;
+    
 
     $sql = "UPDATE people SET " . implode(', ', $set_clauses) . " WHERE id = ?";
     $bind_params_types .= 'i'; // Tipo para el ID
     $bind_params_values[] = &$id; // ¡Asegúrate de que este & esté aquí!
+
 
     $stmt = $conn->prepare($sql);
 
@@ -333,39 +289,6 @@ function update_person($conn, $data)
         echo json_encode(['success' => false, 'message' => 'Error al preparar la sentencia UPDATE: ' . $conn->error]);
         return;
     }
-
-    // Preparar el primer argumento para bind_param (la cadena de tipos)
-    $args = [$bind_params_types];
-    // Añadir el resto de los valores por referencia
-    // Este bucle ya debería estar bien si los valores se añaden con & al $bind_params_values.
-    // Sin embargo, si los valores se añadieron como COPIAS a $bind_params_values,
-    // este bucle también fallaría. La forma más segura es re-iterar sobre las variables originales.
-
-    // Opción 1: (Ideal) Asegúrate que $bind_params_values ya contenga las referencias desde el inicio
-    // (Esta es la que hemos estado intentando conseguir)
-    // El código de arriba con `&$variable` debería lograr esto.
-
-    // Opción 2: Si por alguna razón la primera opción no funciona, puedes hacer esto (menos eficiente):
-    // Descomenta la sección `bind_params_values[] = &$bind_name;` etc. y usa esto:
-    /*
-    $temp_bind_values = [];
-    if ($name !== null) $temp_bind_values[] = &$name;
-    if ($relationship !== null) $temp_bind_values[] = &$relationship;
-    // ... repetir para todos los campos hasta photo
-    if ($photo !== null) $temp_bind_values[] = &$photo;
-
-    // Y luego para spouse_id y id:
-    if ($spouse_id !== null) $temp_bind_values[] = &$spouse_id;
-    $temp_bind_values[] = &$id; // Para el ID final
-
-    // Ahora, $bind_params_values debe ser $temp_bind_values
-    $bind_params_values = $temp_bind_values; // Reemplaza
-    */
-
-    // Reconfirmamos la implementación correcta de `call_user_func_array` con referencias
-    // Esta parte del código ya estaba bien si los elementos de $bind_params_values eran referencias.
-    // El warning indica que en algún punto, se insertaron valores, no referencias.
-    // Asegurémonos de que el array $args se construye correctamente con referencias.
 
     $args = [];
     $args[] = $bind_params_types; // El primer elemento es la cadena de tipos
@@ -643,11 +566,6 @@ function link_existing_parent_child($conn, $data, $pdo)
         return;
     }
 
-    // Verificar si ya existe un vínculo que convertiría a uno en ancestro del otro
-    // Esto es para prevenir bucles en el árbol (ej. A es padre de B, y B es padre de A).
-    // Esto sería una comprobación compleja que podría requerir una función recursiva de SQL.
-    // Por ahora, solo evitamos A->A.
-
     if (add_parent_child_link($conn, $pdo, $parent_id, $child_id)) {
         echo json_encode(['success' => true, 'message' => 'Vínculo padre-hijo creado correctamente.']);
     } else {
@@ -659,3 +577,5 @@ function link_existing_parent_child($conn, $data, $pdo)
 
 // Cierra la conexión a la base de datos al final del script
 $conn->close();
+
+?>

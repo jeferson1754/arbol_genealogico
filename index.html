@@ -523,11 +523,30 @@
 
             // --- 1. Crear el contenido del nodo (persona y cónyuge si existe) ---
            let nodeContent = '<div class="node-content">';
+
+        // Función auxiliar para acortar el nombre
+            const getShortName = (fullName) => {
+                if (!fullName) return '';
+                const parts = fullName.split(' ').filter(part => part.trim() !== '');
+                if (parts.length === 0) return '';
+                
+                let shortName = parts[0]; // Primer nombre
+                if (parts.length > 1) {
+                    // Si hay más de una parte, intentamos encontrar el primer apellido
+                    // Suponemos que el primer apellido es la segunda palabra
+                    // Esto puede no ser infalible para todos los nombres, pero es un buen inicio.
+                    shortName += ' ' + parts[2];
+                }
+                return shortName;
+            };
+
+          const mainPersonShortName = getShortName(person.name); // <--- MODIFICACIÓN
             const mainPersonHtml = `
                 <div class="member" data-id="${person.id}">
-                    <div class="name">${person.name}</div>
-                    <div class="relationship">${person.relationship || ''}
-                    </div>${ageInTree} </div>
+                    <div class="name">${mainPersonShortName}</div>
+                    <div class="relationship">${person.relationship || ''}</div>
+                    ${ageInTree}
+                </div>
             `;
 
                         if (person.spouseId && familyData.has(person.spouseId)) {
@@ -552,11 +571,13 @@
                         } catch(e) { console.error("Error calculating spouse age for tree node", e); }
                     }
 
+                    const spouseShortName = getShortName(spouse.name); // <--- MODIFICACIÓN
                     const spouseHtml = `
                         <div class="member" data-id="${spouse.id}">
-                            <div class="name">${spouse.name}1</div>
+                            <div class="name">${spouseShortName}</div>
                             <div class="relationship">${spouse.relationship || ''}</div>
-                            ${spouseAgeInTree} </div>
+                            ${spouseAgeInTree}
+                        </div>
                     `;
                     const spouseLine = '<div class="spouse-line"></div>';
 

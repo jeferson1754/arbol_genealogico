@@ -123,13 +123,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     $stmt_update = $conn->prepare(
-        "UPDATE people SET name=?, relationship=?, rut=?, gender=?, dob=?, dom=?, dod=?, photo=?, spouse_id=? WHERE id=?"
+        "UPDATE people SET name=?, rut=?, gender=?, dob=?, dom=?, dod=?, photo=?, spouse_id=? WHERE id=?"
     );
 
     if ($stmt_update) {
         // Asignar variables directamente para bind_param
         $bind_name = $updated_name;
-        $bind_relationship = $updated_relationship;
         $bind_rut = $updated_rut;
         $bind_gender = $updated_gender;
         $bind_dob = $updated_dob;
@@ -148,12 +147,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Mantendremos "ssssssssii" asumiendo que spouse_id es INT NULL y que mysqli lo maneja.
         // Si sigues teniendo warnings con 'i' para NULL, esa línea de types debe cambiar a 's'.
-        $types = "ssssssssi"; // 8 strings (hasta photo), 1 integer (spouse_id)
+        $types = "sssssssi"; // 8 strings (hasta photo), 1 integer (spouse_id)
 
         // Aquí pasamos las referencias para cada parámetro
         $params = [
             &$bind_name,
-            &$bind_relationship,
             &$bind_rut,
             &$bind_gender,
             &$bind_dob,
@@ -248,7 +246,6 @@ $conn->close();
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input class="w-full bg-gray-100 text-gray-900 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" name="name" placeholder="Nombre Completo*" value="<?php echo $name; ?>" required>
-                <input class="w-full bg-gray-100 text-gray-900 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" name="relationship" placeholder="Relación (Ej: Tío, Prima)" value="<?php echo $relationship; ?>">
                 <input class="w-full bg-gray-100 text-gray-900 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" name="rut" placeholder="RUT" value="<?php echo $rut; ?>">
                 <select name="gender" class="w-full bg-gray-100 text-gray-900 p-3 rounded-lg focus:outline-none focus:shadow-outline">
                     <option value="Masculino" <?php echo ($gender === 'Masculino') ? 'selected' : ''; ?>>Masculino</option>

@@ -133,11 +133,10 @@ function handle_post_request($conn, $pdo)
 function insert_new_person($conn, $person_data)
 {
     $stmt = $conn->prepare(
-        "INSERT INTO people (name, relationship, rut, gender, dob, dom, dod, photo, spouse_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO people (name, rut, gender, dob, dom, dod, photo, spouse_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     );
     // Coalesce empty strings to null for database
     $name = $person_data['name'] ?? null;
-    $relationship = $person_data['relationship'] ?? null;
     $rut = $person_data['rut'] ?? null;
     $gender = $person_data['gender'] ?? null;
     // Convertir fechas vacías a NULL para la base de datos
@@ -151,7 +150,7 @@ function insert_new_person($conn, $person_data)
     // Con mysqli, para bindear NULLs a tipos 'i' (integer), la variable DEBE ser realmente NULL.
     // Si la columna spouse_id es INT y permite NULL, esto debería funcionar.
     // El tipo 's' puede aceptar NULL, pero 'i' es más estricto.
-    $stmt->bind_param("ssssssssi", $name, $relationship, $rut, $gender, $dob, $dom, $dod, $photo, $spouse_id);
+    $stmt->bind_param("sssssssi", $name, $rut, $gender, $dob, $dom, $dod, $photo, $spouse_id);
    
 
     if ($stmt->execute()) {
@@ -216,7 +215,6 @@ function update_person($conn, $data)
 
     // Mapear los datos del frontend a variables PHP, convirtiendo vacíos a null
     $name = !empty($data['personData']['name']) ? $data['personData']['name'] : null;
-    $relationship = !empty($data['personData']['relationship']) ? $data['personData']['relationship'] : null;
     $rut = !empty($data['personData']['rut']) ? $data['personData']['rut'] : null;
     $gender = !empty($data['personData']['gender']) ? $data['personData']['gender'] : null;
     $dob = (!empty($data['personData']['dob']) && $data['personData']['dob'] !== '0000-00-00') ? $data['personData']['dob'] : null;
@@ -240,10 +238,6 @@ function update_person($conn, $data)
     $set_clauses[] = "name = ?";
     $bind_params_types .= 's';
     $bind_params_values[] = &$name;
-
-    $set_clauses[] = "relationship = ?";
-    $bind_params_types .= 's';
-    $bind_params_values[] = &$relationship;
 
     $set_clauses[] = "rut = ?";
     $bind_params_types .= 's';

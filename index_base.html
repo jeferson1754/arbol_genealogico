@@ -135,7 +135,6 @@
             flex-direction: column; /* Apilar elementos verticalmente */
             align-items: center; /* Centrar horizontalmente */
         }
-
         .tree li .member:hover, .tree li .member.selected {
             background-color: #e0f2fe;
             border-color: #0ea5e9;
@@ -148,11 +147,13 @@
             margin-top: 5px; /* Espacio entre la imagen y el nombre */
         }
 
+
         .member .relationship {
             font-size: 0.8em;
             color: #666;
         }
 
+                /* Nuevo estilo para la edad en el nodo del árbol */
         .member .age {
             font-size: 0.7em; /* Un poco más pequeña que la relación */
             color: #999;
@@ -166,7 +167,7 @@
             background-color: #ccc;
         }
 
-        /* Estilos para el panel de detalles para que sea sticky y responsivo */
+         /* Estilos para el panel de detalles para que sea sticky y responsivo */
         @media (min-width: 1024px) { /* lg breakpoint */
             .sticky-lg {
                 position: sticky;
@@ -174,7 +175,7 @@
             }
         }
 
-        /* --- ESTILOS PARA RESALTADO DE ANCESTROS (Mantenidos) --- */
+        /* --- NUEVOS ESTILOS PARA RESALTADO DE ANCESTROS --- */
         .member.highlighted {
             background-color: #d1fae5; /* Un verde claro */
             border-color: #10b981; /* Borde verde más oscuro */
@@ -195,7 +196,8 @@
         .node-content.highlighted-path .spouse-line {
             background-color: #10b981 !important;
         }
-        
+
+
         /* Para asegurar que el cónyuge del ancestro directo también se vea resaltado visualmente */
         .member.ancestor-spouse-highlight {
             background-color: #d1fae5; /* Mismo verde para el cónyuge del ancestro */
@@ -206,21 +208,21 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div class="mx-auto p-4 md:p-8">
-        <header class="mb-8 relative"> 
-            <div class="flex justify-between items-start"> 
-                <div class="flex-grow"></div> 
-                
-                <div class="text-center"> 
-                    <h1 class="text-3xl md:text-5xl font-bold text-gray-800">Árbol Genealógico Familiar</h1>
-                    <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
-                </div>
+    <div class=" mx-auto p-4 md:p-8">
+<header class="mb-8 relative"> 
+    <div class="flex justify-between items-start"> 
+        <div class="flex-grow"></div> 
+        
+        <div class="text-center"> 
+            <h1 class="text-3xl md:text-5xl font-bold text-gray-800">Árbol Genealógico Familiar</h1>
+            <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
+        </div>
 
-                <div class="flex-grow text-right">
-                    <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1">Buscar Personas</a>
-                </div>
-            </div>
-        </header>
+        <div class="flex-grow text-right">
+            <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap">Buscar Personas</a>
+        </div>
+    </div>
+</header>
         <div class="flex flex-col lg:flex-row gap-8">
             <main class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
                 <div id="family-tree-container" class="tree-container">
@@ -230,108 +232,108 @@
             </main>
 
             <aside class="w-full lg:w-1/4">
-                <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky-lg">
+                <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky top-8">
                     <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-center">Detalles de la Persona</h2>
                     <div id="details-content" class="text-center">
                         <p class="text-gray-500">Selecciona una persona para ver su información.</p>
                     </div>
                     <div id="edit-buttons" class="mt-6 hidden">
-                        <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Descendencia</button>
-                        <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Ascendencia</button>
-                        <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Gestionar Relaciones</button> 
-                         <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block transition duration-300 ease-in-out transform hover:-translate-y-1">Editar Persona</a>
+                        <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Agregar Descendencia</button>
+                        <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Agregar Ascendencia</button>
+                        <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Gestionar Relaciones</button> 
+                         <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block">Editar Persona</a>
                     </div>
                 </div>
             </aside>
         </div>
     </div>
     
-    <div id="person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
-      <div class="relative top-0 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white animate-fade-in-up">
+    <div id="person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+      <div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
         <div class="mt-3">
-          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Agregar Persona</h3>
+          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Agregar/Editar Persona</h3>
           <form id="person-form">
-            <input type="hidden" id="person-id"> 
+            <input type="hidden" id="person-id">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="name" placeholder="Nombre Completo*" required>
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="relationship" placeholder="Relación (Ej: Tío, Prima)">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="rut" placeholder="RUT">
-              <select id="gender" class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="name" placeholder="Nombre Completo*" required>
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="relationship" placeholder="Relación (Ej: Tío, Prima)">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="rut" placeholder="RUT">
+              <select id="gender" class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline">
                 <option value="Masculino">Masculino</option>
                 <option value="Femenino">Femenino</option>
                 <option value="Otro">Otro</option>
               </select>
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dob" placeholder="Fecha de Nacimiento">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dom" placeholder="Fecha de Matrimonio">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dod" placeholder="Fecha de Fallecimiento">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="photo" placeholder="URL de la Foto">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dob" placeholder="Fecha de Nacimiento">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dom" placeholder="Fecha de Matrimonio">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dod" placeholder="Fecha de Fallecimiento">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="photo" placeholder="URL de la Foto">
             </div>
             
             <div class="mt-6 flex justify-end gap-4">
-              <button type="button" id="cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300 ease-in-out">Cancelar</button>
-              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 ease-in-out">Guardar</button>
+              <button type="button" id="cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Guardar</button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <div id="relationships-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
-        <div class="relative top-0 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white animate-fade-in-up">
+    <div id="relationships-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Gestionar Relaciones de <span id="relationship-person-name" class="font-bold"></span></h3>
                 
-                <div class="space-y-4">
+    <div class="space-y-4">
                     <div>
-                        <h4 class="text-md font-semibold mb-2 text-gray-700">Cónyuge</h4>
-                        <div id="current-spouse-display" class="flex items-center justify-between p-3 bg-gray-100 rounded-md border border-gray-200">
+                        <h4 class="text-md font-semibold mb-2">Cónyuge</h4>
+                        <div id="current-spouse-display" class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                             <p class="text-gray-500">No hay cónyuge asignado.</p>
                         </div>
                         <div class="mt-2 flex gap-2">
-                            <button id="add-new-spouse-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition duration-300 ease-in-out">Agregar Nuevo</button>
-                            <button id="link-existing-spouse-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm transition duration-300 ease-in-out">Vincular Existente</button>
+                            <button id="add-new-spouse-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
+                            <button id="link-existing-spouse-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
                         </div>
                     </div>
 
                     <div>
-                        <h4 class="text-md font-semibold mb-2 text-gray-700">Padres</h4>
+                        <h4 class="text-md font-semibold mb-2">Padres</h4>
                         <div id="current-parents-list" class="space-y-2">
                             <p class="text-gray-500">No hay padres asignados.</p>
                         </div>
                         <div class="mt-2 flex gap-2">
-                            <button id="add-new-parent-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition duration-300 ease-in-out">Agregar Nuevo</button>
-                            <button id="link-existing-parent-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm transition duration-300 ease-in-out">Vincular Existente</button>
+                            <button id="add-new-parent-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
+                            <button id="link-existing-parent-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
                         </div>
                     </div>
 
                     <div>
-                        <h4 class="text-md font-semibold mb-2 text-gray-700">Hijos/as</h4>
+                        <h4 class="text-md font-semibold mb-2">Hijos/as</h4>
                         <div id="current-children-list" class="space-y-2">
                             <p class="text-gray-500">No hay hijos/as asignados.</p>
                         </div>
                         <div class="mt-2 flex gap-2">
-                            <button id="add-new-child-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition duration-300 ease-in-out">Agregar Nuevo</button>
-                            <button id="link-existing-child-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm transition duration-300 ease-in-out">Vincular Existente</button>
+                            <button id="add-new-child-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
+                            <button id="link-existing-child-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="mt-6 flex justify-end">
-                    <button type="button" id="close-relationships-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300 ease-in-out">Cerrar</button>
+                    <button type="button" id="close-relationships-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="select-person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
-        <div class="relative top-0 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white animate-fade-in-up">
+    <div id="select-person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="select-modal-title">Seleccionar Persona</h3>
-                <input type="text" id="person-search-input" placeholder="Buscar por nombre..." class="w-full bg-gray-100 text-gray-900 p-2 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200 mb-4">
+                <input type="text" id="person-search-input" placeholder="Buscar por nombre..." class="w-full bg-gray-100 text-gray-900 p-2 rounded-lg focus:outline-none focus:shadow-outline mb-4">
                 <div id="person-list-container" class="max-h-60 overflow-y-auto border border-gray-200 rounded-md">
                     </div>
                 <div class="mt-4 flex justify-end">
-                    <button type="button" id="cancel-select-person-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300 ease-in-out">Cancelar</button>
+                    <button type="button" id="cancel-select-person-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -341,18 +343,19 @@
     <script type="module">
         let familyData = new Map();
         let selectedPersonId = null;
-        let modalMode = ''; 
-        let relatedPersonId = null; 
-        let relatedPersonSpouseId = null; 
+        let modalMode = ''; // Puede ser 'add_descendant', 'add_ancestor', 'add_spouse', 'edit_person'
+        let relatedPersonId = null; // El ID de la persona seleccionada al abrir el modal para agregar
+        let relatedPersonSpouseId = null; // El ID del cónyuge de la persona seleccionada
+        // Nuevas variables para el modal de selección
+        let selectPersonMode = ''; // 'link_spouse', 'link_parent', 'link_child'
+        let personToLinkToId = null; // La persona a la que se vinculará la seleccionada
 
-        let selectPersonMode = ''; 
-        let personToLinkToId = null; 
 
 
         const API_URL = 'api.php';
 
        
-        async function loadFamilyData() {
+                async function loadFamilyData() {
             try {
                 const response = await fetch(API_URL, {
                     method: 'GET',
@@ -379,27 +382,24 @@
                 });
 
                 console.log('Datos cargados en familyData (con IDs parseados):', familyData);
+                renderTree();
                 
+                // --- NUEVA LÓGICA PARA LEER EL ID DE LA URL ---
                 const urlParams = new URLSearchParams(window.location.search);
                 const idFromUrl = urlParams.get('personId');
 
-                // Lógica de carga y selección de la persona principal para el árbol
                 if (idFromUrl && familyData.has(parseInt(idFromUrl))) {
-                    selectedPersonId = parseInt(idFromUrl); 
-                } else if (familyData.size > 0) {
-                    if (familyData.has(1)) { 
-                        selectedPersonId = 1; // Priorizar ID 1 si existe
-                    } else { 
-                        selectedPersonId = Array.from(familyData.keys())[0]; // Tomar la primera persona si no hay ID 1
-                    }
-                } else {
-                    selectedPersonId = null; // No hay personas en la base de datos
-                }
-
-                renderTree(); // Llama a renderTree después de decidir la persona principal
-                
-                if (selectedPersonId) {
+                    selectedPersonId = parseInt(idFromUrl); // Establece el selectedPersonId global
                     showPersonDetails(selectedPersonId);
+                } else if (familyData.size > 0) {
+                    // Si no hay ID en la URL o es inválido, selecciona la primera persona
+                    // Opcional: Puedes intentar seleccionar una persona "principal" si existe, como 'Jefferson' (ID 1)
+                    if (familyData.has(1)) { // Si existe una persona con ID 1 (ej. 'Jefferson')
+                        showPersonDetails(1);
+                    } else { // Si no, selecciona el primer elemento disponible
+                        const firstPersonId = Array.from(familyData.keys())[0]; 
+                        showPersonDetails(firstPersonId);
+                    }
                 } else {
                     document.getElementById('details-content').innerHTML = '<p class="text-gray-500">No hay datos en el árbol. ¡Añade la primera persona!</p>';
                     document.getElementById('edit-buttons').classList.add('hidden');
@@ -411,7 +411,7 @@
             }
         }
 
-        async function sendDataToAPI(actionData) {
+         async function sendDataToAPI(actionData) {
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -443,7 +443,7 @@
             }
         }
 
-        // Función auxiliar para obtener todos los ancestros de una persona
+         // Función auxiliar para obtener todos los ancestros de una persona
         function getAllAncestors(personId) {
             const ancestors = new Set();
             let queue = [personId];
@@ -463,138 +463,136 @@
             return Array.from(ancestors);
         }
 
-        // --- INICIO DE CAMBIOS EN renderTree ---
+
+        async function updatePersonInDB(personData) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(personData),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Persona actualizada con éxito:', result.message);
+                    await loadFamilyData(); // Recarga los datos para reflejar los cambios
+                } else {
+                    console.error('Error al actualizar la persona en la base de datos:', result.message);
+                    alert('Error al guardar: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error de red o servidor al actualizar:', error);
+                alert('Error de conexión o servidor al guardar los datos.');
+            }
+        }
+
+
         function renderTree() {
             const container = document.querySelector('.tree');
             if (!container) return;
 
-            container.innerHTML = ''; 
+            console.log('Iniciando renderTree. Total de personas en familyData:', familyData.size);
 
-            if (!selectedPersonId || !familyData.has(selectedPersonId)) {
-                container.innerHTML = '<p class="text-gray-500 text-center">Selecciona una persona o agrega la primera para construir el árbol.</p>';
-                return;
-            }
+            let potentialRoots = [];
 
-            const centralPerson = familyData.get(selectedPersonId);
-            let rootPersonForDisplay = centralPerson;
-
-            // Encontrar la(s) persona(s) raíz del árbol a renderizar
-            // Estrategia: Empezar con los padres de la persona central.
-            // Si tiene padres, la raíz del árbol será esa pareja de padres.
-            // Si no tiene padres, la persona central es la raíz.
-            // Esto permite que ambas líneas ancestrales (paterna y materna) se dibujen.
-
-            let potentialRoots = []; // Aquí guardaremos las personas de la generación más alta a renderizar
-
-            if (centralPerson.parentIds && centralPerson.parentIds.length > 0) {
-                // Obtener todos los IDs de los padres de la persona central
-                const centralParentsIds = centralPerson.parentIds.filter(pId => familyData.has(pId));
-
-                // Para cada padre de la persona central, encontrar su ancestro más alto
-                const highestAncestorsOfCentralParents = new Set();
-                centralParentsIds.forEach(parentId => {
-                    let currentAncestor = familyData.get(parentId);
-                    while (currentAncestor) {
-                        let hasParentsInLoadedData = false;
-                        if (Array.isArray(currentAncestor.parentIds) && currentAncestor.parentIds.length > 0) {
-                            const parentsAvailable = currentAncestor.parentIds.filter(pId => familyData.has(pId));
-                            if (parentsAvailable.length > 0) {
-                                hasParentsInLoadedData = true;
-                                currentAncestor = familyData.get(parentsAvailable[0]); // Sube por el primer padre
-                            } else {
-                                break; 
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                    if (currentAncestor) {
-                        highestAncestorsOfCentralParents.add(currentAncestor.id);
-                    }
-                });
-
-                // Si se encontraron ancestros más altos para los padres de la persona central,
-                // esas serán nuestras raíces a renderizar.
-                if (highestAncestorsOfCentralParents.size > 0) {
-                    highestAncestorsOfCentralParents.forEach(id => potentialRoots.push(familyData.get(id)));
-                } else {
-                    // Si los padres de la persona central no tienen ancestros más altos (son raíces),
-                    // entonces los padres mismos son las raíces.
-                    centralParentsIds.forEach(id => potentialRoots.push(familyData.get(id)));
+            familyData.forEach(person => {
+                // Una persona es "potencialmente raíz" si no tiene 'parentIds' o si sus padres NO están en el 'familyData' actual.
+                // Si 'parentIds' está vacío o no es un array válido, consideramos que no tiene padres cargados.
+                let hasParentsInLoadedData = false;
+                if (Array.isArray(person.parentIds) && person.parentIds.length > 0) {
+                    // Comprobamos si AL MENOS UNO de sus padres existe en nuestro familyData
+                    hasParentsInLoadedData = person.parentIds.some(pId => familyData.has(pId));
                 }
+                
+                if (!hasParentsInLoadedData) {
+                    potentialRoots.push(person);
+                }
+            });
+
+            console.log('Paso 1: Personas con parentIds vacíos o padres no cargados (potentialRoots):', potentialRoots.map(p => p.name + ' (ID: ' + p.id + ')'));
+
+            let rootsToRender = []; 
+            const processedIds = new Set(); // Para evitar duplicados en el árbol
+
+            // Ordenamos las raíces potenciales para procesar de forma consistente (ej. ID más bajo primero)
+            potentialRoots.sort((a, b) => a.id - b.id);
+
+            potentialRoots.forEach(person => {
+                if (processedIds.has(person.id)) {
+                    return; // Ya fue procesada como parte de una pareja o ya se añadió
+                }
+
+                // Si la persona tiene un cónyuge y el cónyuge también es una raíz potencial y no ha sido procesado
+                if (person.spouseId && familyData.has(person.spouseId)) {
+                    const spouse = familyData.get(person.spouseId);
+                    let spouseHasParentsInLoadedData = false;
+                    if (Array.isArray(spouse.parentIds) && spouse.parentIds.length > 0) {
+                        spouseHasParentsInLoadedData = spouse.parentIds.some(pId => familyData.has(pId));
+                    }
+
+                    // Si el cónyuge también es una "raíz" y no lo hemos procesado
+                    if (!spouseHasParentsInLoadedData && !processedIds.has(spouse.id)) {
+                        // Ambos forman una pareja raíz. Agregamos a la persona actual (ya ordenada por ID)
+                        rootsToRender.push(person);
+                        processedIds.add(person.id);
+                        processedIds.add(spouse.id); // Marcar también al cónyuge como procesado
+                        return;
+                    }
+                }
+                
+                // Si la persona es una raíz potencial y no fue procesada como parte de una pareja raíz
+                if (!processedIds.has(person.id)) {
+                     rootsToRender.push(person);
+                     processedIds.add(person.id);
+                }
+            });
+
+            // Ordenar las raíces finales para una visualización consistente (ej. bisabuelos primero)
+            rootsToRender.sort((a, b) => {
+                const getGenerationRank = (p) => {
+                    // Criterios de ordenación más específicos para generaciones
+                    if (p.relationship && p.relationship.includes('Bisabuelo')) return 1;
+                    if (p.relationship && p.relationship.includes('Bisabuela')) return 1;
+                    if (p.relationship && p.relationship.includes('Abuelo')) return 2;
+                    if (p.relationship && p.relationship.includes('Abuela')) return 2;
+                    if (p.relationship && (p.relationship.includes('Padre') || p.relationship.includes('Madre'))) return 3;
+                    if (p.relationship && p.relationship.includes('Cónyuge')) return 4; // Cónyuges de la generación principal
+                    if (p.relationship && p.relationship.includes('Hijo/a')) return 5;
+                    if (p.relationship && p.relationship.includes('Nieto/a')) return 6;
+                    if (p.relationship && p.relationship.includes('Bisnieto/a')) return 7;
+                    return 99; // Otros, al final
+                };
+                const rankA = getGenerationRank(a);
+                const rankB = getGenerationRank(b);
+
+                if (rankA !== rankB) {
+                    return rankA - rankB;
+                }
+                return a.name.localeCompare(b.name); // Fallback: ordenar alfabéticamente por nombre
+            });
+
+            console.log('Paso 2: Personas seleccionadas para el renderizado principal (rootsToRender):', rootsToRender.map(p => p.name + ' (ID: ' + p.id + ')'));
+
+            if (rootsToRender.length > 0) {
+                container.innerHTML = '<ul>' + rootsToRender.map(person => generatePersonHtml(person)).join('') + '</ul>';
             } else {
-                // Si la persona central no tiene padres, ella misma es la raíz del árbol
-                potentialRoots.push(centralPerson);
+                container.innerHTML = '<p class="text-gray-500">No se pudieron encontrar personas raíz para renderizar el árbol.</p>';
             }
-            
-            // Ordenar las raíces potenciales para una visualización consistente
-            potentialRoots.sort((a, b) => {
-                // Puedes refinar esta lógica de ordenación si tienes preferencias
-                // por ejemplo, si quieres que el lado paterno vaya antes que el materno, etc.
-                // Por ahora, simplemente por ID o nombre.
-                return a.id - b.id; // O a.name.localeCompare(b.name);
-            });
-
-            // Preparar el HTML del árbol. Queremos una única lista <ul> en el nivel superior
-            // que contenga todas las ramas raíz de los ancestros.
-            let treeHtml = '<ul>';
-            const renderedRootNodes = new Set(); // Para evitar duplicados si una persona se considera raíz por dos caminos
-
-            potentialRoots.forEach(root => {
-                if (!renderedRootNodes.has(root.id)) {
-                    treeHtml += generatePersonHtml(root, renderedRootNodes); // Pasar el set de IDs ya renderizados
-                    // Si el nodo raíz tiene un cónyuge y el cónyuge no ha sido renderizado como parte de otra raíz,
-                    // y el cónyuge no tiene padres propios (es también una raíz)
-                    if (root.spouseId && familyData.has(root.spouseId)) {
-                        const spouse = familyData.get(root.spouseId);
-                        if (spouse && spouse.spouseId === root.id && !renderedRootNodes.has(spouse.id)) {
-                             // Si el cónyuge también es una "raíz" (no tiene padres que lo unan a una rama superior ya renderizada)
-                             // Y si no tiene padres cargados
-                            let spouseHasParentsInLoadedData = false;
-                            if (Array.isArray(spouse.parentIds) && spouse.parentIds.length > 0) {
-                                spouseHasParentsInLoadedData = spouse.parentIds.some(pId => familyData.has(pId));
-                            }
-                            if (!spouseHasParentsInLoadedData) {
-                                // Aquí podrías ajustar si quieres que el cónyuge se renderice directamente
-                                // como un nodo hermano en el nivel superior, o si siempre se dibuja al lado del 'root' en generatePersonHtml
-                                // Para evitar duplicar el nodo si ya lo dibuja generatePersonHtml, este bloque es delicado.
-                                // La estrategia actual de generatePersonHtml ya debería dibujar el cónyuge si existe.
-                                // La idea es que `rootPersonForDisplay` sea el único punto de entrada a `generatePersonHtml`.
-                                // Por lo tanto, `potentialRoots` debería contener solo la verdadera raíz o raíces más altas del sub-árbol.
-                            }
-                        }
-                    }
-                }
-            });
-            treeHtml += '</ul>';
-
-            container.innerHTML = treeHtml;
             addClickListeners();
-            
-            setTimeout(() => {
-                const selectedMemberElement = document.querySelector(`.member[data-id="${selectedPersonId}"]`);
-                if (selectedMemberElement) {
-                    const treeContainer = document.getElementById('family-tree-container');
-                    const offsetLeft = selectedMemberElement.offsetLeft - (treeContainer.offsetWidth / 2) + (selectedMemberElement.offsetWidth / 2);
-                    treeContainer.scrollLeft = offsetLeft;
-
-                    const offsetTop = selectedMemberElement.offsetTop - (treeContainer.offsetHeight / 3); 
-                    treeContainer.scrollTop = offsetTop;
-                }
-            }, 100); 
         }
-        // --- FIN DE CAMBIOS EN renderTree ---
-
 
         // --- FUNCIÓN DE RENDERIZADO RECURSIVA ---
-        // Ahora `generatePersonHtml` también necesita un `renderedIds` Set para evitar dibujar duplicados
-        // y gestionar los hermanos correctamente en el mismo nivel.
-        function generatePersonHtml(person, renderedIds = new Set()) {
-            if (!person || renderedIds.has(person.id)) return ''; // Si ya fue renderizada, no la dibujes de nuevo
+        function generatePersonHtml(person) {
+            if (!person) return '';
 
-            renderedIds.add(person.id); // Marcar como renderizada
-
-            // Lógica para calcular la edad en el nodo del árbol (sin cambios)
+            // Lógica para calcular la edad en el nodo del árbol
             let ageInTree = '';
             if (person.dob && person.dob !== '0000-00-00' && (!person.dod || person.dod === '0000-00-00')) {
                 try {
@@ -606,16 +604,17 @@
                         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                             ageDiff--;
                         }
-                        if (ageDiff >= 0) { 
+                        if (ageDiff >= 0) { // Asegurar que la edad no sea negativa
                             ageInTree = `<div class="age">${ageDiff} años</div>`;
                         }
                     }
                 } catch(e) { console.error("Error calculating age for tree node", e); }
             }
 
-            let nodeContent = '<div class="node-content">';
+            // --- 1. Crear el contenido del nodo (persona y cónyuge si existe) ---
+           let nodeContent = '<div class="node-content">';
 
-            // Función auxiliar para acortar el nombre (sin cambios)
+        // Función auxiliar para acortar el nombre
             const getShortName = (fullName) => {
                 if (!fullName) return '';
                 const parts = fullName.split(' ').filter(part => part.trim() !== '');
@@ -631,32 +630,29 @@
                 return shortName;
             };
 
-            // Función auxiliar para la foto de perfil (sin cambios)
+            // Obtener la URL de la foto y generar la etiqueta <img>
             const getProfilePicHtml = (photoUrl, name) => {
-                const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
-                if (photoUrl && photoUrl.trim() !== '') {
-                    return `<img src="${photoUrl}" alt="Foto de ${name}" class="profile-pic" onerror="this.onerror=null;this.src='${defaultPhoto}';">`;
+                if (photoUrl) {
+                    return `<img src="${photoUrl}" alt="Foto de ${name}" class="profile-pic" onerror="this.onerror=null;this.src='https://placehold.co/60x60/E2E8F0/333333?text=Foto';">`;
                 }
-                return `<img src="${defaultPhoto}" alt="Sin foto" class="profile-pic">`;
+                // Placeholder genérico si no hay foto
+                return `<img src="https://placehold.co/60x60/E2E8F0/333333?text=Foto" alt="Sin foto" class="profile-pic">`;
             };
 
             const mainPersonShortName = getShortName(person.name);
-            const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name); 
+            const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name); // <--- NUEVA LÍNEA
             const mainPersonHtml = `
                 <div class="member" data-id="${person.id}">
-                    ${mainPersonProfilePic}
-                    <div class="name">${mainPersonShortName}</div>
+                    ${mainPersonProfilePic} <div class="name">${mainPersonShortName}</div>
                     <div class="relationship">${person.relationship || ''}</div>
                     ${ageInTree}
                 </div>
             `;
 
-            // Lógica para el cónyuge (sin cambios funcionales, solo pasar `renderedIds`)
-            if (person.spouseId && familyData.has(person.spouseId)) {
+                        if (person.spouseId && familyData.has(person.spouseId)) {
                 const spouse = familyData.get(person.spouseId);
-                // Solo si el vínculo es bidireccional y el cónyuge no ha sido renderizado ya
-                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id && !renderedIds.has(spouse.id)) { 
-                    renderedIds.add(spouse.id); // Marcar cónyuge como renderizado
+                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id) {
+                    // Lógica para calcular la edad del cónyuge en el nodo del árbol
                     let spouseAgeInTree = '';
                     if (spouse.dob && spouse.dob !== '0000-00-00' && (!spouse.dod || spouse.dod === '0000-00-00')) {
                         try {
@@ -676,11 +672,10 @@
                     }
 
                     const spouseShortName = getShortName(spouse.name);
-                    const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name); 
+                    const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name); // <--- NUEVA LÍNEA
                     const spouseHtml = `
                         <div class="member" data-id="${spouse.id}">
-                            ${spouseProfilePic}
-                            <div class="name">${spouseShortName}</div>
+                            ${spouseProfilePic} <div class="name">${spouseShortName}</div>
                             <div class="relationship">${spouse.relationship || ''}</div>
                             ${spouseAgeInTree}
                         </div>
@@ -693,39 +688,54 @@
                         nodeContent += spouseHtml + spouseLine + mainPersonHtml;
                     }
                 } else {
-                    nodeContent += mainPersonHtml; // Si el cónyuge ya se renderizó o no es recíproco/válido, solo muestra la persona principal
+                    nodeContent += mainPersonHtml; 
                 }
             } else {
                 nodeContent += mainPersonHtml;
             }
             nodeContent += '</div>';
 
-            // --- LÓGICA RECURSIVA PARA LOS HIJOS (modificada) ---
+            // --- 2. Recursivamente agregar los hijos ---
             let childrenHtml = '';
-            
-            // Recopilar los IDs de los padres de la persona actual y su cónyuge
-            const parentIdsOfCurrentUnit = new Set();
-            parentIdsOfCurrentUnit.add(person.id);
-            if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
-                parentIdsOfCurrentUnit.add(person.spouseId);
+            // Se obtienen los hijos de la persona principal o de su cónyuge si tienen hijos definidos
+            // Se combinan los childrenIds de la persona y su cónyuge para mostrar todos los hijos de la pareja.
+            let combinedChildrenIds = new Set();
+            if (person.childrenIds && person.childrenIds.length > 0) {
+                person.childrenIds.forEach(id => combinedChildrenIds.add(id));
             }
+            // Importante: También considerar los hijos del cónyuge si el cónyuge existe y tiene hijos listados.
+            if (person.spouseId && familyData.has(person.spouseId)) {
+                const spouse = familyData.get(person.spouseId);
+                if (spouse && spouse.childrenIds && spouse.childrenIds.length > 0) {
+                    spouse.childrenIds.forEach(id => combinedChildrenIds.add(id));
+                }
+            }
+            
+           const childrenToRender = Array.from(combinedChildrenIds)
+                                            .filter(childId => familyData.has(childId)) 
+                                            .map(childId => familyData.get(childId))
+                                            .filter(child => {
+                                                const childParents = child.parentIds || [];
+                                                const isChildOfThisPerson = childParents.includes(person.id);
+                                                
+                                                let isChildOfSpouse = false;
+                                                if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                                                    isChildOfSpouse = childParents.includes(person.spouseId);
+                                                }
+                                                return isChildOfThisPerson || isChildOfSpouse;
+                                            })
+                                            .sort((a,b) => a.name.localeCompare(b.name)); 
 
-            // Encontrar a todos los hijos que tienen a *CUALQUIERA* de los IDs en `parentIdsOfCurrentUnit` como padre.
-            const childrenOfThisFamilyUnit = Array.from(familyData.values())
-                                                .filter(child => {
-                                                    const childParents = child.parentIds || [];
-                                                    // Comprueba si alguno de los padres de la unidad actual es padre del hijo
-                                                    return Array.from(parentIdsOfCurrentUnit).some(pId => childParents.includes(pId));
-                                                })
-                                                // Excluir a los hijos que ya fueron renderizados por otra rama
-                                                .filter(child => !renderedIds.has(child.id))
-                                                .sort((a,b) => a.name.localeCompare(b.name));
+            console.log(`Persona: ${person.name}, Hijos encontrados para renderizar:`, childrenToRender.map(c => c.name));
 
-            if (childrenOfThisFamilyUnit.length > 0) {
+          if (childrenToRender.length > 0) {
                 childrenHtml += '<ul>';
-                // Ahora, para cada hijo, llamamos a generatePersonHtml para que se dibuje
-                childrenOfThisFamilyUnit.forEach(child => {
-                    childrenHtml += generatePersonHtml(child, renderedIds); // Pasa el mismo `renderedIds`
+                const renderedChildrenInThisBranch = new Set();
+                childrenToRender.forEach(child => {
+                    if (!renderedChildrenInThisBranch.has(child.id)) {
+                        childrenHtml += generatePersonHtml(child);
+                        renderedChildrenInThisBranch.add(child.id);
+                    }
                 });
                 childrenHtml += '</ul>';
             }
@@ -733,13 +743,12 @@
             return `<li>${nodeContent}${childrenHtml}</li>`;
         }
 
-
         function showPersonDetails(personId) {
-            selectedPersonId = personId; 
+            selectedPersonId = personId;
             const person = familyData.get(personId);
             const detailsContent = document.getElementById('details-content');
             const editButtons = document.getElementById('edit-buttons');
-            const editPersonLink = document.getElementById('edit-person-link');
+                  const editPersonLink = document.getElementById('edit-person-link');
 
             if (!person || !detailsContent || !editButtons || !editPersonLink) {
                 detailsContent.innerHTML = '<p class="text-gray-500">Selecciona una persona para ver su información.</p>';
@@ -748,74 +757,76 @@
                 return;
             }
             
-            // Re-renderizar el árbol para centrarlo en la persona seleccionada
-            // Esto es importante para que los "otros árboles" desaparezcan al seleccionar.
-            renderTree(); 
-
-            // Eliminar resaltado anterior de todos los elementos ANTES de aplicar el nuevo
+             // Eliminar resaltado anterior
             document.querySelectorAll('.member').forEach(el => el.classList.remove('selected', 'highlighted', 'ancestor-spouse-highlight'));
             document.querySelectorAll('.tree li').forEach(li => li.classList.remove('highlighted-path'));
             document.querySelectorAll('.node-content').forEach(nc => nc.classList.remove('highlighted-path'));
 
             // Resaltar la persona seleccionada
-            const currentSelectedMemberElement = document.querySelector(`.member[data-id="${personId}"]`);
-            if(currentSelectedMemberElement) {
-                currentSelectedMemberElement.classList.add('selected');
-            }
-
+            document.querySelector(`.member[data-id="${personId}"]`)?.classList.add('selected');
 
             // --- LÓGICA DE RESALTADO DE ANCESTROS DIRECTOS (MEJORADA PARA AMBAS RAMAS) ---
-            let queue = [personId]; 
-            const visitedForHighlight = new Set(); 
+            let queue = [personId]; // Usaremos una cola para BFS (Breadth-First Search)
+            const visited = new Set(); // Para evitar bucles infinitos y duplicados
 
             while (queue.length > 0) {
-                const currentId = queue.shift(); 
+                const currentId = queue.shift(); // Saca el primer ID de la cola
                 
-                if (visitedForHighlight.has(currentId)) {
-                    continue; 
+                if (visited.has(currentId)) {
+                    continue; // Si ya lo visitamos, omítelo
                 }
-                visitedForHighlight.add(currentId); 
+                visited.add(currentId); // Marca como visitado
 
                 const currentPerson = familyData.get(currentId);
                 if (!currentPerson) {
-                    continue; 
+                    continue; // Si la persona no existe en los datos cargados, omítela
                 }
 
+                // Resaltar el nodo de la persona actual
                 const memberElement = document.querySelector(`.member[data-id="${currentPerson.id}"]`);
                 if (memberElement) {
                     memberElement.classList.add('highlighted');
                 }
 
+                // Si la persona actual tiene un cónyuge, resaltarlo también (y sus líneas)
                 if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
                     const spouse = familyData.get(currentPerson.spouseId);
-                    if (spouse && spouse.spouseId === currentPerson.id) { 
+                    if (spouse.spouseId === currentPerson.id) { // Asegurarse que el vínculo es bidireccional
                         const spouseElement = document.querySelector(`.member[data-id="${currentPerson.spouseId}"]`);
                         if (spouseElement) {
                             spouseElement.classList.add('ancestor-spouse-highlight');
                         }
-                        const nodeContentElement = memberElement ? memberElement.closest('.node-content') : null;
+                        // Resaltar la línea horizontal entre la persona y su cónyuge
+                        const nodeContentElement = memberElement.closest('.node-content');
                         if (nodeContentElement) {
                             nodeContentElement.classList.add('highlighted-path');
                         }
                     }
                 }
                 
+                // Resaltar las líneas (LI) que suben desde esta persona (y su cónyuge) a sus padres
                 const liElement = memberElement ? memberElement.closest('li') : null;
                 if (liElement) {
                     liElement.classList.add('highlighted-path');
+                    // Si este LI tiene un UL padre (significa que hay un nivel superior), resalta la línea vertical
+                    const parentUl = liElement.parentNode;
+                    if (parentUl && parentUl.tagName === 'UL') {
+                        const parentLi = parentUl.closest('li');
+                        if (parentLi) {
+                            parentLi.classList.add('highlighted-path'); // Esto resalta la LI del padre
+                        }
+                    }
                 }
 
-                // Añadir los IDs de los padres a la cola para procesarlos en la siguiente iteración
-                const parentsOfCurrentPerson = Array.from(familyData.values())
-                    .filter(p => p.childrenIds && p.childrenIds.includes(currentId));
-
-                parentsOfCurrentPerson.forEach(parent => {
-                    if (!visitedForHighlight.has(parent.id) && familyData.has(parent.id)) {
-                        queue.push(parent.id);
-                    }
-                });
+                // Añadir los padres a la cola para procesarlos en la siguiente iteración
+                if (currentPerson.parentIds && Array.isArray(currentPerson.parentIds)) {
+                    currentPerson.parentIds.forEach(parentId => {
+                        if (!visited.has(parentId) && familyData.has(parentId)) {
+                            queue.push(parentId);
+                        }
+                    });
+                }
             }
-
 
             let age = '';
             let ageAtDeath = '';
@@ -831,7 +842,7 @@
                         }
                         if(person.dod && person.dod !== '0000-00-00') {
                             ageAtDeath = `(falleció a los ${ageDiff} años)`;
-                        } else if (ageDiff >= 0) { 
+                        } else {
                             age = `${ageDiff} años`;
                         }
                     }
@@ -842,10 +853,11 @@
                 if (!dateString || dateString === '0000-00-00') return 'No disponible';
                 try {
                     const date = new Date(dateString);
-                    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000); 
-                    if(isNaN(adjustedDate.getTime())) return 'Fecha inválida';
-                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                    return adjustedDate.toLocaleDateString('es-ES', options);
+                    // Ajuste para la zona horaria que puede afectar la fecha
+                    date.setDate(date.getDate() + 1); 
+                    if(isNaN(date.getTime())) return 'Fecha inválida';
+                    const options = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
+                    return date.toLocaleDateString('es-ES', options);
                 } catch(e) {
                     return 'Fecha inválida';
                 }
@@ -866,7 +878,7 @@
             `;
             editButtons.classList.remove('hidden');
 
-            editPersonLink.href = `editar.php?id=${personId}`;
+                        editPersonLink.href = `editar.php?id=${personId}`;
         }
 
         const modal = document.getElementById('person-modal');
@@ -877,13 +889,13 @@
         const currentSpouseDisplay = document.getElementById('current-spouse-display');
         const currentParentsList = document.getElementById('current-parents-list');
         const currentChildrenList = document.getElementById('current-children-list');
-        const addNewSpouseBtn = document.getElementById('add-new-spouse-btn'); 
-        const linkExistingSpouseBtn = document.getElementById('link-existing-spouse-btn');
-        const addNewParentBtn = document.getElementById('add-new-parent-btn'); 
-        const linkExistingParentBtn = document.getElementById('link-existing-parent-btn');
-        const addNewChildBtn = document.getElementById('add-new-child-btn'); 
-        const linkExistingChildBtn = document.getElementById('link-existing-child-btn');
+        const addnewSpouseBtn = document.getElementById('add-new-spouse-btn');
+             const linkExistingSpouseBtn = document.getElementById('link-existing-spouse-btn');
+        const addnewParentBtn = document.getElementById('add-new-parent-btn');
+                const linkExistingParentBtn = document.getElementById('link-existing-parent-btn');
+        const addnewChildBtn = document.getElementById('add-new-child-btn');
 
+                const linkExistingChildBtn = document.getElementById('link-existing-child-btn');
         const closeRelationshipsModalBtn = document.getElementById('close-relationships-modal-btn');
 
         const selectPersonModal = document.getElementById('select-person-modal');
@@ -904,7 +916,7 @@
             form.reset();
             personIdField.value = ''; 
 
-            if (mode.startsWith('add_') && personId !== null) {
+             if (mode.startsWith('add_') && personId !== null) {
                 const selectedPerson = familyData.get(personId);
                 if (!selectedPerson) return; 
                 relatedPersonSpouseId = selectedPerson.spouseId; 
@@ -920,11 +932,10 @@
                     form.querySelector('#relationship').value = 'Cónyuge'; 
                 }
             }
-            
             modal.classList.remove('hidden');
         }
 
-        async function openRelationshipsModal(personId) {
+      async function openRelationshipsModal(personId) {
             selectedPersonId = personId; 
             const person = familyData.get(personId);
             if (!person) return;
@@ -1017,7 +1028,6 @@
 
             relationshipsModal.classList.remove('hidden');
         }
-
          function openSelectPersonModal(mode, currentPersonId) {
             selectPersonMode = mode;
             personToLinkToId = currentPersonId; 
@@ -1037,7 +1047,8 @@
             selectPersonModal.classList.remove('hidden');
         }
 
-        function renderSelectablePeopleList(searchTerm = '', excludeId = null) {
+        // Función para renderizar la lista de personas en el modal de selección
+       function renderSelectablePeopleList(searchTerm = '', excludeId = null) {
             personListContainer.innerHTML = '';
             const filteredPeople = Array.from(familyData.values()).filter(p => 
                 p.id !== excludeId && 
@@ -1058,6 +1069,8 @@
             });
         }
         
+
+        // Event listener para el botón "Gestionar Relaciones"
         document.getElementById('manage-relationships-btn').addEventListener('click', () => {
             if (selectedPersonId) {
                 openRelationshipsModal(selectedPersonId);
@@ -1066,36 +1079,36 @@
             }
         });
 
+        // Event listener para cerrar el modal de relaciones
         closeRelationshipsModalBtn.addEventListener('click', () => {
             relationshipsModal.classList.add('hidden');
-            if (selectedPersonId) {
-                showPersonDetails(selectedPersonId);
-            }
+            showPersonDetails(selectedPersonId);
             loadFamilyData(); 
         });
 
-        addNewSpouseBtn.addEventListener('click', () => {
+        // Event listeners para los botones de agregar en el modal de relaciones
+        addnewSpouseBtn.addEventListener('click', () => {
             if (selectedPersonId) {
-                relationshipsModal.classList.add('hidden'); 
-                openPersonModal('add_spouse', selectedPersonId); 
+                relationshipsModal.classList.add('hidden');
+                openPersonModal('add_spouse', selectedPersonId); // Abrir 
             }
         });
 
-        addNewParentBtn.addEventListener('click', () => {
+        addnewParentBtn.addEventListener('click', () => {
            if (selectedPersonId) {
                 relationshipsModal.classList.add('hidden'); 
                 openPersonModal('add_ancestor', selectedPersonId); 
             }
         });
 
-        addNewChildBtn.addEventListener('click', () => {
+        addnewChildBtn.addEventListener('click', () => {
             if (selectedPersonId) {
-                relationshipsModal.classList.add('hidden'); 
-                openPersonModal('add_descendant', selectedPersonId); 
+                relationshipsModal.classList.add('hidden'); // Cerrar este modal
+                openPersonModal('add_descendant', selectedPersonId); // Abrir el modal de persona para agregar descendiente
             }
         });
 
-        linkExistingSpouseBtn.addEventListener('click', () => {
+         linkExistingSpouseBtn.addEventListener('click', () => {
             if (selectedPersonId) {
                 openSelectPersonModal('link_spouse', selectedPersonId);
             }
@@ -1113,6 +1126,7 @@
             }
         });
 
+        // Event listener para los botones de eliminar dentro del modal de relaciones (delegación de eventos)
         relationshipsModal.addEventListener('click', async (event) => {
             if (event.target.classList.contains('remove-relationship-btn')) {
                 const button = event.target;
@@ -1127,11 +1141,37 @@
                     }
                 } else if (action === 'remove_spouse') {
                     dataToSend.person_id = parseInt(button.dataset.personId);
-                    if (!confirm(`¿Estás seguro de que quieres eliminar el vínculo de cónyuge de ${familyData.get(dataToSend.person_id)?.name}? Esto también desvinculará a su cónyuge.`)) {
+                   if (!confirm(`¿Estás seguro de que quieres eliminar el vínculo de cónyuge de ${familyData.get(dataToSend.person_id)?.name}? Esto también desvinculará a su cónyuge.`)) {
                         return;
                     }
                 } else {
-                    return; 
+                    return; // Acción desconocida
+                }
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(dataToSend),
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('Vínculo eliminado con éxito:', result.message);
+                        await loadFamilyData(); // Recargar el árbol para reflejar los cambios
+                        openRelationshipsModal(selectedPersonId); // Volver a abrir el modal para ver los cambios
+                    } else {
+                        console.error('Error al eliminar vínculo:', result.message);
+                        alert('Error al eliminar vínculo: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error de red o servidor al eliminar vínculo:', error);
+                    alert('Error de conexión o servidor al eliminar vínculo.');
                 }
 
                 const result = await sendDataToAPI(dataToSend);
@@ -1146,6 +1186,7 @@
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
+            // Recolectar datos del formulario
             const personData = {
                 name: form.querySelector('#name').value,
                 relationship: form.querySelector('#relationship').value,
@@ -1155,37 +1196,66 @@
                 dom: form.querySelector('#dom').value,
                 dod: form.querySelector('#dod').value,
                 photo: form.querySelector('#photo').value,
+                // spouseId se gestiona en las funciones de acción específicas si es necesario
             };
 
             let actionData = { _action: modalMode, personData: personData };
 
-            actionData.selectedPersonId = relatedPersonId;
-            if (modalMode === 'add_descendant') {
-                actionData.selectedPersonSpouseId = relatedPersonSpouseId;
+            if (modalMode === 'edit_person') {
+                actionData.personData.id = parseInt(form.querySelector('#person-id').value);
+                // Si la persona editada tiene cónyuge, mantenerlo si no se cambia en el formulario
+                actionData.personData.spouseId = familyData.get(actionData.personData.id)?.spouseId;
+            } else { // Si es 'add_descendant', 'add_ancestor', 'add_spouse'
+                actionData.selectedPersonId = relatedPersonId;
+                actionData.selectedPersonSpouseId = relatedPersonSpouseId; // Pasar el cónyuge de la persona seleccionada
             }
 
-            const result = await sendDataToAPI(actionData);
-            if (result && result.success) {
-                modal.classList.add('hidden');
-                if (result.new_person_id) { 
-                    showPersonDetails(result.new_person_id);
-                } else if (relatedPersonId) {
-                    showPersonDetails(relatedPersonId);
+            // Enviar los datos a la API
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(actionData),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
                 }
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Operación exitosa:', result.message);
+                    modal.classList.add('hidden');
+                    await loadFamilyData(); // Recargar el árbol
+                    if (result.new_person_id) { // Si se añadió una nueva persona, seleccionarla
+                        showPersonDetails(result.new_person_id);
+                    } else if (modalMode === 'edit_person') {
+                         showPersonDetails(actionData.personData.id); // Re-seleccionar la persona editada
+                    } else if (relatedPersonId) {
+                         showPersonDetails(relatedPersonId); // Re-seleccionar la persona original para ver su nuevo vínculo
+                    }
+                } else {
+                    console.error('Error en la operación:', result.message);
+                    alert('Error al guardar: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error de red o servidor al guardar:', error);
+                alert('Error de conexión o servidor al guardar los datos.');
             }
         });
 
         cancelBtn.addEventListener('click', () => {
              modal.classList.add('hidden');
-             if (relationshipsModal.classList.contains('hidden') && selectedPersonId) {
-                 openRelationshipsModal(selectedPersonId);
-             }
         });
 
         personSearchInput.addEventListener('input', (event) => {
             renderSelectablePeopleList(event.target.value, personToLinkToId); 
         });
 
+         // Manejador de clic en la lista de personas seleccionables (delegación de eventos)
         personListContainer.addEventListener('click', async (event) => {
             const selectedElement = event.target.closest('div[data-person-id]');
             if (selectedElement) {
@@ -1201,14 +1271,14 @@
                 } else if (selectPersonMode === 'link_parent') {
                     dataToSend = {
                         _action: 'link_existing_parent_child',
-                        parent_id: targetPersonId, 
-                        child_id: personToLinkToId 
+                        parent_id: targetPersonId,
+                        child_id: personToLinkToId
                     };
                 } else if (selectPersonMode === 'link_child') {
                     dataToSend = {
                         _action: 'link_existing_parent_child',
-                        parent_id: personToLinkToId, 
-                        child_id: targetPersonId 
+                        parent_id: personToLinkToId,
+                        child_id: targetPersonId
                     };
                 }
 
@@ -1222,11 +1292,11 @@
             }
         });
 
+       // Event listener para cerrar el modal de selección de persona
         cancelSelectPersonBtn.addEventListener('click', () => {
             selectPersonModal.classList.add('hidden');
-            if (selectedPersonId) {
-                openRelationshipsModal(selectedPersonId);
-            }
+            // Al cancelar el select-person-modal, volvemos a mostrar el relationshipsModal
+            relationshipsModal.classList.remove('hidden'); 
         });
 
         document.getElementById('add-descendant-btn').addEventListener('click', () => {

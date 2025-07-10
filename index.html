@@ -138,7 +138,6 @@
 
         .tree li .member:hover, .tree li .member.selected {
             background-color: #e0f2fe;
-            border-color: #0ea5e9;
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
@@ -177,15 +176,10 @@
         /* --- ESTILOS PARA RESALTADO DE ANCESTROS (Mantenidos) --- */
         .member.highlighted {
             background-color: #d1fae5; /* Un verde claro */
-            border-color: #10b981; /* Borde verde más oscuro */
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
         }
 
-        /* Resaltar las líneas de conexión de los ancestros */
-        .highlighted-path::before,
-        .highlighted-path::after {
-            border-color: #10b981 !important; /* Mismo verde que el nodo */
-        }
+
         /* Para la línea vertical que une la lista de hijos (de la pareja resaltada) */
         .tree li.highlighted-path ul::before {
             border-left-color: #10b981 !important;
@@ -202,6 +196,49 @@
             border-color: #10b981;
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
         }
+
+        .member.male {
+            border-color: #4a90e2;
+            background: linear-gradient(145deg, #ffffff 0%, #f0f8ff 100%);
+        }
+
+        .member.female {
+            border-color: #e24a90;
+            background: linear-gradient(145deg, #ffffff 0%, #fff0f8 100%);
+        }
+
+        .deceased {
+            opacity: 0.8;
+            position: relative;
+        }
+
+        .deceased::after {
+            content: '✝';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #666;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* Nuevo estilo para el gorrito de cumpleaños */
+        .member.birthday::before {
+            content: '🎂'; /* Emoji de pastel o gorrito */
+            position: absolute;
+            top: -10px; /* Ajusta la posición vertical */
+            right: -10px; /* Ajusta la posición horizontal */
+            font-size: 1.5em; /* Tamaño del gorrito */
+            z-index: 10; /* Asegura que esté por encima del cuadro del miembro */
+            transform: rotate(15deg); /* Pequeña rotación para efecto divertido */
+        }
+
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -620,22 +657,32 @@
             renderedIds.add(person.id); 
 
             let ageInTree = '';
-            if (person.dob && person.dob !== '0000-00-00' && (!person.dod || person.dod === '0000-00-00')) {
+                        if (person.dob && person.dob !== '0000-00-00') {
                 try {
                     const birthDate = new Date(person.dob);
-                    const today = new Date();
-                    if(!isNaN(birthDate.getTime())){
-                        let ageDiff = today.getFullYear() - birthDate.getFullYear();
-                        const m = today.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    let endDate = new Date(); // Por defecto, hoy
+
+                    const hasDeathDate = person.dod && person.dod !== '0000-00-00';
+                    if (hasDeathDate) {
+                        endDate = new Date(person.dod);
+                    }
+
+                    if(!isNaN(birthDate.getTime()) && !isNaN(endDate.getTime())){
+                        let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
+                        const m = endDate.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
                             ageDiff--;
                         }
                         if (ageDiff >= 0) { 
-                            ageInTree = `<div class="age">${ageDiff} años</div>`;
+                            ageInTree = `<div class="age">${ageDiff} años${hasDeathDate ? ' (fallecido)' : ''}</div>`; // Mostrar " (fallecido)"
                         }
                     }
                 } catch(e) { console.error("Error calculating age for tree node", e); }
             }
+
+            // Determinar si la persona ha fallecido para añadir la clase 'deceased'
+            const isDeceased = person.dod && person.dod !== '0000-00-00';
+            
 
             let nodeContent = '<div class="node-content">';
 
@@ -660,6 +707,9 @@
                 }
                 return `<img src="${defaultPhoto}" alt="Sin foto" class="profile-pic">`;
             };
+
+            const currentIsMale = (person.gender === 'Masculino');
+            const currentIsFemale = (person.gender === 'Femenino');
 
             const calculateDynamicRelationship = (currentPersonId, referencePersonId) => {
                 const currentPerson = familyData.get(currentPersonId);
@@ -876,11 +926,43 @@
                 return currentPerson.relationship || 'Familiar';
             };
 
+            const birthDate = new Date(person.dob);
+                    
+            // Obtener la fecha actual en horario de Santiago de Chile
+        // Lógica para el gorrito de cumpleaños
+        let birthdayClass = '';
+        if (person.dob && person.dob !== '0000-00-00') {
+            try {
+                // MODIFICACIÓN CLAVE AQUÍ: Construir la fecha de nacimiento como UTC para evitar desfases
+                const dobParts = person.dob.split('-').map(Number); // [año, mes, día]
+                // El mes en JavaScript es 0-indexado, por eso (dobParts[1] - 1)
+                const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] +1));
+                
+                // Obtener la fecha actual en horario de Santiago de Chile
+                const now = new Date();
+                const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
+                
+                const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
+                // Usar el mismo formateador para la fecha de nacimiento UTC
+                const birthMonthDay = new Intl.DateTimeFormat('es-CL', options).format(birthDateUTC);
+
+                console.log(`${person.name} - santiagoDate : ${santiagoDate}, birthMonthDay: ${birthMonthDay}`); // Para depuración
+                
+                if (santiagoDate === birthMonthDay) {
+                    birthdayClass = ' birthday';
+                }
+            } catch(e) {
+                console.error("Error calculating birthday for tree node", e);
+            }
+        }
+
             const displayRelationship = calculateDynamicRelationship(person.id, selectedPersonId);
             const mainPersonShortName = getShortName(person.name);
             const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name);
+
+
             const mainPersonHtml = `
-                <div class="member" data-id="${person.id}">
+                <div class="member ${isDeceased ? ' deceased' : ''} ${birthdayClass} ${currentIsMale ? 'male' : 'female'}" data-id="${person.id}">
                     ${mainPersonProfilePic}
                     <div class="name">${mainPersonShortName}</div>
                     <div class="relationship">${displayRelationship}</div>
@@ -894,18 +976,24 @@
                     renderedIds.add(spouse.id); 
                     
                     let spouseAgeInTree = '';
-                    if (spouse.dob && spouse.dob !== '0000-00-00' && (!spouse.dod || spouse.dod === '0000-00-00')) {
+                   if (spouse.dob && spouse.dob !== '0000-00-00') {
                         try {
                             const birthDate = new Date(spouse.dob);
-                            const today = new Date();
-                            if(!isNaN(birthDate.getTime())){
-                                let ageDiff = today.getFullYear() - birthDate.getFullYear();
-                                const m = today.getMonth() - birthDate.getMonth();
-                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            let endDate = new Date(); // Por defecto, hoy
+
+                            const hasDeathDate = spouse.dod && spouse.dod !== '0000-00-00';
+                            if (hasDeathDate) {
+                                endDate = new Date(spouse.dod);
+                            }
+
+                            if(!isNaN(birthDate.getTime()) && !isNaN(endDate.getTime())){
+                                let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
+                                const m = endDate.getMonth() - birthDate.getMonth();
+                                if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
                                     ageDiff--;
                                 }
                                 if (ageDiff >= 0) {
-                                    spouseAgeInTree = `<div class="age">${ageDiff} años</div>`;
+                                    spouseAgeInTree = `<div class="age">${ageDiff} años${hasDeathDate ? ' (fallecido)' : ''}</div>`;
                                 }
                             }
                         } catch(e) { console.error("Error calculating spouse age for tree node", e); }
@@ -914,8 +1002,32 @@
                     const spouseDisplayRelationship = calculateDynamicRelationship(spouse.id, selectedPersonId);
                     const spouseShortName = getShortName(spouse.name);
                     const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name);
+                    // Determinar si la pareja ha fallecido para añadir la clase 'deceased'
+                    const isDeceased = spouse.dod && spouse.dod !== '0000-00-00';
+
+                     let spouseBirthdayClass = '';
+                        if (spouse.dob && spouse.dob !== '0000-00-00') {
+                            try {
+                                // MODIFICACIÓN CLAVE AQUÍ PARA CÓNYUGE
+                                const dobPartsSpouse = spouse.dob.split('-').map(Number);
+                                const birthDateSpouseUTC = new Date(Date.UTC(dobPartsSpouse[0], dobPartsSpouse[1] - 1, dobPartsSpouse[2]));
+
+                                const now = new Date();
+                                const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
+                                const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
+                                const birthMonthDaySpouse = new Intl.DateTimeFormat('es-CL', options).format(birthDateSpouseUTC);
+
+                                if (santiagoDate === birthMonthDaySpouse) {
+                                    spouseBirthdayClass = ' birthday';
+                                }
+                            } catch(e) {
+                                console.error("Error calculating spouse birthday for tree node", e);
+                            }
+                        }
+
+
                     const spouseHtml = `
-                        <div class="member" data-id="${spouse.id}">
+                        <div class="member ${isDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${currentIsMale ? 'female' : 'male'}" data-id="${spouse.id}">
                             ${spouseProfilePic}
                             <div class="name">${spouseShortName}</div>
                             <div class="relationship">${spouseDisplayRelationship}</div>

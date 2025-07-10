@@ -216,7 +216,7 @@
             content: '✝';
             position: absolute;
             top: -5px;
-            right: -5px;
+            left: -5px;
             background: #666;
             color: white;
             border-radius: 50%;
@@ -237,6 +237,24 @@
             font-size: 1.5em; /* Tamaño del gorrito */
             z-index: 10; /* Asegura que esté por encima del cuadro del miembro */
             transform: rotate(15deg); /* Pequeña rotación para efecto divertido */
+        }
+
+         /* Nuevos estilos para los iconos condicionales */
+        .member .icon-status {
+            position: absolute;
+            font-size: 0.9em;
+            background-color: #fff;
+            border-radius: 50%;
+            padding: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            z-index: 5; /* Por encima del miembro, pero debajo del gorrito */
+        }
+
+
+        .member .icon-child {
+            top: -5px; /* Posición superior izquierda */
+            /*left: -5px;*/
+            font-size: 1.1em; /* Un poco más grande para el icono de niño */
         }
 
     </style>
@@ -656,6 +674,9 @@
 
             renderedIds.add(person.id); 
 
+            const currentIsMale = (person.gender === 'Masculino');
+            const currentIsFemale = (person.gender === 'Femenino');
+
             let ageInTree = '';
                         if (person.dob && person.dob !== '0000-00-00') {
                 try {
@@ -674,7 +695,7 @@
                             ageDiff--;
                         }
                         if (ageDiff >= 0) { 
-                            ageInTree = `<div class="age">${ageDiff} años${hasDeathDate ? ' (fallecido)' : ''}</div>`; // Mostrar " (fallecido)"
+                            ageInTree = `<div class="age">${ageDiff} años${hasDeathDate ? `${currentIsMale ? ' (fallecido)' : ' (fallecida)'}` : ''}</div>`;
                         }
                     }
                 } catch(e) { console.error("Error calculating age for tree node", e); }
@@ -708,8 +729,7 @@
                 return `<img src="${defaultPhoto}" alt="Sin foto" class="profile-pic">`;
             };
 
-            const currentIsMale = (person.gender === 'Masculino');
-            const currentIsFemale = (person.gender === 'Femenino');
+   
 
             const calculateDynamicRelationship = (currentPersonId, referencePersonId) => {
                 const currentPerson = familyData.get(currentPersonId);
@@ -929,32 +949,57 @@
             const birthDate = new Date(person.dob);
                     
             // Obtener la fecha actual en horario de Santiago de Chile
-        // Lógica para el gorrito de cumpleaños
-        let birthdayClass = '';
-        if (person.dob && person.dob !== '0000-00-00') {
-            try {
-                // MODIFICACIÓN CLAVE AQUÍ: Construir la fecha de nacimiento como UTC para evitar desfases
-                const dobParts = person.dob.split('-').map(Number); // [año, mes, día]
-                // El mes en JavaScript es 0-indexado, por eso (dobParts[1] - 1)
-                const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] +1));
-                
-                // Obtener la fecha actual en horario de Santiago de Chile
-                const now = new Date();
-                const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
-                
-                const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
-                // Usar el mismo formateador para la fecha de nacimiento UTC
-                const birthMonthDay = new Intl.DateTimeFormat('es-CL', options).format(birthDateUTC);
+            // Lógica para el gorrito de cumpleaños
+            let birthdayClass = '';
+            if (person.dob && person.dob !== '0000-00-00') {
+                try {
+                    // MODIFICACIÓN CLAVE AQUÍ: Construir la fecha de nacimiento como UTC para evitar desfases
+                    const dobParts = person.dob.split('-').map(Number); // [año, mes, día]
+                    // El mes en JavaScript es 0-indexado, por eso (dobParts[1] - 1)
+                    const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] +1));
+                    
+                    // Obtener la fecha actual en horario de Santiago de Chile
+                    const now = new Date();
+                    const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
+                    
+                    const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
+                    // Usar el mismo formateador para la fecha de nacimiento UTC
+                    const birthMonthDay = new Intl.DateTimeFormat('es-CL', options).format(birthDateUTC);
 
-                console.log(`${person.name} - santiagoDate : ${santiagoDate}, birthMonthDay: ${birthMonthDay}`); // Para depuración
-                
-                if (santiagoDate === birthMonthDay) {
-                    birthdayClass = ' birthday';
+                    console.log(`${person.name} - santiagoDate : ${santiagoDate}, birthMonthDay: ${birthMonthDay}`); // Para depuración
+                    
+                    if (santiagoDate === birthMonthDay) {
+                        birthdayClass = ' birthday';
+                    }
+                } catch(e) {
+                    console.error("Error calculating birthday for tree node", e);
                 }
-            } catch(e) {
-                console.error("Error calculating birthday for tree node", e);
             }
-        }
+
+
+
+             let childIcon = '';
+            // Calcular la edad numérica para la comprobación de < 10 años
+            let actualAge = -1; // Inicializar con un valor que indique que no se ha calculado
+            if (person.dob && person.dob !== '0000-00-00') {
+                 try {
+                    const birthDate = new Date(person.dob);
+                    const today = new Date();
+                    // Solo si está viva, calculamos la edad actual. Si ha fallecido, no tiene "edad actual"
+                    if (!isDeceased && !isNaN(birthDate.getTime())) {
+                        actualAge = today.getFullYear() - birthDate.getFullYear();
+                        const m = today.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            actualAge--;
+                        }
+                    } 
+                 } catch(e) { /* Error calculando edad, ignorar */ }
+            }
+
+            // Si la edad calculada es menor de 10 años (o si se murió antes de los 10 años)
+            if (actualAge >= 0 && actualAge < 10) { // Asegura que la edad es válida y menor de 10
+                childIcon = '<span class="icon-status icon-child">👶</span>'; // Bebé
+            }
 
             const displayRelationship = calculateDynamicRelationship(person.id, selectedPersonId);
             const mainPersonShortName = getShortName(person.name);
@@ -963,6 +1008,7 @@
 
             const mainPersonHtml = `
                 <div class="member ${isDeceased ? ' deceased' : ''} ${birthdayClass} ${currentIsMale ? 'male' : 'female'}" data-id="${person.id}">
+                    ${childIcon}
                     ${mainPersonProfilePic}
                     <div class="name">${mainPersonShortName}</div>
                     <div class="relationship">${displayRelationship}</div>
@@ -993,7 +1039,7 @@
                                     ageDiff--;
                                 }
                                 if (ageDiff >= 0) {
-                                    spouseAgeInTree = `<div class="age">${ageDiff} años${hasDeathDate ? ' (fallecido)' : ''}</div>`;
+                                    spouseAgeInTree = `<div class="age">${ageDiff} años${hasDeathDate ? `${currentIsMale ? ' (fallecida)' : ' (fallecido)'}` : ''}</div>`;
                                 }
                             }
                         } catch(e) { console.error("Error calculating spouse age for tree node", e); }
@@ -1010,8 +1056,7 @@
                             try {
                                 // MODIFICACIÓN CLAVE AQUÍ PARA CÓNYUGE
                                 const dobPartsSpouse = spouse.dob.split('-').map(Number);
-                                const birthDateSpouseUTC = new Date(Date.UTC(dobPartsSpouse[0], dobPartsSpouse[1] - 1, dobPartsSpouse[2]));
-
+                                const birthDateSpouseUTC = new Date(Date.UTC(dobPartsSpouse[0], dobPartsSpouse[1] - 1, dobPartsSpouse[2] +1 ));
                                 const now = new Date();
                                 const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
                                 const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
@@ -1026,8 +1071,30 @@
                         }
 
 
+                    let spouseChildIcon = '';
+                    let spouseActualAge = -1;
+                    if (spouse.dob && spouse.dob !== '0000-00-00') {
+                        try {
+                            const birthDate = new Date(spouse.dob);
+                            const today = new Date();
+                            if (!isSpouseDeceased && !isNaN(birthDate.getTime())) {
+                                spouseActualAge = today.getFullYear() - birthDate.getFullYear();
+                                const m = today.getMonth() - birthDate.getMonth();
+                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                    spouseActualAge--;
+                                }
+                            } 
+                        } catch(e) { /* Error calculando edad, ignorar */ }
+                    }
+
+                    if (spouseActualAge >= 0 && spouseActualAge < 10) {
+                        spouseChildIcon = `<span class="icon-status icon-child" id="${spouse.id}">👶</span>`;
+                    }
+
+
                     const spouseHtml = `
                         <div class="member ${isDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${currentIsMale ? 'female' : 'male'}" data-id="${spouse.id}">
+                            ${spouseChildIcon}
                             ${spouseProfilePic}
                             <div class="name">${spouseShortName}</div>
                             <div class="relationship">${spouseDisplayRelationship}</div>
@@ -1155,6 +1222,8 @@
 
             let age = '';
             let ageAtDeath = '';
+            let ageAtMarriage = ''; // Variable para la edad al matrimonio
+
             if(person.dob){
                 try {
                     const birthDate = new Date(person.dob);
@@ -1172,6 +1241,24 @@
                         }
                     }
                 } catch(e) { console.error("Error calculating age", e); }
+            }
+
+            // Lógica para edad al matrimonio
+            if (person.dob && person.dom && person.dob !== '0000-00-00' && person.dom !== '0000-00-00') {
+                try {
+                    const birthDate = new Date(person.dob);
+                    const marriageDate = new Date(person.dom);
+                    if (!isNaN(birthDate.getTime()) && !isNaN(marriageDate.getTime())) {
+                        let ageDiff = marriageDate.getFullYear() - birthDate.getFullYear();
+                        const m = marriageDate.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && marriageDate.getDate() < birthDate.getDate())) {
+                            ageDiff--;
+                        }
+                        if (ageDiff >= 0) {
+                            ageAtMarriage = `(se casó a los ${ageDiff} años)`;
+                        }
+                    }
+                } catch(e) { console.error("Error calculating age at marriage", e); }
             }
             
             const formatDate = (dateString) => {
@@ -1196,7 +1283,7 @@
                     <p><strong>RUT:</strong> ${person.rut || 'No disponible'}</p>
                     <p><strong>Nacimiento:</strong> ${formatDate(person.dob)}</p>
                     ${age ? `<p><strong>Edad:</strong> ${age}</p>` : ''}
-                    <p><strong>Matrimonio:</strong> ${formatDate(person.dom)}</p>
+                    <p><strong>Matrimonio:</strong> ${formatDate(person.dom)} ${ageAtMarriage}</p>
                     <p><strong>Fallecimiento:</strong> ${formatDate(person.dod)} ${ageAtDeath}</p>
                 </div>
             `;

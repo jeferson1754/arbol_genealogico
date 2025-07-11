@@ -994,26 +994,19 @@
             let birthdayClass = '';
             if (person.dob && person.dob !== '0000-00-00') {
                 try {
-                    // MODIFICACIÓN CLAVE AQUÍ: Construir la fecha de nacimiento como UTC para evitar desfases
                     const dobParts = person.dob.split('-').map(Number); // [año, mes, día]
-                    // El mes en JavaScript es 0-indexado, por eso (dobParts[1] - 1)
-                    const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] +1));
-                    
-                    // Obtener la fecha actual en horario de Santiago de Chile
+                    const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] + 1 ));
+
                     const now = new Date();
                     const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
-                    
                     const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
-                    // Usar el mismo formateador para la fecha de nacimiento UTC
                     const birthMonthDay = new Intl.DateTimeFormat('es-CL', options).format(birthDateUTC);
 
-                    console.log(`${person.name} - santiagoDate : ${santiagoDate}, birthMonthDay: ${birthMonthDay}`); // Para depuración
-                    
                     if (santiagoDate === birthMonthDay) {
                         birthdayClass = ' birthday';
                     }
-                } catch(e) {
-                    console.error("Error calculating birthday for tree node", e);
+                } catch (e) {
+                    console.error("Error calculando cumpleaños de la persona principal", e);
                 }
             }
 
@@ -1090,7 +1083,8 @@
                     const spouseShortName = getShortName(spouse.name);
                     const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name);
                     // Determinar si la pareja ha fallecido para añadir la clase 'deceased'
-                    const isDeceased = spouse.dod && spouse.dod !== '0000-00-00';
+                    const isSpouseDeceased = spouse.dod && spouse.dod !== '0000-00-00';
+
 
                      let spouseBirthdayClass = '';
                         if (spouse.dob && spouse.dob !== '0000-00-00') {
@@ -1134,7 +1128,7 @@
 
 
                     const spouseHtml = `
-                        <div class="member ${isDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${currentIsMale ? 'female' : 'male'}" data-id="${spouse.id}">
+                        <div class="member ${isSpouseDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${currentIsMale ? 'female' : 'male'}" data-id="${spouse.id}">
                             ${spouseChildIcon}
                             ${spouseProfilePic}
                             <div class="name">${spouseShortName}</div>

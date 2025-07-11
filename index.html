@@ -175,14 +175,14 @@
 
         /* --- ESTILOS PARA RESALTADO DE ANCESTROS (Mantenidos) --- */
         .member.highlighted {
-            background-color: #d1fae5; /* Un verde claro */
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
+            border-color: #10b981  !important;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1) ;
         }
 
 
         /* Para la línea vertical que une la lista de hijos (de la pareja resaltada) */
         .tree li.highlighted-path ul::before {
-            border-left-color: #10b981 !important;
+            border-left-color: #10b981 ;
         }
 
         /* Asegurarse de que el cónyuge de un ancestro también tenga la línea resaltada */
@@ -193,7 +193,7 @@
         /* Para asegurar que el cónyuge del ancestro directo también se vea resaltado visualmente */
         .member.ancestor-spouse-highlight {
             background-color: #d1fae5; /* Mismo verde para el cónyuge del ancestro */
-            border-color: #10b981;
+            border-color: #10b981  !important;
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
         }
 

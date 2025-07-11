@@ -925,6 +925,13 @@
                         }
                     }
 
+                     // Sobrino/a Político/a (pareja de mi sobrina)
+                    // currentPerson es el cónyuge de un sobrino/a de referencePerson
+                    if (refDescendantsWithDist.has(currentPerson.spouseId) && refDescendantsWithDist.get(currentPerson.spouseId) === 2) {
+                        // currentPerson.spouseId es un sobrino de referencePerson
+                        return currentIsMale ? 'Sobrino Político' : (currentIsFemale ? 'Sobrina Política' : 'Sobrino/a Político/a');
+                    }
+
                     // Primos (ambos están a la misma distancia generacional del LCA)
                     if (distCurrentToLCA === distRefToLCA && distCurrentToLCA > 1) {
                         const degree = distCurrentToLCA - 1; // Grado del primo (Primo, Primo Segundo, etc.)

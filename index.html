@@ -780,12 +780,46 @@
                     if (distToRefDesc === 5) return currentIsMale ? 'Trastataranieto' : (currentIsFemale ? 'Trastataranieta' : 'Trastataranieto/a');
                 }
 
-                // 4. Relaciones Colaterales - Hermanos
-                // Son hermanos si comparten al menos un padre y no son la misma persona.
+                // --- NUEVAS RELACIONES POLÍTICAS Y COLATERALES ---
+
+                // Padrastro/Madrastra: Cónyuge de un padre biológico de referencePerson, que no es el padre biológico
+                // referencePerson.parentIds son los padres biológicos de referencePerson.
+                // currentPerson es el cónyuge de uno de ellos y no es uno de ellos.
+                if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
+                    for (const parentId of referencePerson.parentIds) {
+                        const biologicalParent = familyData.get(parentId);
+                        if (biologicalParent && biologicalParent.spouseId === currentPersonId && currentPerson.spouseId === biologicalParent.id) {
+                            // currentPerson es el cónyuge del padre/madre de referencePerson
+                            // Y currentPerson NO es el padre/madre biológico de referencePerson
+                            if (!referencePerson.parentIds.includes(currentPersonId)) {
+                                return currentIsMale ? 'Padrastro' : (currentIsFemale ? 'Madrastra' : 'Padrastro/Madrastra');
+                            }
+                        }
+                    }
+                }
+
+                // Hijastros (Hijo/a de mi cónyuge pero no mío)
+                // currentPerson es hijo/a de referencePerson.spouseId, pero referencePerson no es padre de currentPerson
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse && Array.isArray(refSpouse.childrenIds) && refSpouse.childrenIds.includes(currentPersonId)) {
+                        // currentPerson es hijo de refSpouse
+                        // Ahora, verificar que referencePerson NO sea padre de currentPerson
+                        if (!Array.isArray(currentPerson.parentIds) || !currentPerson.parentIds.includes(referencePersonId)) {
+                            return currentIsMale ? 'Hijastro' : (currentIsFemale ? 'Hijastra' : 'Hijastro/a');
+                        }
+                    }
+                }
+
+                 // 4. Relaciones Colaterales - Hermanos (ya lo tienes, va antes de otras colaterales)
                 if (currentPerson.parentIds && referencePerson.parentIds) {
                     const commonParents = currentPerson.parentIds.filter(pId => referencePerson.parentIds.includes(pId));
                     if (commonParents.length > 0) {
-                        return currentIsMale ? 'Hermano' : (currentIsFemale ? 'Hermana' : 'Hermano/a');
+                        // Si ya se ha manejado la relación directa (Padre, Hijo),
+                        // esta es la comprobación para hermanos.
+                        if (currentPersonId !== referencePersonId) { // Asegurarse de que no sea la misma persona
+                            return currentIsMale ? 'Hermano' : (currentIsFemale ? 'Hermana' : 'Hermano/a');
+                        }
                     }
                 }
                 

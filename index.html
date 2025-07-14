@@ -970,6 +970,119 @@
                     }
                 });
 
+                // Tío Político: Pareja de mi Tío/a biológico/a
+                // currentPerson es cónyuge de X, y X es Tío/a biológico/a de referencePerson
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    // Si el cónyuge de currentPerson es tío/tía de referencePerson (ya sea directo o de grados superiores)
+                    // Usamos la misma lógica que para identificar Tíos biológicos
+                    let lcaForSpouse = null;
+                    let minSumDistancesForSpouseLCA = Infinity;
+
+                    for (let [idA, distA] of getAncestorsWithDistance(spouseOfCurrent.id).entries()) {
+                        if (refAncestorsWithDist.has(idA)) {
+                            const distB = refAncestorsWithDist.get(idA);
+                            if (distA + distB < minSumDistancesForSpouseLCA) {
+                                minSumDistancesForSpouseLCA = distA + distB;
+                                lcaForSpouse = idA;
+                            }
+                        }
+                    }
+
+                    if (lcaForSpouse !== null) {
+                        const distSpouseToLCA = getAncestorsWithDistance(spouseOfCurrent.id).get(lcaForSpouse) || 0;
+                        const distRefToLCA = refAncestorsWithDist.get(lcaForSpouse) || 0;
+                        
+                        // Condición para Tío/a biológico: (distancia cónyuge a LCA = 1) Y (distancia ref a LCA = 2)
+                        // O más general para tíos de grados superiores (ej. Tío abuelo)
+                        if (distSpouseToLCA < distRefToLCA) { // Spouse es más viejo que ref
+                            // Y si tienen un ancestro común
+                            // Para ser "Tío/a" (biológico), el cónyuge debe estar en una generación superior y colateral a referencePerson
+                            // Distancia de spouse a LCA es 1, 2, etc. (Ej. 1 = hermano del padre)
+                            // Distancia de ref a LCA es 2, 3, etc. (Ej. 2 = hijo de hermano del padre)
+                            if (distSpouseToLCA > 0 && distRefToLCA > 0 && distRefToLCA === distSpouseToLCA + 1) { // Spouse está a 1 generación por encima de ref colateral
+                                return currentIsMale ? 'Tío Político' : (currentIsFemale ? 'Tía Política' : 'Tío/a Político/a');
+                            }
+                            // Caso especial para tíos más lejanos (Tío Abuelo político, etc.)
+                            if (distSpouseToLCA > 0 && distRefToLCA > distSpouseToLCA) {
+                                return currentIsMale ? `Tío Político ${getOrdinal(distRefToLCA - distSpouseToLCA)}` : (currentIsFemale ? `Tía Política ${getOrdinal(distRefToLCA - distSpouseToLCA)}` : `Tío/a Político/a ${getOrdinal(distRefToLCA - distSpouseToLCA)}`);
+                            }
+                        }
+                    }
+                }
+
+                 // Cuñado (pareja de mi cuñada) / Cuñada (pareja de mi cuñado)
+                // Esto se refiere al cónyuge de tu hermano/a político/a.
+                // Es decir, currentPerson es el cónyuge de una persona X, donde X es cuñado/a de referencePerson.
+                // Para simplificar y evitar bucles, asumiremos que si currentPerson es cónyuge de alguien que ya es cuñado/a de referencePerson,
+                // entonces currentPerson es también un cuñado/a de referencePerson.
+                // Esta relación suele subsumirse bajo la categoría general de "Cuñado/a" si ya detectas al cuñado principal.
+                // Sin embargo, si quieres una etiqueta EXCLUSIVA para "pareja de mi cuñada":
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    // Si spouseOfCurrent es hermano/a del cónyuge de referencePerson
+                    if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                        const refSpouse = familyData.get(referencePerson.spouseId);
+                        if (refSpouse && spouseOfCurrent.parentIds && refSpouse.parentIds) {
+                            const commonParentsWithRefSpouse = spouseOfCurrent.parentIds.filter(pId => refSpouse.parentIds.includes(pId));
+                            if (commonParentsWithRefSpouse.length > 0 && spouseOfCurrent.id !== refSpouse.id) {
+                                // SpouseOfCurrent es hermano/a de refSpouse
+                                // Entonces currentPerson es el cónyuge del hermano/a de refSpouse
+                                return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
+                            }
+                        }
+                    }
+                    // O si spouseOfCurrent es cónyuge de un hermano/a de referencePerson
+                    if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
+                        const refParents = referencePerson.parentIds.map(id => familyData.get(id)).filter(p => p);
+                        for (const refParent of refParents) {
+                            if (refParent.childrenIds) {
+                                const siblingsOfRefPerson = refParent.childrenIds.filter(sId => sId !== referencePersonId && familyData.has(sId));
+                                for (const siblingId of siblingsOfRefPerson) {
+                                    const sibling = familyData.get(siblingId);
+                                    if (sibling && sibling.spouseId === spouseOfCurrent.id && spouseOfCurrent.spouseId === sibling.id) {
+                                        // SpouseOfCurrent es cónyuge de un hermano de referencePerson
+                                        // Entonces currentPerson es la pareja de mi cuñado/a
+                                        return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                 // Nieto Político (pareja de mi nieto/a biológico/a)
+                // currentPerson es el cónyuge de X, donde X es Nieto/a biológico/a de referencePerson
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id); // Distancia del cónyuge de currentPerson a referencePerson como descendiente
+                    
+                    if (distSpouseOfCurrentToRef === 2) { // Si el cónyuge de currentPerson es nieto/a de referencePerson
+                        return currentIsMale ? 'Nieto Político' : (currentIsFemale ? 'Nieta Política' : 'Nieto/a Político/a');
+                    }
+                }
+
+                // Bisnieto político (pareja de mi bisnieta)
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id);
+                    
+                    if (distSpouseOfCurrentToRef === 3) { // Si el cónyuge de currentPerson es bisnieto/a de referencePerson
+                        return currentIsMale ? 'Bisnieto Político' : (currentIsFemale ? 'Bisnieta Política' : 'Bisnieto/a Político/a');
+                    }
+                }
+
+                // Tataranieto Político (pareja de mi tataranieta)
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) { 
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id);
+                    
+                    if (distSpouseOfCurrentToRef === 4) { // Si el cónyuge de currentPerson es tataranieto/a de referencePerson
+                        return currentIsMale ? 'Tataranieto Político' : (currentIsFemale ? 'Tataranieta Política' : 'Tataranieto/a Político/a');
+                    }
+                }
+
+
                 // Si currentPerson es el cónyuge de un sobrino de referencePerson
                 // 1. Encuentra todos los sobrinos de referencePerson
                 // 2. Comprueba si currentPerson es el cónyuge de alguno de esos sobrinos

@@ -103,17 +103,29 @@
             } else {
                 filtered.forEach(person => {
                     const item = document.createElement('div');
-                    item.className = 'person-item';
+                    item.className = 'person-item shadow-md rounded-xl border p-4 flex items-center justify-between hover:shadow-lg transition';
                     item.dataset.personId = person.id;
+
                     item.innerHTML = `
-                        <div>
-                            <div class="name">${person.name}</div>
-                            <div class="details">${person.relationship || 'Persona'}</div>
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-lg text-gray-800">${person.name}</span>
+                            <span class="text-sm text-gray-500">${person.relationship || 'Persona'}</span>
                         </div>
-                        <a href="index.html?personId=${person.id}" class="bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 px-3 rounded">Ver en Árbol</a>
+                        <div class="flex gap-2">
+                            <a href="editar.php?id=${person.id}" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 px-4 rounded-lg shadow transition">
+                            ✏️ Editar
+                            </a>
+                            <a href="index.html?personId=${person.id}" 
+                            class="bg-green-500 hover:bg-green-600 text-white text-sm py-1.5 px-4 rounded-lg shadow transition">
+                            🌳 Ver en Árbol
+                            </a>
+                        </div>
                     `;
+
                     searchResultsDiv.appendChild(item);
                 });
+
             }
         }
 

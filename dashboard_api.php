@@ -194,6 +194,113 @@ $stmt->execute();
 $results['births_deaths_by_decade'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// --- CONSULTA 8: Apellidos más Comunes ---
+// Extrae los últimos dos apellidos, agrupa y cuenta.
+$sql_common_surnames = "
+    SELECT
+        TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(name, ' ', -2), ' ', 1)) AS apellido_paterno,
+        TRIM(SUBSTRING_INDEX(name, ' ', -1)) AS apellido_materno,
+        COUNT(*) AS total
+    FROM
+        people
+    WHERE
+        name IS NOT NULL AND name != ''
+    GROUP BY
+        apellido_paterno, apellido_materno
+    ORDER BY
+        total DESC
+    LIMIT 10;
+";
+$stmt = $conn->prepare($sql_common_surnames);
+$stmt->execute();
+$results['common_surnames'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// --- CONSULTA 9: Nombres más Comunes ---
+// Extrae el primer nombre, agrupa y cuenta.
+$sql_common_names = "
+    SELECT
+        SUBSTRING_INDEX(name, ' ', 1) AS nombre,
+        COUNT(*) AS total
+    FROM
+        people
+    WHERE
+        name IS NOT NULL AND name != ''
+    GROUP BY
+        nombre
+    ORDER BY
+        total DESC
+    LIMIT 10;
+";
+$stmt = $conn->prepare($sql_common_names);
+$stmt->execute();
+$results['common_names'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// --- CONSULTA 10: Persona que más vivió (viva o muerta) ---
+$sql_longevity_leader = "
+    SELECT
+        id,
+        name,
+        dob,
+        dod,
+        FLOOR(DATEDIFF(
+            CASE WHEN dod IS NULL OR dod = '0000-00-00' THEN CURDATE() ELSE dod END,
+            dob
+        ) / 365.25) AS edad_calculada
+    FROM
+        people
+    WHERE
+        dob IS NOT NULL AND dob != '0000-00-00'
+    ORDER BY
+        edad_calculada DESC, dob ASC
+    LIMIT 1;
+";
+$stmt = $conn->prepare($sql_longevity_leader);
+$stmt->execute();
+$results['longevity_leader'] = $stmt->get_result()->fetch_assoc(); // Usar fetch_assoc para obtener un solo resultado
+$stmt->close();
+
+// --- CONSULTA 11: Persona más joven (viva) ---
+$sql_youngest_person = "
+    SELECT
+        id,
+        name,
+        dob,
+        FLOOR(DATEDIFF(CURDATE(), dob) / 365.25) AS edad_actual
+    FROM
+        people
+    WHERE
+        dob IS NOT NULL AND dob != '0000-00-00'
+        AND (dod IS NULL OR dod = '0000-00-00')
+    ORDER BY
+        dob DESC
+    LIMIT 1;
+";
+$stmt = $conn->prepare($sql_youngest_person);
+$stmt->execute();
+$results['youngest_person'] = $stmt->get_result()->fetch_assoc(); // Usar fetch_assoc para un solo resultado
+$stmt->close();
+
+// --- CONSULTA 12: Distribución de Edades de Fallecimiento ---
+$sql_longevity_distribution = "
+    SELECT
+        CONCAT(FLOOR(DATEDIFF(dod, dob) / 365.25) DIV 10 * 10, '-', FLOOR(DATEDIFF(dod, dob) / 365.25) DIV 10 * 10 + 9) AS rango_edad_fallecimiento,
+        COUNT(id) AS total_personas
+    FROM
+        people
+    WHERE
+        dob IS NOT NULL AND dob != '0000-00-00'
+        AND dod IS NOT NULL AND dod != '0000-00-00'
+    GROUP BY
+        rango_edad_fallecimiento
+    ORDER BY
+        MIN(FLOOR(DATEDIFF(dod, dob) / 365.25)) ASC;
+";
+$stmt = $conn->prepare($sql_longevity_distribution);
+$stmt->execute();
+$results['longevity_distribution'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 
 // Devolver todos los resultados como un único objeto JSON
 echo json_encode($results);

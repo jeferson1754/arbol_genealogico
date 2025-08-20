@@ -318,6 +318,66 @@
             font-style: italic;
             padding: 20px;
         }
+
+        /* --- NUEVOS ESTILOS PARA LAS TABLAS DE NOMBRES/APELLIDOS --- */
+    #commonSurnamesTableContainer, #commonNamesTableContainer {
+        /* Contenedor de la tabla */
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: white;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .table-auto {
+        /* Estilo base de la tabla */
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table-auto thead th {
+        /* Encabezados de la tabla */
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.8rem;
+        padding: 12px 16px;
+        background-color: #f9fafb;
+        color: #4b5563;
+        position: sticky; /* Para que el encabezado se mantenga visible al hacer scroll */
+        top: 0;
+        z-index: 1;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .table-auto tbody tr {
+        /* Filas del cuerpo de la tabla */
+        transition: background-color 0.2s ease;
+    }
+    
+    .table-auto tbody tr:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .table-auto tbody td {
+        /* Celdas del cuerpo de la tabla */
+        padding: 12px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        color: #374151;
+        font-size: 0.9rem;
+    }
+    
+    .table-auto tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .table-auto tbody .no-data td {
+        text-align: center;
+        padding: 24px;
+        color: #9ca3af;
+        font-style: italic;
+    }
     </style>
 </head>
 <body>
@@ -412,7 +472,7 @@
                     </div>
                 </div>
 
-                 <div class="chart-card">
+                <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-chart-bar"></i>
                         Nacimientos y Muertes por Década
@@ -432,8 +492,93 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-user-tag"></i>
+                        Apellidos más Comunes
+                    </h3>
+                    <div id="commonSurnamesTableContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Apellidos</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commonSurnamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando apellidos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-            <!-- Rangos de edad -->
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-id-badge"></i>
+                        Nombres más Comunes
+                    </h3>
+                    <div id="commonNamesTableContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Nombre</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commonNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando nombres...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Longevidad de Fallecidos
+                    </h3>
+                    <div id="longevityDistributionContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Rango de Edad</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="longevityDistributionTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-crown"></i>
+                        La Persona que Más Vivió
+                    </h3>
+                    <div id="longevityLeaderCard" class="p-4 text-center">
+                        <div class="no-data">Cargando datos...</div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-baby"></i>
+                        La Persona Más Joven
+                    </h3>
+                    <div id="youngestPersonCard" class="p-4 text-center">
+                        <div class="no-data">Cargando datos...</div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="age-ranges">
                 <div class="age-card">
                     <h3 class="chart-title">
@@ -455,13 +600,17 @@
             this.init();
         }
 
-        init() {
-            // No usamos setTimeout, ya que los datos ya están cargados.
-            this.updateStats();
-            this.createCharts();
-            this.updateAgeRanges();
-            this.updateBirthdayList();
-        }
+    init() {
+                this.updateStats();
+                this.createCharts();
+                this.updateAgeRanges();
+                this.updateBirthdayList();
+                this.updateCommonSurnamesTable(); // Llama al nuevo método
+                this.updateCommonNamesTable();  
+                this.updateLongevityLeaderCard(); // Llama al nuevo método
+                this.updateYoungestPersonCard(); // Llama al nuevo método  // Llama al nuevo método
+                this.updateLongevityDistributionTable();
+            }
 
         updateStats() {
                 const stats = this.data.stats;
@@ -791,6 +940,130 @@
             return monthNames[monthIndex];
         }
 
+
+                    // NUEVO MÉTODO: updateCommonSurnamesTable
+        updateCommonSurnamesTable() {
+                const data = this.data.common_surnames;
+                const tbody = document.getElementById('commonSurnamesTableBody');
+                if (!tbody) return;
+
+                tbody.innerHTML = ''; // Limpiar el mensaje de carga
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" class="no-data">No hay datos de apellidos.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-100 last:border-none';
+                    const surnames = `${item.apellido_paterno} ${item.apellido_materno}`;
+                    row.innerHTML = `
+                        <td class="px-4 py-2 text-gray-800">${surnames}</td>
+                        <td class="px-4 py-2 text-gray-800 text-right font-bold">${item.total}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // NUEVO MÉTODO: updateCommonNamesTable
+        updateCommonNamesTable() {
+                const data = this.data.common_names;
+                const tbody = document.getElementById('commonNamesTableBody');
+                if (!tbody) return;
+
+                tbody.innerHTML = ''; // Limpiar el mensaje de carga
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" class="no-data">No hay datos de nombres.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-100 last:border-none';
+                    row.innerHTML = `
+                        <td class="px-4 py-2 text-gray-800">${item.nombre}</td>
+                        <td class="px-4 py-2 text-gray-800 text-right font-bold">${item.total}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+           // NUEVO MÉTODO: updateLongevityLeaderCard
+        updateLongevityLeaderCard() {
+                const data = this.data.longevity_leader;
+                const card = document.getElementById('longevityLeaderCard');
+                if (!card) return;
+
+                if (!data) {
+                    card.innerHTML = '<div class="no-data">No hay datos de personas fallecidas.</div>';
+                    return;
+                }
+                
+                const deathText = data.dod ? `Vivió ${data.edad_calculada} años` : `Tiene ${data.edad_calculada} años`;
+                const deathIcon = data.dod ? `<i class="fas fa-cross text-red-500"></i>` : `<i class="fas fa-heartbeat text-green-500"></i>`;
+
+                card.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="p-4 rounded-full bg-gray-100 mb-4 text-3xl">
+                            ${deathIcon}
+                        </div>
+                        <h4 class="text-xl font-bold">${data.name}</h4>
+                        <p class="text-sm text-gray-500">${deathText}</p>
+                        <p class="text-xs text-gray-400 mt-2">Nacimiento: ${data.dob}</p>
+                        ${data.dod ? `<p class="text-xs text-gray-400">Fallecimiento: ${data.dod}</p>` : ''}
+                    </div>
+                `;
+            }
+
+            // NUEVO MÉTODO: updateYoungestPersonCard
+        updateYoungestPersonCard() {
+                const data = this.data.youngest_person;
+                const card = document.getElementById('youngestPersonCard');
+                if (!card) return;
+
+                if (!data) {
+                    card.innerHTML = '<div class="no-data">No hay datos de la persona más joven.</div>';
+                    return;
+                }
+                
+                card.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="p-4 rounded-full bg-gray-100 mb-4 text-3xl">
+                            <i class="fas fa-baby text-blue-500"></i>
+                        </div>
+                        <h4 class="text-xl font-bold">${data.name}</h4>
+                        <p class="text-sm text-gray-500">Edad: ${data.edad_actual} años</p>
+                        <p class="text-xs text-gray-400 mt-2">Nacimiento: ${data.dob}</p>
+                    </div>
+                `;
+            }
+
+         updateLongevityDistributionTable() {
+                const data = this.data.longevity_distribution;
+                const tbody = document.getElementById('longevityDistributionTableBody');
+                if (!tbody) return;
+
+                tbody.innerHTML = ''; // Limpiar el mensaje de carga
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" class="no-data">No hay datos de fallecidos para mostrar.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-100 last:border-none';
+                    row.innerHTML = `
+                        <td class="px-4 py-2 text-gray-800">${item.rango_edad_fallecimiento} años</td>
+                        <td class="px-4 py-2 text-gray-800 text-right font-bold">${item.total_personas}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+
  // Método para obtener las iniciales del nombre
         getInitials(name) {
                 if (!name) return '?';
@@ -846,35 +1119,44 @@
 
                 // Restaurar el contenido principal con los elementos originales del DOM
                 mainContent.innerHTML = `
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <div class="stat-icon icon-total">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                            </div>
-                            <div class="stat-value" id="totalPersonas"></div>
-                            <div class="stat-label">Personas Totales</div>
+                     <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon icon-total">
+                            <i class="fas fa-users"></i>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <div class="stat-icon icon-alive">
-                                    <i class="fas fa-heartbeat"></i>
-                                </div>
-                            </div>
-                            <div class="stat-value" id="personasVivas"></div>
-                            <div class="stat-label">Personas Vivas</div>
+                    </div>
+                    <div class="stat-value" id="totalPersonas">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="stat-label">Personas Totales</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon icon-alive">
+                            <i class="fas fa-heartbeat"></i>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <div class="stat-icon icon-dead">
-                                    <i class="fas fa-cross"></i>
-                                </div>
-                            </div>
-                            <div class="stat-value" id="personasMuertas"></div>
-                            <div class="stat-label">Personas Fallecidas</div>
+                    </div>
+                    <div class="stat-value" id="personasVivas">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="stat-label">Personas Vivas</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon icon-dead">
+                            <i class="fas fa-cross"></i>
                         </div>
-                        <div class="stat-card">
+                    </div>
+                    <div class="stat-value" id="personasMuertas">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="stat-label">Personas Fallecidas</div>
+                </div>
+
+                    <div class="stat-card">
                             <div class="stat-header">
                                 <div class="stat-icon icon-birthday">
                                     <i class="fas fa-birthday-cake"></i>
@@ -883,61 +1165,159 @@
                             <div class="stat-value" id="cumpleanosEsteMes"></div>
                             <div class="stat-label">Cumpleaños Este Mes</div>
                         </div>
+            </div>
+
+            <!-- Lista de cumpleaños -->
+            <div class="chart-card">
+                <h3 class="chart-title">
+                    <i class="fas fa-gift"></i>
+                    Cumpleaños de Este Mes
+                </h3>
+                <div class="birthday-list" id="birthdayList">
+                    <div class="no-data">Cargando cumpleaños...</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Nacimientos por Mes
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="birthChart"></canvas>
                     </div>
-                    <div class="chart-card">
-                        <h3 class="chart-title">
-                            <i class="fas fa-gift"></i>
-                            Cumpleaños de Este Mes
-                        </h3>
-                        <div class="birthday-list" id="birthdayList"></div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Defunciones por Mes
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="deathChart"></canvas>
                     </div>
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <h3 class="chart-title">
-                                <i class="fas fa-chart-bar"></i>
-                                Nacimientos por Mes
-                            </h3>
-                            <div class="chart-container">
-                                <canvas id="birthChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="chart-card">
-                            <h3 class="chart-title">
-                                <i class="fas fa-chart-bar"></i>
-                                Defunciones por Mes
-                            </h3>
-                            <div class="chart-container">
-                                <canvas id="deathChart"></canvas>
-                            </div>
-                        </div>
-                         <div class="chart-card">
-                            <h3 class="chart-title">
-                                <i class="fas fa-chart-bar"></i>
-                                Nacimientos y Muertes por Década
-                            </h3>
-                            <div class="chart-container">
-                                <canvas id="birthDeathDecadeChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="chart-card">
-                            <h3 class="chart-title">
-                                <i class="fas fa-chart-pie"></i>
-                                Distribución por Género
-                            </h3>
-                            <div class="chart-container">
-                                <canvas id="genderChart"></canvas>
-                            </div>
-                        </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Nacimientos y Muertes por Década
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="birthDeathDecadeChart"></canvas>
                     </div>
-                    <div class="age-ranges">
-                        <div class="age-card">
-                            <h3 class="chart-title">
-                                <i class="fas fa-users"></i>
-                                Distribución por Edades
-                            </h3>
-                            <div id="ageRanges"></div>
-                        </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Distribución por Género
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="genderChart"></canvas>
                     </div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-user-tag"></i>
+                        Apellidos más Comunes
+                    </h3>
+                    <div id="commonSurnamesTableContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Apellidos</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commonSurnamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando apellidos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-id-badge"></i>
+                        Nombres más Comunes
+                    </h3>
+                    <div id="commonNamesTableContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Nombre</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commonNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando nombres...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Longevidad de Fallecidos
+                    </h3>
+                    <div id="longevityDistributionContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Rango de Edad</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="longevityDistributionTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-crown"></i>
+                        La Persona que Más Vivió
+                    </h3>
+                    <div id="longevityLeaderCard" class="p-4 text-center">
+                        <div class="no-data">Cargando datos...</div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-baby"></i>
+                        La Persona Más Joven
+                    </h3>
+                    <div id="youngestPersonCard" class="p-4 text-center">
+                        <div class="no-data">Cargando datos...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="age-ranges">
+                <div class="age-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-users"></i>
+                        Distribución por Edades
+                    </h3>
+                    <div id="ageRanges">
+                        <div class="no-data">Cargando rangos de edad...</div>
+                    </div>
+                </div>
+            </div>
                 `;
 
                 new Dashboard(dashboardData);

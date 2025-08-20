@@ -343,6 +343,109 @@ $stmt->execute();
 $results['longevity_by_birth_decade'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// --- CONSULTA 15: Top 10 Superprogenitores (Persona con más hijos) ---
+$sql_superprogenitors = "
+    SELECT
+        p.name AS nombre_superprogenitor,
+        COUNT(pc.child_id) AS total_hijos
+    FROM
+        parent_child pc
+    INNER JOIN
+        people p ON pc.parent_id = p.id
+    GROUP BY
+        pc.parent_id
+    ORDER BY
+        total_hijos DESC
+    LIMIT 10;
+";
+$stmt = $conn->prepare($sql_superprogenitors);
+$stmt->execute();
+$results['superprogenitors'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// --- CONSULTA 16: Distribución de la Diferencia de Edad entre Cónyuges ---
+$sql_age_difference_distribution = "
+    SELECT
+        CONCAT(FLOOR(ABS(DATEDIFF(p1.dob, p2.dob)) / 365.25) DIV 5 * 5, '-', FLOOR(ABS(DATEDIFF(p1.dob, p2.dob)) / 365.25) DIV 5 * 5 + 4) AS rango_diferencia_edad,
+        COUNT(p1.id) AS total_parejas
+    FROM
+        people p1
+    INNER JOIN
+        people p2 ON p1.spouse_id = p2.id
+    WHERE
+        p1.dob IS NOT NULL AND p1.dob != '0000-00-00'
+        AND p2.dob IS NOT NULL AND p2.dob != '0000-00-00'
+        AND p1.id < p2.id
+    GROUP BY
+        rango_diferencia_edad
+    ORDER BY
+        MIN(FLOOR(ABS(DATEDIFF(p1.dob, p2.dob)) / 365.25)) ASC;
+";
+$stmt = $conn->prepare($sql_age_difference_distribution);
+$stmt->execute();
+$results['age_difference_distribution'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+
+// --- CONSULTA 17: Nacimientos, Matrimonios y Muertes por Mes ---
+$sql_events_by_month = "
+    SELECT
+        mes,
+        SUM(total_nacimientos) AS total_nacimientos,
+        SUM(total_matrimonios) AS total_matrimonios,
+        SUM(total_muertes) AS total_muertes
+    FROM
+    (
+        SELECT
+            MONTH(dob) AS mes,
+            COUNT(id) AS total_nacimientos,
+            0 AS total_matrimonios,
+            0 AS total_muertes
+        FROM
+            people
+        WHERE
+            dob IS NOT NULL AND dob != '0000-00-00'
+        GROUP BY
+            mes
+    
+        UNION ALL
+    
+        SELECT
+            MONTH(dom) AS mes,
+            0 AS total_nacimientos,
+            COUNT(id) AS total_matrimonios,
+            0 AS total_muertes
+        FROM
+            people
+        WHERE
+            dom IS NOT NULL AND dom != '0000-00-00'
+        GROUP BY
+            mes
+    
+        UNION ALL
+    
+        SELECT
+            MONTH(dod) AS mes,
+            0 AS total_nacimientos,
+            0 AS total_matrimonios,
+            COUNT(id) AS total_muertes
+        FROM
+            people
+        WHERE
+            dod IS NOT NULL AND dod != '0000-00-00'
+        GROUP BY
+            mes
+    ) AS eventos
+    GROUP BY
+        mes
+    ORDER BY
+        mes ASC;
+";
+$stmt = $conn->prepare($sql_events_by_month);
+$stmt->execute();
+$results['events_by_month'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
 // Devolver todos los resultados como un único objeto JSON
 echo json_encode($results);
 

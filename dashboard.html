@@ -446,18 +446,30 @@
                 </div>
             </div>
 
+            <div class="charts-grid">
             <!-- Lista de cumpleaños -->
-            <div class="chart-card">
-                <h3 class="chart-title">
-                    <i class="fas fa-gift"></i>
-                    Cumpleaños de Este Mes
-                </h3>
-                <div class="birthday-list" id="birthdayList">
-                    <div class="no-data">Cargando cumpleaños...</div>
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-gift"></i>
+                        Cumpleaños de Este Mes
+                    </h3>
+                    <div class="birthday-list" id="birthdayList">
+                        <div class="no-data">Cargando cumpleaños...</div>
+                    </div>
                 </div>
             </div>
-
             <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-calendar-check"></i>
+                        Eventos por Mes
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="eventsByMonthChart"></canvas>
+                    </div>
+                </div>
+            </div>
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
@@ -498,9 +510,7 @@
                         <canvas id="genderChart"></canvas>
                     </div>
                 </div>
-            </div>
-            
-            <div class="charts-grid">
+   
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-user-tag"></i>
@@ -552,6 +562,7 @@
                         <canvas id="generationDistributionChart"></canvas>
                     </div>
                 </div>
+            
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-calendar-alt"></i>
@@ -573,7 +584,29 @@
                 </div>
             </div>
 
+             <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-venus-mars"></i>
+                        Diferencia de Edad entre Cónyuges
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="ageDifferenceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-child"></i>
+                        Las 10 Personas con Más Hijos
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="superprogenitorsChart"></canvas>
+                    </div>
+                </div>
+        
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-heartbeat"></i>
@@ -628,13 +661,14 @@
             this.init();
         }
 
-    init() {
+        init() {
                 this.updateStats();
                 this.createCharts();
                 this.updateAgeRanges();
                 this.updateBirthdayList();
                 this.updateCommonSurnamesTable(); // Llama al nuevo método
                 this.updateCommonNamesTable();  
+                this.createSuperprogenitorsChart(); 
                 this.updateLongevityLeaderCard(); // Llama al nuevo método
                 this.updateYoungestPersonCard(); // Llama al nuevo método  // Llama al nuevo método
                 this.updateLongevityDistributionTable();
@@ -670,13 +704,161 @@
             }
 
         createCharts() {
+                this.createEventsByMonthChart();
                 this.createBirthChart();
                 this.createDeathChart();
                 this.createBirthDeathDecadeChart(); // Llama al nuevo método
                 this.createGenerationDistributionChart(); 
                 this.createLongevityByDecadeChart(); 
                 this.createGenderChart();
+                this.createAgeDifferenceChart(); 
         }
+
+        // NUEVO MÉTODO: createEventsByMonthChart
+        createEventsByMonthChart() {
+                const data = this.data.events_by_month; // Asumimos que la API devuelve los datos en este campo
+                const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                
+                // Mapear los datos de la API para que coincidan con los 12 meses
+                const allMonthsData = new Array(12).fill(null).map((_, i) => {
+                    const monthItem = data.find(item => parseInt(item.mes) === i + 1);
+                    return monthItem || { mes: i + 1, total_nacimientos: 0, total_matrimonios: 0, total_muertes: 0 };
+                });
+
+                const birthsData = allMonthsData.map(item => parseInt(item.total_nacimientos));
+                const marriagesData = allMonthsData.map(item => parseInt(item.total_matrimonios));
+                const deathsData = allMonthsData.map(item => parseInt(item.total_muertes));
+
+                const ctx = document.getElementById('eventsByMonthChart');
+                if (!ctx) return;
+
+                new Chart(ctx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: monthNames,
+                        datasets: [
+                            {
+                                label: 'Nacimientos',
+                                data: birthsData,
+                                borderColor: 'rgba(79, 70, 229, 1)',
+                                backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                                fill: false,
+                                tension: 0.4,
+                            },
+                            {
+                                label: 'Matrimonios',
+                                data: marriagesData,
+                                borderColor: 'rgba(236, 72, 153, 1)',
+                                backgroundColor: 'rgba(236, 72, 153, 0.2)',
+                                fill: false,
+                                tension: 0.4,
+                            },
+                            {
+                                label: 'Muertes',
+                                data: deathsData,
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                                fill: false,
+                                tension: 0.4,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Eventos'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Mes'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        // NUEVO MÉTODO: createSuperprogenitorsChart
+        createSuperprogenitorsChart() {
+                const data = this.data.superprogenitors;
+                const labels = data.map(item => item.nombre_superprogenitor);
+                const values = data.map(item => parseInt(item.total_hijos));
+                
+                const ctx = document.getElementById('superprogenitorsChart');
+                if (!ctx) return;
+
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Total de Hijos',
+                                data: values,
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                            }
+                        ]
+                    },
+                    options: {
+                        indexAxis: 'y', // Esta es la clave para un gráfico de barras horizontales
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.raw} hijos`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Hijos'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Persona'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
 
         // NUEVO MÉTODO: createBirthDeathDecadeChart
         createBirthDeathDecadeChart() {
@@ -744,7 +926,7 @@
                 });
             }
 
-  // NUEVO MÉTODO: createGenerationDistributionChart
+        // NUEVO MÉTODO: createGenerationDistributionChart
         createGenerationDistributionChart() {
                 const data = this.data.generation_distribution;
                 const labels = data.map(item => `${item.generacion_aproximada}s`);
@@ -878,6 +1060,7 @@
                     }
                 });
             }
+        
         createBirthChart() {
                 const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
                                      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -1104,8 +1287,7 @@
             return monthNames[monthIndex];
         }
 
-
-                    // NUEVO MÉTODO: updateCommonSurnamesTable
+        // NUEVO MÉTODO: updateCommonSurnamesTable
         updateCommonSurnamesTable() {
                 const data = this.data.common_surnames;
                 const tbody = document.getElementById('commonSurnamesTableBody');
@@ -1130,7 +1312,7 @@
                 });
             }
 
-            // NUEVO MÉTODO: updateCommonNamesTable
+        // NUEVO MÉTODO: updateCommonNamesTable
         updateCommonNamesTable() {
                 const data = this.data.common_names;
                 const tbody = document.getElementById('commonNamesTableBody');
@@ -1154,7 +1336,7 @@
                 });
             }
 
-           // NUEVO MÉTODO: updateLongevityLeaderCard
+        // NUEVO MÉTODO: updateLongevityLeaderCard
         updateLongevityLeaderCard() {
                 const data = this.data.longevity_leader;
                 const card = document.getElementById('longevityLeaderCard');
@@ -1181,7 +1363,7 @@
                 `;
             }
 
-            // NUEVO MÉTODO: updateYoungestPersonCard
+        // NUEVO MÉTODO: updateYoungestPersonCard
         updateYoungestPersonCard() {
                 const data = this.data.youngest_person;
                 const card = document.getElementById('youngestPersonCard');
@@ -1204,7 +1386,68 @@
                 `;
             }
 
-         updateLongevityDistributionTable() {
+        // NUEVO MÉTODO: createAgeDifferenceChart
+        createAgeDifferenceChart() {
+                const data = this.data.age_difference_distribution;
+                const labels = data.map(item => `${item.rango_diferencia_edad} años`);
+                const values = data.map(item => parseInt(item.total_parejas));
+
+                const ctx = document.getElementById('ageDifferenceChart');
+                if (!ctx) return;
+
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Total de Parejas',
+                                data: values,
+                                backgroundColor: 'rgba(236, 72, 153, 0.8)',
+                                borderColor: 'rgba(236, 72, 153, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.raw} parejas`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Parejas'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Diferencia de Edad'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+        updateLongevityDistributionTable() {
                 const data = this.data.longevity_distribution;
                 const tbody = document.getElementById('longevityDistributionTableBody');
                 if (!tbody) return;
@@ -1227,8 +1470,7 @@
                 });
             }
 
-
- // Método para obtener las iniciales del nombre
+        // Método para obtener las iniciales del nombre
         getInitials(name) {
                 if (!name) return '?';
                 return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -1263,10 +1505,7 @@
 
     // --- LÓGICA DE INICIALIZACIÓN DEL DASHBOARD ---
 
-    // Función principal para cargar los datos y inicializar el dashboard
-    // --- LÓGICA DE INICIALIZACIÓN DEL DASHBOARD ---
-
-        async function loadDashboardData() {
+    async function loadDashboardData() {
             const mainContent = document.querySelector('.main-content');
             mainContent.innerHTML = '<div style="text-align:center; padding: 50px;">' +
                                        '<div class="loading"></div><p style="margin-top: 15px;">Cargando datos del dashboard...</p>' +
@@ -1330,19 +1569,31 @@
                             <div class="stat-label">Cumpleaños Este Mes</div>
                         </div>
             </div>
-
+        <div class="charts-grid">
             <!-- Lista de cumpleaños -->
-            <div class="chart-card">
-                <h3 class="chart-title">
-                    <i class="fas fa-gift"></i>
-                    Cumpleaños de Este Mes
-                </h3>
-                <div class="birthday-list" id="birthdayList">
-                    <div class="no-data">Cargando cumpleaños...</div>
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-gift"></i>
+                        Cumpleaños de Este Mes
+                    </h3>
+                    <div class="birthday-list" id="birthdayList">
+                        <div class="no-data">Cargando cumpleaños...</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Gráficos -->
+               <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-calendar-check"></i>
+                        Eventos por Mes
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="eventsByMonthChart"></canvas>
+                    </div>
+                </div>
+            </div>
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
@@ -1383,9 +1634,7 @@
                         <canvas id="genderChart"></canvas>
                     </div>
                 </div>
-            </div>
-            
-            <div class="charts-grid">
+        
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-user-tag"></i>
@@ -1456,9 +1705,32 @@
                         </table>
                     </div>
                 </div>
+                   
             </div>
 
-            <div class="charts-grid">
+             <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-venus-mars"></i>
+                        Diferencia de Edad entre Cónyuges
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="ageDifferenceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        <div class="charts-grid">
+              <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-child"></i>
+                        Las 10 Personas con Más Hijos
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="superprogenitorsChart"></canvas>
+                    </div>
+                </div>
+
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-heartbeat"></i>

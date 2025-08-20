@@ -49,6 +49,13 @@
             background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
             animation: float 6s ease-in-out infinite;
         }
+        .chart-note{
+            margin: 0 auto;
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-align: center;
+            padding: 10px 0;
+        }
 
         @keyframes float {
             0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -538,6 +545,15 @@
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
+                        <i class="fas fa-chart-line"></i>
+                        Conteo por Generación
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="generationDistributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">
                         <i class="fas fa-calendar-alt"></i>
                         Longevidad de Fallecidos
                     </h3>
@@ -553,6 +569,18 @@
                                 <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-heartbeat"></i>
+                        Esperanza de Vida por Década
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="longevityByDecadeChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -645,6 +673,8 @@
                 this.createBirthChart();
                 this.createDeathChart();
                 this.createBirthDeathDecadeChart(); // Llama al nuevo método
+                this.createGenerationDistributionChart(); 
+                this.createLongevityByDecadeChart(); 
                 this.createGenderChart();
         }
 
@@ -714,6 +744,140 @@
                 });
             }
 
+  // NUEVO MÉTODO: createGenerationDistributionChart
+        createGenerationDistributionChart() {
+                const data = this.data.generation_distribution;
+                const labels = data.map(item => `${item.generacion_aproximada}s`);
+                const values = data.map(item => parseInt(item.total_personas));
+
+                const ctx = document.getElementById('generationDistributionChart');
+                if (!ctx) return;
+
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                           {
+                                label: 'Personas',
+                                data: values,
+                                // Reemplaza estas dos líneas
+                                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                                borderColor: 'rgba(16, 185, 129, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Personas'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Generación (aprox. 25 años)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+         // NUEVO MÉTODO: createLongevityByDecadeChart
+        createLongevityByDecadeChart() {
+                const data = this.data.longevity_by_birth_decade;
+                const labels = data.map(item => `${item.decada_nacimiento}s`);
+                const values = data.map(item => parseFloat(item.edad_promedio_fallecimiento).toFixed(1));
+
+                const ctx = document.getElementById('longevityByDecadeChart');
+                if (!ctx) return;
+                
+                // Añadir una nota explicativa al HTML
+                const chartCard = ctx.closest('.chart-card');
+                if (chartCard && !chartCard.querySelector('.chart-note')) {
+                    const note = document.createElement('p');
+                    note.className = 'chart-note';
+                    note.textContent = 'Este gráfico solo incluye a las personas fallecidas. Por ello, las décadas recientes no aparecen.';
+                    chartCard.appendChild(note);
+                }
+
+                new Chart(ctx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Esperanza de Vida',
+                                data: values,
+                                borderColor: 'rgba(16, 185, 129, 1)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgba(16, 185, 129, 1)',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += `${context.parsed.y} años`;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Edad Promedio de Fallecimiento'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return `${value} años`;
+                                    }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Década de Nacimiento'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         createBirthChart() {
                 const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
                                      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -1266,6 +1430,15 @@
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
+                        <i class="fas fa-chart-line"></i>
+                        Conteo por Generación
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="generationDistributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">
                         <i class="fas fa-calendar-alt"></i>
                         Longevidad de Fallecidos
                     </h3>
@@ -1281,6 +1454,18 @@
                                 <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-heartbeat"></i>
+                        Esperanza de Vida por Década
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="longevityByDecadeChart"></canvas>
                     </div>
                 </div>
             </div>

@@ -302,6 +302,47 @@ $stmt->execute();
 $results['longevity_distribution'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+
+// --- CONSULTA 13: Conteo de Personas por Generación ---
+$sql_generation_distribution = "
+    SELECT
+        FLOOR(YEAR(dob) / 25) * 25 AS generacion_aproximada,
+        COUNT(id) AS total_personas
+    FROM
+        people
+    WHERE
+        dob IS NOT NULL AND dob != '0000-00-00'
+    GROUP BY
+        generacion_aproximada
+    ORDER BY
+        generacion_aproximada ASC;
+";
+$stmt = $conn->prepare($sql_generation_distribution);
+$stmt->execute();
+$results['generation_distribution'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// --- CONSULTA 14: Esperanza de Vida por Década de Nacimiento ---
+$sql_longevity_by_birth_decade = "
+    SELECT
+        FLOOR(YEAR(dob) / 10) * 10 AS decada_nacimiento,
+        AVG(DATEDIFF(dod, dob) / 365.25) AS edad_promedio_fallecimiento,
+        COUNT(id) AS total_fallecidos
+    FROM
+        people
+    WHERE
+        dob IS NOT NULL AND dob != '0000-00-00'
+        AND dod IS NOT NULL AND dod != '0000-00-00'
+    GROUP BY
+        decada_nacimiento
+    ORDER BY
+        decada_nacimiento ASC;
+";
+$stmt = $conn->prepare($sql_longevity_by_birth_decade);
+$stmt->execute();
+$results['longevity_by_birth_decade'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
 // Devolver todos los resultados como un único objeto JSON
 echo json_encode($results);
 

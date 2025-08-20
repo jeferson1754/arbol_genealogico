@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Demográfico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, -30px) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .icon-total { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .icon-alive { background: linear-gradient(135deg, #10b981, #047857); }
+        .icon-dead { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .icon-birthday { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .chart-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .age-ranges {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .age-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .age-range-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .age-range-item:last-child {
+            border-bottom: none;
+        }
+
+        .age-range-label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .age-range-value {
+            font-weight: 700;
+            color: #4f46e5;
+            font-size: 1.1rem;
+        }
+
+        .birthday-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .birthday-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: rgba(79, 70, 229, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .birthday-item:hover {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .birthday-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .birthday-info h4 {
+            margin: 0;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .birthday-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(79, 70, 229, 0.3);
+            border-radius: 50%;
+            border-top-color: #4f46e5;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 25px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .age-ranges {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .no-data {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Dashboard Demográfico</h1>
+            <p>Análisis completo de datos poblacionales en tiempo real</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Estadísticas principales -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon icon-total">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalPersonas">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="stat-label">Personas Totales</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon icon-alive">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="personasVivas">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="stat-label">Personas Vivas</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon icon-dead">
+                            <i class="fas fa-cross"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="personasMuertas">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="stat-label">Personas Fallecidas</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon icon-birthday">
+                            <i class="fas fa-birthday-cake"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="cumpleanosHoy">
+                        <div class="loading"></div>
+                    </div>
+                    <div class="stat-label">Cumpleaños Este Mes</div>
+                </div>
+            </div>
+
+            <!-- Lista de cumpleaños -->
+            <div class="chart-card">
+                <h3 class="chart-title">
+                    <i class="fas fa-gift"></i>
+                    Cumpleaños de Este Mes
+                </h3>
+                <div class="birthday-list" id="birthdayList">
+                    <div class="no-data">Cargando cumpleaños...</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Nacimientos por Mes
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="birthChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Defunciones por Mes
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="deathChart"></canvas>
+                    </div>
+                </div>
+
+                 <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Nacimientos y Muertes por Década
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="birthDeathDecadeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Distribución por Género
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="genderChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rangos de edad -->
+            <div class="age-ranges">
+                <div class="age-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-users"></i>
+                        Distribución por Edades
+                    </h3>
+                    <div id="ageRanges">
+                        <div class="no-data">Cargando rangos de edad...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    class Dashboard {
+        constructor(data) {
+            this.data = data;
+            this.init();
+        }
+
+        init() {
+            // No usamos setTimeout, ya que los datos ya están cargados.
+            this.updateStats();
+            this.createCharts();
+            this.updateAgeRanges();
+            this.updateBirthdayList();
+        }
+
+        updateStats() {
+                const stats = this.data.stats;
+                
+                this.animateValue('totalPersonas', 0, parseInt(stats.total_personas), 1000);
+                this.animateValue('personasVivas', 0, parseInt(stats.personas_vivas), 1200);
+                this.animateValue('personasMuertas', 0, parseInt(stats.personas_fallecidas), 1400);
+                
+                const cumpleanosEsteMes = this.data.birthdays_alive.length + this.data.birthdays_deceased.length;
+                this.animateValue('cumpleanosEsteMes', 0, cumpleanosEsteMes, 1600);
+            }
+
+        animateValue(id, start, end, duration) {
+                const element = document.getElementById(id);
+                if (!element) return; // Asegurarse de que el elemento existe
+                
+                const range = end - start;
+                let current = start;
+                const increment = end > start ? 1 : -1;
+                const stepTime = Math.abs(Math.floor(duration / range));
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    element.textContent = current;
+                    if (current === end) {
+                        clearInterval(timer);
+                    }
+                }, stepTime);
+            }
+
+        createCharts() {
+                this.createBirthChart();
+                this.createDeathChart();
+                this.createBirthDeathDecadeChart(); // Llama al nuevo método
+                this.createGenderChart();
+        }
+
+        // NUEVO MÉTODO: createBirthDeathDecadeChart
+        createBirthDeathDecadeChart() {
+                const birthDeathData = this.data.births_deaths_by_decade;
+                const decades = birthDeathData.map(item => item.decada + 's');
+                const births = birthDeathData.map(item => parseInt(item.total_nacimientos));
+                const deaths = birthDeathData.map(item => parseInt(item.total_muertes));
+
+                const ctx = document.getElementById('birthDeathDecadeChart');
+                if (!ctx) return;
+
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: decades,
+                        datasets: [
+                            {
+                                label: 'Nacimientos',
+                                data: births,
+                                backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                                borderColor: 'rgba(79, 70, 229, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8
+                            },
+                            {
+                                label: 'Muertes',
+                                data: deaths,
+                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true, // Esto crea un gráfico de barras apiladas
+                                title: {
+                                    display: true,
+                                    text: 'Década'
+                                }
+                            },
+                            y: {
+                                stacked: true, // Esto apila las barras
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Personas'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        createBirthChart() {
+                const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                                     'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                const birthsByMonth = new Array(12).fill(0);
+                
+                this.data.births.forEach(item => {
+                    birthsByMonth[item.mes - 1] = parseInt(item.total);
+                });
+                
+                const ctx = document.getElementById('birthChart');
+                if (!ctx) return; // Asegurarse de que el elemento existe
+                
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: monthNames,
+                        datasets: [{
+                            label: 'Nacimientos',
+                            data: birthsByMonth,
+                            backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        createDeathChart() {
+            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                                 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const deathsByMonth = new Array(12).fill(0);
+
+            // Los datos de defunciones por mes vienen de la API
+            this.data.deaths.forEach(item => {
+                deathsByMonth[item.mes - 1] = parseInt(item.total);
+            });
+
+            const ctx = document.getElementById('deathChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: 'Defunciones',
+                        data: deathsByMonth,
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        createGenderChart() {
+                const genderLabels = [];
+                const genderData = [];
+                const genderColors = [];
+                
+                this.data.gender_dist.forEach(item => {
+                    genderLabels.push(item.gender);
+                    genderData.push(parseInt(item.total));
+                    if (item.gender === 'Masculino') {
+                        genderColors.push('rgba(59, 130, 246, 0.8)');
+                    } else if (item.gender === 'Femenino') {
+                        genderColors.push('rgba(236, 72, 153, 0.8)');
+                    } else {
+                        genderColors.push('rgba(107, 114, 128, 0.8)');
+                    }
+                });
+                
+                const ctx = document.getElementById('genderChart');
+                if (!ctx) return;
+                
+                new Chart(ctx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: genderLabels,
+                        datasets: [{
+                            data: genderData,
+                            backgroundColor: genderColors,
+                            borderColor: genderColors.map(c => c.replace('0.8', '1')),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        updateAgeRanges() {
+            const container = document.getElementById('ageRanges');
+            container.innerHTML = '';
+            
+            const ageRangesData = this.data.age_ranges_alive;
+            
+            if (ageRangesData.length === 0) {
+                 container.innerHTML = '<div class="no-data">No hay personas vivas para mostrar rangos de edad.</div>';
+                 return;
+            }
+
+            ageRangesData.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'age-range-item';
+                itemDiv.innerHTML = `
+                    <span class="age-range-label">${item.rango_edad} años</span>
+                    <span class="age-range-value">${item.total_personas}</span>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        updateBirthdayList() {
+                const birthdaysAlive = this.data.birthdays_alive;
+                const birthdaysDeceased = this.data.birthdays_deceased;
+                const container = document.getElementById('birthdayList');
+                if (!container) return;
+
+                if (birthdaysAlive.length === 0 && birthdaysDeceased.length === 0) {
+                    container.innerHTML = '<div class="no-data">No hay cumpleaños este mes.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                
+                const monthName = this.getMonthName(new Date().getMonth());
+
+                birthdaysAlive.forEach(persona => {
+                    const item = document.createElement('div');
+                    item.className = 'birthday-item';
+                    const age = this.calculateAge(persona.dob);
+
+                    // --- MODIFICACIÓN CLAVE AQUÍ ---
+                    const birthDate = new Date(persona.dob);
+                    birthDate.setDate(birthDate.getDate() + 1); // Sumar un día para evitar desfase horario
+
+
+                    item.innerHTML = `
+                        <div class="birthday-avatar">
+                            ${this.getInitials(persona.name)}
+                        </div>
+                        <div class="birthday-info">
+                            <h4>${persona.name}</h4>
+                            <p>Cumple ${age} años el ${birthDate.getDate()} de ${monthName}</p>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+                
+                birthdaysDeceased.forEach(persona => {
+                    const item = document.createElement('div');
+                    item.className = 'birthday-item deceased';
+                    const age = this.calculateAgeDeceased(persona.dob, persona.dod);
+
+                    // --- MODIFICACIÓN CLAVE AQUÍ TAMBIÉN ---
+                    const birthDate = new Date(persona.dob);
+                    birthDate.setDate(birthDate.getDate() + 1); // Sumar un día para evitar desfase horario
+
+                    item.innerHTML = `
+                        <div class="birthday-avatar" style="background: linear-gradient(135deg, #6b7280, #374151);">
+                            <i class="fas fa-cross"></i>
+                        </div>
+                        <div class="birthday-info">
+                            <h4>${persona.name}</h4>
+                              <p>Hubiera cumplido ${age} años el ${birthDate.getDate()} de ${monthName}</p>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+        // Nuevo método para obtener el nombre del mes en español
+        getMonthName(monthIndex) {
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            return monthNames[monthIndex];
+        }
+
+ // Método para obtener las iniciales del nombre
+        getInitials(name) {
+                if (!name) return '?';
+                return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+            }
+
+        // Lógica de cálculo de edad para vivos (se mantiene)
+        calculateAge(birthDate) {
+                const birth = new Date(birthDate);
+                const today = new Date();
+                let age = today.getFullYear() - birth.getFullYear();
+                const monthDiff = today.getMonth() - birth.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                    age--;
+                }
+                
+                return age;
+            }
+
+        // Nuevo método para calcular la edad de los fallecidos en su cumpleaños actual
+        calculateAgeDeceased(birthDate, deathDate) {
+             const birth = new Date(birthDate);
+             const death = new Date(deathDate);
+             let age = death.getFullYear() - birth.getFullYear();
+             const monthDiff = death.getMonth() - birth.getMonth();
+             if (monthDiff < 0 || (monthDiff === 0 && death.getDate() < birth.getDate())) {
+                 age--;
+             }
+             return age;
+        }
+    }
+
+    // --- LÓGICA DE INICIALIZACIÓN DEL DASHBOARD ---
+
+    // Función principal para cargar los datos y inicializar el dashboard
+    // --- LÓGICA DE INICIALIZACIÓN DEL DASHBOARD ---
+
+        async function loadDashboardData() {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.innerHTML = '<div style="text-align:center; padding: 50px;">' +
+                                       '<div class="loading"></div><p style="margin-top: 15px;">Cargando datos del dashboard...</p>' +
+                                       '</div>';
+            
+            try {
+                const response = await fetch('dashboard_api.php');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const dashboardData = await response.json();
+                console.log('Datos del dashboard cargados:', dashboardData);
+
+                // Restaurar el contenido principal con los elementos originales del DOM
+                mainContent.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon icon-total">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalPersonas"></div>
+                            <div class="stat-label">Personas Totales</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon icon-alive">
+                                    <i class="fas fa-heartbeat"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="personasVivas"></div>
+                            <div class="stat-label">Personas Vivas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon icon-dead">
+                                    <i class="fas fa-cross"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="personasMuertas"></div>
+                            <div class="stat-label">Personas Fallecidas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon icon-birthday">
+                                    <i class="fas fa-birthday-cake"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="cumpleanosEsteMes"></div>
+                            <div class="stat-label">Cumpleaños Este Mes</div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <i class="fas fa-gift"></i>
+                            Cumpleaños de Este Mes
+                        </h3>
+                        <div class="birthday-list" id="birthdayList"></div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3 class="chart-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Nacimientos por Mes
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="birthChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3 class="chart-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Defunciones por Mes
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="deathChart"></canvas>
+                            </div>
+                        </div>
+                         <div class="chart-card">
+                            <h3 class="chart-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Nacimientos y Muertes por Década
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="birthDeathDecadeChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3 class="chart-title">
+                                <i class="fas fa-chart-pie"></i>
+                                Distribución por Género
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="genderChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="age-ranges">
+                        <div class="age-card">
+                            <h3 class="chart-title">
+                                <i class="fas fa-users"></i>
+                                Distribución por Edades
+                            </h3>
+                            <div id="ageRanges"></div>
+                        </div>
+                    </div>
+                `;
+
+                new Dashboard(dashboardData);
+
+            } catch (error) {
+                console.error('Error al cargar los datos del dashboard:', error);
+                mainContent.innerHTML = '<div style="text-align:center; padding: 50px; color: #ef4444;">' +
+                                       '<p>Error al cargar los datos. Por favor, revisa la conexión o los archivos del servidor.</p>' +
+                                       '</div>';
+            }
+        }
+    
+    // Al cargar el DOM, llamamos a la función de carga
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDashboardData();
+    });
+</script>
+</body>
+</html>

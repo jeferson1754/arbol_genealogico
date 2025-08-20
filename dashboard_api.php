@@ -446,6 +446,44 @@ $stmt->execute();
 $results['events_by_month'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+// Incluir la lista de nombres comunes
+$common_names_list = require 'common_names.php';
+$common_names_set = array_map('strtolower', $common_names_list);
+
+// --- CONSULTA 18: Nombres más raros / inusuales ---
+$sql_all_first_names = "
+    SELECT
+        SUBSTRING_INDEX(name, ' ', 1) AS nombre,
+        COUNT(*) AS total
+    FROM
+        people
+    WHERE
+        name IS NOT NULL AND name != ''
+    GROUP BY
+        nombre
+    HAVING
+        COUNT(*) = 1
+    ORDER BY
+        nombre ASC
+";
+$stmt = $conn->prepare($sql_all_first_names);
+$stmt->execute();
+$all_names_data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Filtrar los nombres que no están en la lista de nombres comunes
+$rare_names = [];
+foreach ($all_names_data as $item) {
+    if (!in_array(strtolower($item['nombre']), $common_names_set)) {
+        $rare_names[] = $item;
+    }
+}
+
+// Tomar solo el top 10 de los nombres raros y de menor frecuencia
+$rare_names_top_10 = array_slice($rare_names, 0, 50);
+
+$results['rare_names'] = $rare_names_top_10;
+
 // Devolver todos los resultados como un único objeto JSON
 echo json_encode($results);
 

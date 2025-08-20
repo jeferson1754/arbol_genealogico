@@ -385,6 +385,23 @@
         color: #9ca3af;
         font-style: italic;
     }
+
+        /* Estilos para el contenedor de la tabla con scroll vertical */
+    .table-scroll-container {
+        max-height: 320px; /* Define la altura máxima de tu contenedor (ej. 320px) */
+        overflow-y: auto;  /* Habilita el scroll vertical cuando el contenido sobrepasa la altura */
+        background-color: white;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .table-scroll-container thead th {
+        position: sticky; /* Para que el encabezado se mantenga visible */
+        top: 0;
+        background-color: #f9fafb; /* Color de fondo del encabezado pegajoso */
+        z-index: 1;
+    }
     </style>
 </head>
 <body>
@@ -641,13 +658,32 @@
             </div>
             
             <div class="age-ranges">
-                <div class="age-card">
+                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-users"></i>
                         Distribución por Edades
                     </h3>
-                    <div id="ageRanges">
-                        <div class="no-data">Cargando rangos de edad...</div>
+                    <div class="chart-container">
+                        <canvas id="ageDistributionChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-question-circle"></i>
+                        Nombres más Inusuales
+                    </h3>
+                      <div class="table-scroll-container">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Nombre Inusual</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Apariciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rareNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -664,13 +700,14 @@
         init() {
                 this.updateStats();
                 this.createCharts();
-                this.updateAgeRanges();
                 this.updateBirthdayList();
                 this.updateCommonSurnamesTable(); // Llama al nuevo método
                 this.updateCommonNamesTable();  
+                this.updateRareNamesTable(); 
                 this.createSuperprogenitorsChart(); 
                 this.updateLongevityLeaderCard(); // Llama al nuevo método
-                this.updateYoungestPersonCard(); // Llama al nuevo método  // Llama al nuevo método
+                this.updateYoungestPersonCard(); // Llama al nuevo método
+                this.createAgeDistributionChart();
                 this.updateLongevityDistributionTable();
             }
 
@@ -713,6 +750,67 @@
                 this.createGenderChart();
                 this.createAgeDifferenceChart(); 
         }
+
+         // NUEVO MÉTODO: createAgeDistributionChart
+        createAgeDistributionChart() {
+                const data = this.data.age_ranges_alive;
+                const labels = data.map(item => item.rango_edad);
+                const values = data.map(item => parseInt(item.total_personas));
+
+                const ctx = document.getElementById('ageDistributionChart');
+                if (!ctx) return;
+
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Personas Vivas',
+                                data: values,
+                                backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                                borderColor: 'rgba(79, 70, 229, 1)',
+                                borderWidth: 2,
+                                borderRadius: 8,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.raw} personas`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Personas'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Rango de Edad'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
 
         // NUEVO MÉTODO: createEventsByMonthChart
         createEventsByMonthChart() {
@@ -1199,28 +1297,6 @@
                 });
             }
 
-        updateAgeRanges() {
-            const container = document.getElementById('ageRanges');
-            container.innerHTML = '';
-            
-            const ageRangesData = this.data.age_ranges_alive;
-            
-            if (ageRangesData.length === 0) {
-                 container.innerHTML = '<div class="no-data">No hay personas vivas para mostrar rangos de edad.</div>';
-                 return;
-            }
-
-            ageRangesData.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'age-range-item';
-                itemDiv.innerHTML = `
-                    <span class="age-range-label">${item.rango_edad} años</span>
-                    <span class="age-range-value">${item.total_personas}</span>
-                `;
-                container.appendChild(itemDiv);
-            });
-        }
-
         updateBirthdayList() {
                 const birthdaysAlive = this.data.birthdays_alive;
                 const birthdaysDeceased = this.data.birthdays_deceased;
@@ -1277,6 +1353,30 @@
                         </div>
                     `;
                     container.appendChild(item);
+                });
+            }
+
+        // NUEVO MÉTODO: updateRareNamesTable
+        updateRareNamesTable() {
+                const data = this.data.rare_names;
+                const tbody = document.getElementById('rareNamesTableBody');
+                if (!tbody) return;
+
+                tbody.innerHTML = ''; // Limpiar el mensaje de carga
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" class="no-data">No se encontraron nombres inusuales.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-100 last:border-none';
+                    row.innerHTML = `
+                        <td class="px-4 py-2 text-gray-800">${item.nombre}</td>
+                        <td class="px-4 py-2 text-gray-800 text-right font-bold">${item.total}</td>
+                    `;
+                    tbody.appendChild(row);
                 });
             }
 
@@ -1770,8 +1870,27 @@
                         <i class="fas fa-users"></i>
                         Distribución por Edades
                     </h3>
-                    <div id="ageRanges">
-                        <div class="no-data">Cargando rangos de edad...</div>
+                     <div class="chart-container">
+                        <canvas id="ageDistributionChart"></canvas>
+                    </div>
+                </div>
+                 <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-question-circle"></i>
+                        Nombres más Inusuales
+                    </h3>
+                     <div class="table-scroll-container">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Nombre Inusual</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Apariciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rareNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

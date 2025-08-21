@@ -388,7 +388,7 @@
 
         /* Estilos para el contenedor de la tabla con scroll vertical */
     .table-scroll-container {
-        max-height: 320px; /* Define la altura máxima de tu contenedor (ej. 320px) */
+        max-height: 400px; /* Define la altura máxima de tu contenedor (ej. 320px) */
         overflow-y: auto;  /* Habilita el scroll vertical cuando el contenido sobrepasa la altura */
         background-color: white;
         border-radius: 12px;
@@ -683,14 +683,59 @@
 
                 <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-chart-pie"></i>
-                        Distribución por Género
+                        <i class="fas fa-users"></i>
+                        Distribución por Edades
                     </h3>
                     <div class="chart-container">
-                        <canvas id="genderChart"></canvas>
+                        <canvas id="ageDistributionChart"></canvas>
                     </div>
                 </div>
-   
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-venus-mars"></i>
+                        Diferencia de Edad entre Cónyuges
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="ageDifferenceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-line"></i>
+                        Conteo por Generación
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="generationDistributionChart"></canvas>
+                    </div>
+                </div>
+
+               
+            </div>
+
+            <div class="charts-grid">
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-id-badge"></i>
+                        Nombres más Comunes
+                    </h3>
+                    <div id="commonNamesTableContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Nombre</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commonNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando nombres...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-user-tag"></i>
@@ -713,36 +758,24 @@
 
                 <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-id-badge"></i>
-                        Nombres más Comunes
+                        <i class="fas fa-question-circle"></i>
+                        Nombres más Inusuales
                     </h3>
-                    <div id="commonNamesTableContainer">
+                      <div class="table-scroll-container">
                         <table class="w-full text-left table-auto">
                             <thead>
                                 <tr class="border-b-2 border-gray-200">
-                                    <th class="px-4 py-2 text-gray-600">Nombre</th>
-                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                    <th class="px-4 py-2 text-gray-600">Nombre Inusual</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Apariciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="commonNamesTableBody">
-                                <tr class="no-data"><td colspan="2">Cargando nombres...</td></tr>
+                            <tbody id="rareNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
 
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3 class="chart-title">
-                        <i class="fas fa-chart-line"></i>
-                        Conteo por Generación
-                    </h3>
-                    <div class="chart-container">
-                        <canvas id="generationDistributionChart"></canvas>
-                    </div>
-                </div>
-            
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-calendar-alt"></i>
@@ -762,31 +795,17 @@
                         </table>
                     </div>
                 </div>
-            </div>
 
-             <div class="charts-grid">
-                <div class="chart-card">
+              <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-venus-mars"></i>
-                        Diferencia de Edad entre Cónyuges
+                        <i class="fas fa-chart-pie"></i>
+                        Distribución por Género
                     </h3>
                     <div class="chart-container">
-                        <canvas id="ageDifferenceChart"></canvas>
+                        <canvas id="genderChart"></canvas>
                     </div>
                 </div>
-            </div>
 
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3 class="chart-title">
-                        <i class="fas fa-child"></i>
-                        Las 10 Personas con Más Hijos
-                    </h3>
-                    <div class="chart-container">
-                        <canvas id="superprogenitorsChart"></canvas>
-                    </div>
-                </div>
-        
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-heartbeat"></i>
@@ -796,7 +815,12 @@
                         <canvas id="longevityByDecadeChart"></canvas>
                     </div>
                 </div>
+
             </div>
+
+
+         
+            
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
@@ -824,37 +848,21 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="age-ranges">
-                 <div class="chart-card">
-                    <h3 class="chart-title">
-                        <i class="fas fa-users"></i>
-                        Distribución por Edades
-                    </h3>
-                    <div class="chart-container">
-                        <canvas id="ageDistributionChart"></canvas>
-                    </div>
-                </div>
+
+            <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-question-circle"></i>
-                        Nombres más Inusuales
+                        <i class="fas fa-child"></i>
+                        Las 10 Personas con Más Hijos
                     </h3>
-                      <div class="table-scroll-container">
-                        <table class="w-full text-left table-auto">
-                            <thead>
-                                <tr class="border-b-2 border-gray-200">
-                                    <th class="px-4 py-2 text-gray-600">Nombre Inusual</th>
-                                    <th class="px-4 py-2 text-gray-600 text-right">Apariciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rareNamesTableBody">
-                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="chart-container">
+                        <canvas id="superprogenitorsChart"></canvas>
                     </div>
                 </div>
+        
+                
             </div>
+            
         </div>
     </div>
 
@@ -1457,7 +1465,39 @@
                                 position: 'bottom',
                                 labels: {
                                     padding: 20,
-                                    usePointStyle: true
+                                    usePointStyle: true,
+                                    // CÓDIGO CORREGIDO: Evitar colisión de nombres de variables
+                                    generateLabels: (chart) => {
+                                        const chartData = chart.data; // <-- Renombrada a chartData
+                                        if (chartData.labels.length && chartData.datasets.length) {
+                                            const total = chartData.datasets[0].data.reduce((acc, current) => acc + current, 0);
+                                            return chartData.labels.map((label, i) => {
+                                                const value = chartData.datasets[0].data[i]; // <-- Acceder correctamente al valor
+                                                const percentage = ((value / total) * 100).toFixed(1);
+                                                return {
+                                                    text: `${label}: ${percentage}%`,
+                                                    fillStyle: chartData.datasets[0].backgroundColor[i],
+                                                    strokeStyle: chartData.datasets[0].borderColor[i],
+                                                    lineWidth: 2,
+                                                    pointStyle: 'circle',
+                                                    hidden: false,
+                                                    index: i
+                                                };
+                                            });
+                                        }
+                                        return [];
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label;
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((acc, current) => acc + current, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${percentage}% (${value})`;
+                                    }
                                 }
                             }
                         }
@@ -1878,7 +1918,8 @@
                             <div class="stat-label">Cumpleaños Este Mes</div>
                         </div>
             </div>
-        <div class="charts-grid">
+        
+            <div class="charts-grid">
             <!-- Lista de cumpleaños -->
                 <div class="chart-card">
                     <h3 class="chart-title">
@@ -1890,9 +1931,8 @@
                     </div>
                 </div>
             </div>
-
             <!-- Gráficos -->
-               <div class="charts-grid">
+            <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-calendar-check"></i>
@@ -1936,14 +1976,59 @@
 
                 <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-chart-pie"></i>
-                        Distribución por Género
+                        <i class="fas fa-users"></i>
+                        Distribución por Edades
                     </h3>
                     <div class="chart-container">
-                        <canvas id="genderChart"></canvas>
+                        <canvas id="ageDistributionChart"></canvas>
                     </div>
                 </div>
-        
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-venus-mars"></i>
+                        Diferencia de Edad entre Cónyuges
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="ageDifferenceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-line"></i>
+                        Conteo por Generación
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="generationDistributionChart"></canvas>
+                    </div>
+                </div>
+
+               
+            </div>
+
+             <div class="charts-grid">
+
+                <div class="chart-card">
+                    <h3 class="chart-title">
+                        <i class="fas fa-id-badge"></i>
+                        Nombres más Comunes
+                    </h3>
+                    <div id="commonNamesTableContainer">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="px-4 py-2 text-gray-600">Nombre</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commonNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando nombres...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-user-tag"></i>
@@ -1966,35 +2051,24 @@
 
                 <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-id-badge"></i>
-                        Nombres más Comunes
+                        <i class="fas fa-question-circle"></i>
+                        Nombres más Inusuales
                     </h3>
-                    <div id="commonNamesTableContainer">
+                      <div class="table-scroll-container">
                         <table class="w-full text-left table-auto">
                             <thead>
                                 <tr class="border-b-2 border-gray-200">
-                                    <th class="px-4 py-2 text-gray-600">Nombre</th>
-                                    <th class="px-4 py-2 text-gray-600 text-right">Cantidad</th>
+                                    <th class="px-4 py-2 text-gray-600">Nombre Inusual</th>
+                                    <th class="px-4 py-2 text-gray-600 text-right">Apariciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="commonNamesTableBody">
-                                <tr class="no-data"><td colspan="2">Cargando nombres...</td></tr>
+                            <tbody id="rareNamesTableBody">
+                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
 
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3 class="chart-title">
-                        <i class="fas fa-chart-line"></i>
-                        Conteo por Generación
-                    </h3>
-                    <div class="chart-container">
-                        <canvas id="generationDistributionChart"></canvas>
-                    </div>
-                </div>
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-calendar-alt"></i>
@@ -2014,29 +2088,14 @@
                         </table>
                     </div>
                 </div>
-                   
-            </div>
 
-             <div class="charts-grid">
-                <div class="chart-card">
-                    <h3 class="chart-title">
-                        <i class="fas fa-venus-mars"></i>
-                        Diferencia de Edad entre Cónyuges
-                    </h3>
-                    <div class="chart-container">
-                        <canvas id="ageDifferenceChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-        <div class="charts-grid">
               <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-child"></i>
-                        Las 10 Personas con Más Hijos
+                        <i class="fas fa-chart-pie"></i>
+                        Distribución por Género
                     </h3>
                     <div class="chart-container">
-                        <canvas id="superprogenitorsChart"></canvas>
+                        <canvas id="genderChart"></canvas>
                     </div>
                 </div>
 
@@ -2049,16 +2108,23 @@
                         <canvas id="longevityByDecadeChart"></canvas>
                     </div>
                 </div>
+
             </div>
 
+
+         
+            
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-crown"></i>
                         La Persona que Más Vivió
                     </h3>
-                    <div id="longevityLeaderCard" class="p-4 text-center">
-                        <div class="no-data">Cargando datos...</div>
+                    <div id="longevityLeaderCard" class="card-content">
+                        <div class="no-data">
+                            <div class="loading-spinner"></div>
+                            Cargando datos...
+                        </div>
                     </div>
                 </div>
 
@@ -2067,41 +2133,27 @@
                         <i class="fas fa-baby"></i>
                         La Persona Más Joven
                     </h3>
-                    <div id="youngestPersonCard" class="p-4 text-center">
-                        <div class="no-data">Cargando datos...</div>
+                    <div id="youngestPersonCard" class="card-content">
+                        <div class="no-data">
+                            <div class="loading-spinner"></div>
+                            Cargando datos...
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="age-ranges">
-                <div class="age-card">
+
+            <div class="charts-grid">
+                <div class="chart-card">
                     <h3 class="chart-title">
-                        <i class="fas fa-users"></i>
-                        Distribución por Edades
+                        <i class="fas fa-child"></i>
+                        Las 10 Personas con Más Hijos
                     </h3>
-                     <div class="chart-container">
-                        <canvas id="ageDistributionChart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="superprogenitorsChart"></canvas>
                     </div>
                 </div>
-                 <div class="chart-card">
-                    <h3 class="chart-title">
-                        <i class="fas fa-question-circle"></i>
-                        Nombres más Inusuales
-                    </h3>
-                     <div class="table-scroll-container">
-                        <table class="w-full text-left table-auto">
-                            <thead>
-                                <tr class="border-b-2 border-gray-200">
-                                    <th class="px-4 py-2 text-gray-600">Nombre Inusual</th>
-                                    <th class="px-4 py-2 text-gray-600 text-right">Apariciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rareNamesTableBody">
-                                <tr class="no-data"><td colspan="2">Cargando datos...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        
+                
             </div>
                 `;
 

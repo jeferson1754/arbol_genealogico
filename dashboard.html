@@ -1311,45 +1311,54 @@
                 container.innerHTML = '';
                 
                 const monthName = this.getMonthName(new Date().getMonth());
+                
+                // Función auxiliar para verificar si es hoy
+                const isToday = (dob) => {
+                    const today = new Date();
+                    const birthday = new Date(dob);
+                    // Usar Date.UTC para evitar problemas de zona horaria
+                    return today.getUTCDate() === birthday.getUTCDate() && today.getUTCMonth() === birthday.getUTCMonth();
+                };
 
+                // Vivos
                 birthdaysAlive.forEach(persona => {
-                    const item = document.createElement('div');
-                    item.className = 'birthday-item';
                     const age = this.calculateAge(persona.dob);
-
-                    // --- MODIFICACIÓN CLAVE AQUÍ ---
+                    const isBirthdayToday = isToday(persona.dob);
+                    const item = document.createElement('div');
+                    item.className = `birthday-item${isBirthdayToday ? ' highlight' : ''}`; // Clase 'highlight' si es hoy
+                    
                     const birthDate = new Date(persona.dob);
-                    birthDate.setDate(birthDate.getDate() + 1); // Sumar un día para evitar desfase horario
-
+                    birthDate.setDate(birthDate.getDate() + 1);
 
                     item.innerHTML = `
                         <div class="birthday-avatar">
                             ${this.getInitials(persona.name)}
                         </div>
                         <div class="birthday-info">
-                            <h4>${persona.name}</h4>
+                            <h4>${persona.name}${isBirthdayToday ? ' <i class="fas fa-gift text-yellow-500"></i>' : ''}</h4>
                             <p>Cumple ${age} años el ${birthDate.getDate()} de ${monthName}</p>
                         </div>
                     `;
                     container.appendChild(item);
                 });
                 
+                // Fallecidos
                 birthdaysDeceased.forEach(persona => {
-                    const item = document.createElement('div');
-                    item.className = 'birthday-item deceased';
                     const age = this.calculateAgeDeceased(persona.dob, persona.dod);
-
-                    // --- MODIFICACIÓN CLAVE AQUÍ TAMBIÉN ---
+                    const isBirthdayToday = isToday(persona.dob);
+                    const item = document.createElement('div');
+                    item.className = `birthday-item deceased${isBirthdayToday ? ' highlight' : ''}`;
+                    
                     const birthDate = new Date(persona.dob);
-                    birthDate.setDate(birthDate.getDate() + 1); // Sumar un día para evitar desfase horario
+                    birthDate.setDate(birthDate.getDate() + 1);
 
                     item.innerHTML = `
                         <div class="birthday-avatar" style="background: linear-gradient(135deg, #6b7280, #374151);">
                             <i class="fas fa-cross"></i>
                         </div>
                         <div class="birthday-info">
-                            <h4>${persona.name}</h4>
-                              <p>Hubiera cumplido ${age} años el ${birthDate.getDate()} de ${monthName}</p>
+                            <h4>${persona.name}${isBirthdayToday ? ' <i class="fas fa-gift text-yellow-500"></i>' : ''}</h4>
+                            <p>Hubiera cumplido ${age} años el ${birthDate.getDate()} de ${monthName}</p>
                         </div>
                     `;
                     container.appendChild(item);

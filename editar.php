@@ -957,8 +957,8 @@ $conn->close();
             // --- Lógica de subida y eliminación de documentos ---
 
             // Helper to get file icon class
-            const getFileIconClassJs = (filename) => {
-                const ext = filename.split('.').pop().toLowerCase();
+            const getFileIconClassJs = (fileNameDisplay) => {
+                const ext = fileNameDisplay.split('.').pop().toLowerCase();
                 switch (ext) {
                     case 'pdf':
                         return 'fas fa-file-pdf text-red-600';
@@ -1095,9 +1095,13 @@ $conn->close();
 
                     if (result.success) {
                         alert(result.message);
-                        addDocumentToDisplay(result); // Add to display dynamically
-                        documentUploadForm.reset(); // Clear form
-                        removeFile(); // Clear file preview
+                        addDocumentToDisplay(result);
+                        documentUploadForm.reset(); // Esta línea restablece todo el formulario
+                        fileInput.value = '';
+                        fileNameDisplay.textContent = '';
+                        fileSizeDisplay.textContent = '';
+                        filePreview.classList.add('hidden');
+
                     } else {
                         alert('Error al subir documento: ' + result.message);
                     }

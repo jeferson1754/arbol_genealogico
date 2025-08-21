@@ -414,6 +414,149 @@
         .floating-button:hover {
             transform: scale(1.05);
         }
+
+      /* ... (estilos CSS existentes) ... */
+
+        /* Nuevos estilos para las tarjetas de persona */
+        .chart-title {
+            /* Mantenemos el estilo de título anterior */
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-top-left-radius: 19px; /* Para que coincida con el card-radius */
+            border-top-right-radius: 19px;
+        }
+        .chart-card {
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            animation: fadeInUp 0.6s ease-out; /* Animación de entrada */
+        }
+        .chart-card:nth-child(2) { animation-delay: 0.2s; }
+
+        .chart-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-content {
+            padding: 2rem;
+            text-align: center;
+            min-height: 200px; /* Para mantener una altura consistente */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .person-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .icon-container:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .icon-container.longevity {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+        }
+
+        .icon-container.youngest {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #4a90e2;
+        }
+
+        .icon-container.death {
+            background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+            color: #8b4a8b;
+        }
+
+        .person-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .person-status {
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-weight: 500;
+            background: rgba(52, 152, 219, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin: 0;
+        }
+
+        .person-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .detail-item {
+            font-size: 0.85rem;
+            color: #95a5a6;
+            background: rgba(236, 240, 241, 0.8);
+            padding: 0.4rem 1rem;
+            border-radius: 12px;
+            border-left: 3px solid #3498db;
+            margin: 0;
+        }
+        .detail-item i { margin-right: 0.5rem; }
+
+
+        /* Clases para estados de carga */
+        .no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            color: #7f8c8d;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #ecf0f1;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -654,15 +797,17 @@
                     </div>
                 </div>
             </div>
-
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3 class="chart-title">
                         <i class="fas fa-crown"></i>
                         La Persona que Más Vivió
                     </h3>
-                    <div id="longevityLeaderCard" class="p-4 text-center">
-                        <div class="no-data">Cargando datos...</div>
+                    <div id="longevityLeaderCard" class="card-content">
+                        <div class="no-data">
+                            <div class="loading-spinner"></div>
+                            Cargando datos...
+                        </div>
                     </div>
                 </div>
 
@@ -671,8 +816,11 @@
                         <i class="fas fa-baby"></i>
                         La Persona Más Joven
                     </h3>
-                    <div id="youngestPersonCard" class="p-4 text-center">
-                        <div class="no-data">Cargando datos...</div>
+                    <div id="youngestPersonCard" class="card-content">
+                        <div class="no-data">
+                            <div class="loading-spinner"></div>
+                            Cargando datos...
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1465,55 +1613,87 @@
                 });
             }
 
-        // NUEVO MÉTODO: updateLongevityLeaderCard
-        updateLongevityLeaderCard() {
+       // ... (código JavaScript existente de la clase Dashboard) ...
+
+             // NUEVO MÉTODO MEJORADO: updateLongevityLeaderCard
+            updateLongevityLeaderCard() {
                 const data = this.data.longevity_leader;
-                const card = document.getElementById('longevityLeaderCard');
-                if (!card) return;
+                const cardContent = document.getElementById('longevityLeaderCard');
+                if (!cardContent) return;
 
-                if (!data) {
-                    card.innerHTML = '<div class="no-data">No hay datos de personas fallecidas.</div>';
+                if (!data || !data.name) {
+                    cardContent.innerHTML = `
+                        <div class="no-data">
+                            <div class="loading-spinner"></div>
+                            Cargando datos...
+                        </div>
+                    `;
                     return;
                 }
                 
-                const deathText = data.dod ? `Vivió ${data.edad_calculada} años` : `Tiene ${data.edad_calculada} años`;
-                const deathIcon = data.dod ? `<i class="fas fa-cross text-red-500"></i>` : `<i class="fas fa-heartbeat text-green-500"></i>`;
+                const isDeceased = data.dod && data.dod !== '0000-00-00';
+                const iconClass = isDeceased ? 'fas fa-cross' : 'fas fa-heart'; // Corregido a fas fa-heart
+                const iconContainerClass = isDeceased ? 'icon-container death' : 'icon-container longevity'; // Usar la nueva clase 'death' o 'longevity'
+                const statusText = isDeceased ? `Vivió ${data.edad_calculada} años` : `Tiene ${data.edad_calculada} años (Vivo)`;
+                const dobFormatted = new Date(data.dob).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                const dodFormatted = isDeceased ? new Date(data.dod).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
 
-                card.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <div class="p-4 rounded-full bg-gray-100 mb-4 text-3xl">
-                            ${deathIcon}
+                cardContent.innerHTML = `
+                    <div class="person-card">
+                        <div class="${iconContainerClass}">
+                            <i class="${iconClass}"></i>
                         </div>
-                        <h4 class="text-xl font-bold">${data.name}</h4>
-                        <p class="text-sm text-gray-500">${deathText}</p>
-                        <p class="text-xs text-gray-400 mt-2">Nacimiento: ${data.dob}</p>
-                        ${data.dod ? `<p class="text-xs text-gray-400">Fallecimiento: ${data.dod}</p>` : ''}
+                        <h4 class="person-name">${data.name}</h4>
+                        <p class="person-status">${statusText}</p>
+                        <div class="person-details">
+                            <p class="detail-item">
+                                <i class="fas fa-birthday-cake"></i> Nacimiento: ${dobFormatted}
+                            </p>
+                            ${isDeceased ? `
+                                <p class="detail-item">
+                                    <i class="fas fa-calendar-times"></i> Fallecimiento: ${dodFormatted}
+                                </p>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             }
 
-        // NUEVO MÉTODO: updateYoungestPersonCard
-        updateYoungestPersonCard() {
+            // NUEVO MÉTODO MEJORADO: updateYoungestPersonCard
+            updateYoungestPersonCard() {
                 const data = this.data.youngest_person;
-                const card = document.getElementById('youngestPersonCard');
-                if (!card) return;
+                const cardContent = document.getElementById('youngestPersonCard');
+                if (!cardContent) return;
 
-                if (!data) {
-                    card.innerHTML = '<div class="no-data">No hay datos de la persona más joven.</div>';
+                if (!data || !data.name) {
+                    cardContent.innerHTML = `
+                        <div class="no-data">
+                            <div class="loading-spinner"></div>
+                            Cargando datos...
+                        </div>
+                    `;
                     return;
                 }
                 
-                card.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <div class="p-4 rounded-full bg-gray-100 mb-4 text-3xl">
-                            <i class="fas fa-baby text-blue-500"></i>
+                const dobFormatted = new Date(data.dob).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+                cardContent.innerHTML = `
+                    <div class="person-card">
+                        <div class="icon-container youngest">
+                            <i class="fas fa-baby"></i>
                         </div>
-                        <h4 class="text-xl font-bold">${data.name}</h4>
-                        <p class="text-sm text-gray-500">Edad: ${data.edad_actual} años</p>
-                        <p class="text-xs text-gray-400 mt-2">Nacimiento: ${data.dob}</p>
+                        <h4 class="person-name">${data.name}</h4>
+                        <p class="person-status">Edad: ${data.edad_actual} años</p>
+                        <div class="person-details">
+                            <p class="detail-item">
+                                <i class="fas fa-birthday-cake"></i> Nacimiento: ${dobFormatted}
+                            </p>
+                        </div>
                     </div>
                 `;
             }
+
+// ... (resto del código JavaScript) ...
 
         // NUEVO MÉTODO: createAgeDifferenceChart
         createAgeDifferenceChart() {

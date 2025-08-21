@@ -95,6 +95,7 @@ return [
     'ruth',
     'sandra',
     'susana',
-    'sonia'
+    'sonia',
+    'juana'
 
 ];

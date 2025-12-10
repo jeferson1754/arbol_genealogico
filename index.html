@@ -257,6 +257,105 @@
             font-size: 1.1em; /* Un poco más grande para el icono de niño */
         }
 
+       /* --- ESTILOS PARA EL COLAPSO HORIZONTAL DEL PANEL DE DETALLES --- */
+
+        /* Nuevo selector para el contenedor <aside> */
+        .details-panel-container {
+            /* Prepara la transición para el ancho */
+            transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+            width: 100%; /* Ancho completo en móviles */
+            min-width: 100%;
+        }
+
+        /* Reglas para pantallas grandes (lg: - 1024px y más) */
+        @media (min-width: 1024px) {
+     
+
+            .details-panel-container.collapsed-horizontal {
+                /* Estado Colapsado: solo ancho suficiente para el encabezado */
+                overflow: hidden; /* Oculta el contenido que sobresale */
+            }
+
+            /* Ocultar el contenido interno cuando está colapsado */
+            .details-panel-container.collapsed-horizontal #collapsible-content {
+                visibility: hidden;
+                opacity: 0;
+                transition: opacity 0.1s; /* Transición rápida para ocultar el contenido */
+            }
+        }
+
+        /* Rotación del icono para indicar el estado */
+        #collapse-icon {
+            /* Estado Inicial (Expandido): Rotación para apuntar a la IZQUIERDA */
+            transform: rotate(-90deg); 
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .details-panel-container.collapsed-horizontal #collapse-icon {
+            /* Estado Colapsado: Rotación para apuntar a la DERECHA */
+            transform: rotate(90deg); 
+        }
+
+        /* --- ESTILOS BASE Y TRANSICIÓN --- */
+
+        /* Contenedor principal para la gestión de ancho (flexbox en pantallas grandes) */
+        @media (min-width: 1024px) {
+            #main-layout {
+                display: flex;
+                flex-direction: row;
+            }
+
+            /* El contenido principal debe tener transición de ancho */
+            #main-content {
+                transition: width 0.3s ease-in-out;
+                height: 100%;
+            }
+
+            /* El panel lateral debe tener transición de ancho */
+            #aside-container {
+                width: 25%; /* Ancho inicial (1/4) */
+                min-width: 300px; /* Asegura un ancho legible */
+                overflow: hidden;
+                          height: 100%;
+                transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+            }
+
+            /* --- ESTADO COLAPSADO (Se aplica a #main-layout) --- */
+
+            #main-layout.aside-collapsed #main-content {
+                /* El Main Content se expande para ocupar todo el espacio restante */
+                width: calc(100% - 50px);
+            }
+
+            #main-layout.aside-collapsed #aside-container {
+                /* El Aside se colapsa a un ancho fijo (por ejemplo, 50px para solo mostrar el título/icono) */
+                width: 50px; 
+                min-width: 50px;
+                height: 700px;
+      
+            }
+
+            /* Ocultar el contenido interno (detalles, botones) cuando está colapsado */
+            #main-layout.aside-collapsed #collapsible-content {
+                visibility: hidden;
+                opacity: 0;
+                transition: opacity 0.1s;
+            }
+        }
+
+        /* --- ROTACIÓN DEL ICONO --- */
+
+        #collapse-icon {
+            /* Estado Inicial (Expandido): Apunta a la IZQUIERDA */
+            transform: rotate(90deg); 
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #main-layout.aside-collapsed #collapse-icon {
+            /* Estado Colapsado: Apunta a la DERECHA (después de colapsarse, el icono debe rotar) */
+            transform: rotate(-90deg); 
+        }
+
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -281,25 +380,33 @@
                 </div>
             </div>
         </header>
-        <div class="flex flex-col lg:flex-row gap-8">
-            <main class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
+        <div id="main-layout" class="flex flex-col lg:flex-row gap-8">
+            <main id="main-content" class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
                 <div id="family-tree-container" class="tree-container">
                     <div class="tree">
                         </div>
                 </div>
             </main>
-
-            <aside class="w-full lg:w-1/4">
+           <aside id="aside-container" class="w-full details-panel-container">
                 <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky-lg">
-                    <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-center">Detalles de la Persona</h2>
-                    <div id="details-content" class="text-center">
-                        <p class="text-gray-500">Selecciona una persona para ver su información.</p>
-                    </div>
-                    <div id="edit-buttons" class="mt-6 hidden">
-                        <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Descendencia</button>
-                        <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Ascendencia</button>
-                        <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Gestionar Relaciones</button> 
-                         <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block transition duration-300 ease-in-out transform hover:-translate-y-1">Editar Persona</a>
+                    
+                    <h2 id="details-header" class="text-2xl font-bold mb-4 border-b pb-2 text-center cursor-pointer flex justify-between items-center">
+                        Detalles de la Persona
+                        <span id="collapse-icon" class="text-xl transition-transform duration-300">
+                            &#9660; 
+                        </span>
+                    </h2>
+                    
+                    <div id="collapsible-content">
+                        <div id="details-content" class="text-center">
+                            <p class="text-gray-500">Selecciona una persona para ver su información.</p>
+                        </div>
+                        <div id="edit-buttons" class="mt-6 hidden">
+                            <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Descendencia</button>
+                            <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Ascendencia</button>
+                            <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Gestionar Relaciones</button> 
+                            <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block transition duration-300 ease-in-out transform hover:-translate-y-1">Editar Persona</a>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -1829,6 +1936,16 @@
         
         document.addEventListener('DOMContentLoaded', () => {
             loadFamilyData();
+
+            const detailsHeader = document.getElementById('details-header');
+            const mainLayout = document.getElementById('main-layout');
+
+           if (detailsHeader && mainLayout) {
+                detailsHeader.addEventListener('click', () => {
+                    // Alterna la clase 'aside-collapsed' en el contenedor padre
+                    mainLayout.classList.toggle('aside-collapsed');
+                });
+            }
         });
 
     </script>

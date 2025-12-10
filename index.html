@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Árbol Genealógico Interactivo</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -405,7 +407,9 @@
                             <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Descendencia</button>
                             <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Ascendencia</button>
                             <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Gestionar Relaciones</button> 
-                            <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block transition duration-300 ease-in-out transform hover:-translate-y-1">Editar Persona</a>
+                            <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 mb-2 rounded-lg block transition duration-300 ease-in-out transform hover:-translate-y-1">Editar Persona</a>
+                            <button id="export-tree-png" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Exportar Árbol (PNG)</button>
+                            <button id="export-tree-pdf" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1">Exportar Árbol (PDF)</button>
                         </div>
                     </div>
                 </div>
@@ -1947,7 +1951,86 @@
                 });
             }
         });
+// ----------------------------------------------------------------------
+        // FUNCIÓN DE EXPORTACIÓN DEL ÁRBOL
+        // ----------------------------------------------------------------------
+        function exportTree(format) {
+            // El selector '.tree' apunta al contenedor flexible interno que realmente se estira
+            const treeElement = document.querySelector('.tree'); 
+            
+            if (!treeElement) {
+                alert("No se encontró el contenido del árbol para exportar.");
+                return;
+            }
 
+            // Muestra un mensaje de carga (opcional, pero útil)
+            // const originalHtml = treeElement.innerHTML;
+            // treeElement.innerHTML = '<div class="text-center p-10">Generando exportación... Por favor, espere.</div>';
+
+            // Opciones para la captura de alta resolución
+            const options = {
+                scale: 3, // Factor de escala para alta resolución (3x)
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#f0f2f5' // El color de fondo de tu cuerpo
+            };
+
+            html2canvas(treeElement, options).then(canvas => {
+                // treeElement.innerHTML = originalHtml; // Restaura el contenido (si se usó mensaje de carga)
+                
+                if (format === 'png') {
+                    // Exportar como PNG
+                    const imageURL = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = imageURL;
+                    link.download = `arbol_genealogico_${selectedPersonId || 'completo'}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                } else if (format === 'pdf') {
+                    // Exportar como PDF (maneja árboles grandes/anchos)
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/jpeg', 1.0); // Calidad JPEG para PDF
+                    
+                    const canvasWidth = canvas.width;
+                    const canvasHeight = canvas.height;
+                    
+                    // Tamaño de la página PDF (ajustado para ser ancho)
+                    const pdfWidth = 297; // Ancho A4 en mm (se rotará)
+                    const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth; // Calcula la altura proporcional
+                    
+                    // Inicializa jsPDF en formato apaisado (landscape)
+                    const pdf = new jsPDF({
+                        orientation: canvasWidth > canvasHeight ? 'l' : 'p', // 'l' = landscape (horizontal)
+                        unit: 'mm',
+                        format: [pdfWidth, pdfHeight] // Usa el tamaño calculado para evitar el escalado.
+                    });
+
+                    // Añade la imagen al PDF, cubriendo toda el área.
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`arbol_genealogico_${selectedPersonId || 'completo'}.pdf`);
+                }
+            });
+        }
+
+        // ----------------------------------------------------------------------
+        // CONECTAR BOTONES AL EVENT LISTENER
+        // ----------------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... (Tu código existente para loadFamilyData, etc.) ...
+            
+            // Conectar botones de exportación
+            const exportPngBtn = document.getElementById('export-tree-png');
+            const exportPdfBtn = document.getElementById('export-tree-pdf');
+
+            if (exportPngBtn) {
+                exportPngBtn.addEventListener('click', () => exportTree('png'));
+            }
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', () => exportTree('pdf'));
+            }
+        });
     </script>
 </body>
 </html>

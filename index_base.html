@@ -135,9 +135,9 @@
             flex-direction: column; /* Apilar elementos verticalmente */
             align-items: center; /* Centrar horizontalmente */
         }
+
         .tree li .member:hover, .tree li .member.selected {
             background-color: #e0f2fe;
-            border-color: #0ea5e9;
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
@@ -147,13 +147,11 @@
             margin-top: 5px; /* Espacio entre la imagen y el nombre */
         }
 
-
         .member .relationship {
             font-size: 0.8em;
             color: #666;
         }
 
-                /* Nuevo estilo para la edad en el nodo del árbol */
         .member .age {
             font-size: 0.7em; /* Un poco más pequeña que la relación */
             color: #999;
@@ -167,7 +165,7 @@
             background-color: #ccc;
         }
 
-         /* Estilos para el panel de detalles para que sea sticky y responsivo */
+        /* Estilos para el panel de detalles para que sea sticky y responsivo */
         @media (min-width: 1024px) { /* lg breakpoint */
             .sticky-lg {
                 position: sticky;
@@ -175,165 +173,332 @@
             }
         }
 
-        /* --- NUEVOS ESTILOS PARA RESALTADO DE ANCESTROS --- */
+        /* --- ESTILOS PARA RESALTADO DE ANCESTROS (Mantenidos) --- */
         .member.highlighted {
-            background-color: #d1fae5; /* Un verde claro */
-            border-color: #10b981; /* Borde verde más oscuro */
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
+            border-color: #10b981  !important;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1) ;
         }
 
-        /* Resaltar las líneas de conexión de los ancestros */
-        .highlighted-path::before,
-        .highlighted-path::after {
-            border-color: #10b981 !important; /* Mismo verde que el nodo */
-        }
+
         /* Para la línea vertical que une la lista de hijos (de la pareja resaltada) */
         .tree li.highlighted-path ul::before {
-            border-left-color: #10b981 !important;
+            border-left-color: #10b981 ;
         }
 
         /* Asegurarse de que el cónyuge de un ancestro también tenga la línea resaltada */
         .node-content.highlighted-path .spouse-line {
             background-color: #10b981 !important;
         }
-
-
+        
         /* Para asegurar que el cónyuge del ancestro directo también se vea resaltado visualmente */
         .member.ancestor-spouse-highlight {
             background-color: #d1fae5; /* Mismo verde para el cónyuge del ancestro */
-            border-color: #10b981;
+            border-color: #10b981  !important;
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
         }
+
+        .member.male {
+            border-color: #4a90e2;
+            background: linear-gradient(145deg, #ffffff 0%, #f0f8ff 100%);
+        }
+
+        .member.female {
+            border-color: #e24a90;
+            background: linear-gradient(145deg, #ffffff 0%, #fff0f8 100%);
+        }
+
+        .deceased {
+            opacity: 0.8;
+            position: relative;
+        }
+
+        .deceased::after {
+            content: '✝';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #666;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* Nuevo estilo para el gorrito de cumpleaños */
+        .member.birthday::before {
+            content: '🎂'; /* Emoji de pastel o gorrito */
+            position: absolute;
+            top: -10px; /* Ajusta la posición vertical */
+            right: -10px; /* Ajusta la posición horizontal */
+            font-size: 1.5em; /* Tamaño del gorrito */
+            z-index: 10; /* Asegura que esté por encima del cuadro del miembro */
+            transform: rotate(15deg); /* Pequeña rotación para efecto divertido */
+        }
+
+         /* Nuevos estilos para los iconos condicionales */
+        .member .icon-status {
+            position: absolute;
+            font-size: 0.9em;
+            background-color: #fff;
+            border-radius: 50%;
+            padding: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            z-index: 5; /* Por encima del miembro, pero debajo del gorrito */
+        }
+
+
+        .member .icon-child {
+            top: -5px; /* Posición superior izquierda */
+            /*left: -5px;*/
+            font-size: 1.1em; /* Un poco más grande para el icono de niño */
+        }
+
+       /* --- ESTILOS PARA EL COLAPSO HORIZONTAL DEL PANEL DE DETALLES --- */
+
+        /* Nuevo selector para el contenedor <aside> */
+        .details-panel-container {
+            /* Prepara la transición para el ancho */
+            transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+            width: 100%; /* Ancho completo en móviles */
+            min-width: 100%;
+        }
+
+        /* Reglas para pantallas grandes (lg: - 1024px y más) */
+        @media (min-width: 1024px) {
+     
+
+            .details-panel-container.collapsed-horizontal {
+                /* Estado Colapsado: solo ancho suficiente para el encabezado */
+                overflow: hidden; /* Oculta el contenido que sobresale */
+            }
+
+            /* Ocultar el contenido interno cuando está colapsado */
+            .details-panel-container.collapsed-horizontal #collapsible-content {
+                visibility: hidden;
+                opacity: 0;
+                transition: opacity 0.1s; /* Transición rápida para ocultar el contenido */
+            }
+        }
+
+        /* Rotación del icono para indicar el estado */
+        #collapse-icon {
+            /* Estado Inicial (Expandido): Rotación para apuntar a la IZQUIERDA */
+            transform: rotate(-90deg); 
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .details-panel-container.collapsed-horizontal #collapse-icon {
+            /* Estado Colapsado: Rotación para apuntar a la DERECHA */
+            transform: rotate(90deg); 
+        }
+
+        /* --- ESTILOS BASE Y TRANSICIÓN --- */
+
+        /* Contenedor principal para la gestión de ancho (flexbox en pantallas grandes) */
+        @media (min-width: 1024px) {
+            #main-layout {
+                display: flex;
+                flex-direction: row;
+            }
+
+            /* El contenido principal debe tener transición de ancho */
+            #main-content {
+                transition: width 0.3s ease-in-out;
+                height: 100%;
+            }
+
+            /* El panel lateral debe tener transición de ancho */
+            #aside-container {
+                width: 25%; /* Ancho inicial (1/4) */
+                min-width: 300px; /* Asegura un ancho legible */
+                overflow: hidden;
+                          height: 100%;
+                transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+            }
+
+            /* --- ESTADO COLAPSADO (Se aplica a #main-layout) --- */
+
+            #main-layout.aside-collapsed #main-content {
+                /* El Main Content se expande para ocupar todo el espacio restante */
+                width: calc(100% - 50px);
+            }
+
+            #main-layout.aside-collapsed #aside-container {
+                /* El Aside se colapsa a un ancho fijo (por ejemplo, 50px para solo mostrar el título/icono) */
+                width: 50px; 
+                min-width: 50px;
+                height: 700px;
+      
+            }
+
+            /* Ocultar el contenido interno (detalles, botones) cuando está colapsado */
+            #main-layout.aside-collapsed #collapsible-content {
+                visibility: hidden;
+                opacity: 0;
+                transition: opacity 0.1s;
+            }
+        }
+
+        /* --- ROTACIÓN DEL ICONO --- */
+
+        #collapse-icon {
+            /* Estado Inicial (Expandido): Apunta a la IZQUIERDA */
+            transform: rotate(90deg); 
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #main-layout.aside-collapsed #collapse-icon {
+            /* Estado Colapsado: Apunta a la DERECHA (después de colapsarse, el icono debe rotar) */
+            transform: rotate(-90deg); 
+        }
+
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div class=" mx-auto p-4 md:p-8">
-<header class="mb-8 relative"> 
-    <div class="flex justify-between items-start"> 
-        <div class="flex-grow"></div> 
-        
-        <div class="text-center"> 
-            <h1 class="text-3xl md:text-5xl font-bold text-gray-800">Árbol Genealógico Familiar</h1>
-            <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
-        </div>
+    <div class="mx-auto p-4 md:p-8">
+        <header class="mb-8 relative"> 
+            <div class="flex justify-between items-start"> 
+                <div class="flex-grow"></div> 
+                
+                <div class="text-center"> 
+                    <h1 class="text-3xl md:text-5xl font-bold text-gray-800">Árbol Genealógico Familiar</h1>
+                    <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
+                </div>
 
-        <div class="flex-grow text-right">
-            <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap">Buscar Personas</a>
-        </div>
-    </div>
-</header>
-        <div class="flex flex-col lg:flex-row gap-8">
-            <main class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
+           
+                <div class="flex-grow text-right">
+                      <a href="dashboard.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 mr-2">
+                        <i class="fas fa-chart-bar mr-2"></i> Ver Dashboard
+                    </a>
+                    <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1">Buscar Personas</a>
+                  
+                </div>
+            </div>
+        </header>
+        <div id="main-layout" class="flex flex-col lg:flex-row gap-8">
+            <main id="main-content" class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
                 <div id="family-tree-container" class="tree-container">
                     <div class="tree">
                         </div>
                 </div>
             </main>
-
-            <aside class="w-full lg:w-1/4">
-                <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky top-8">
-                    <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-center">Detalles de la Persona</h2>
-                    <div id="details-content" class="text-center">
-                        <p class="text-gray-500">Selecciona una persona para ver su información.</p>
-                    </div>
-                    <div id="edit-buttons" class="mt-6 hidden">
-                        <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Agregar Descendencia</button>
-                        <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Agregar Ascendencia</button>
-                        <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2">Gestionar Relaciones</button> 
-                         <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block">Editar Persona</a>
+           <aside id="aside-container" class="w-full details-panel-container">
+                <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky-lg">
+                    
+                    <h2 id="details-header" class="text-2xl font-bold mb-4 border-b pb-2 text-center cursor-pointer flex justify-between items-center">
+                        Detalles de la Persona
+                        <span id="collapse-icon" class="text-xl transition-transform duration-300">
+                            &#9660; 
+                        </span>
+                    </h2>
+                    
+                    <div id="collapsible-content">
+                        <div id="details-content" class="text-center">
+                            <p class="text-gray-500">Selecciona una persona para ver su información.</p>
+                        </div>
+                        <div id="edit-buttons" class="mt-6 hidden">
+                            <button id="add-descendant-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Descendencia</button>
+                            <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Ascendencia</button>
+                            <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Gestionar Relaciones</button> 
+                            <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg block transition duration-300 ease-in-out transform hover:-translate-y-1">Editar Persona</a>
+                        </div>
                     </div>
                 </div>
             </aside>
         </div>
     </div>
     
-    <div id="person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-      <div class="relative top-10 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+    <div id="person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+      <div class="relative top-0 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white animate-fade-in-up">
         <div class="mt-3">
-          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Agregar/Editar Persona</h3>
+          <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">Agregar Persona</h3>
           <form id="person-form">
-            <input type="hidden" id="person-id">
+            <input type="hidden" id="person-id"> 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="name" placeholder="Nombre Completo*" required>
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="relationship" placeholder="Relación (Ej: Tío, Prima)">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="rut" placeholder="RUT">
-              <select id="gender" class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="name" placeholder="Nombre Completo*" required>
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="relationship" placeholder="Relación (Ej: Tío, Prima)">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="rut" placeholder="RUT">
+              <select id="gender" class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200">
                 <option value="Masculino">Masculino</option>
                 <option value="Femenino">Femenino</option>
                 <option value="Otro">Otro</option>
               </select>
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dob" placeholder="Fecha de Nacimiento">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dom" placeholder="Fecha de Matrimonio">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dod" placeholder="Fecha de Fallecimiento">
-              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline" type="text" id="photo" placeholder="URL de la Foto">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dob" placeholder="Fecha de Nacimiento">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dom" placeholder="Fecha de Matrimonio">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" id="dod" placeholder="Fecha de Fallecimiento">
+              <input class="w-full bg-gray-100 text-gray-900 mt-2 p-3 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200" type="text" id="photo" placeholder="URL de la Foto">
             </div>
             
             <div class="mt-6 flex justify-end gap-4">
-              <button type="button" id="cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
-              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Guardar</button>
+              <button type="button" id="cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300 ease-in-out">Cancelar</button>
+              <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 ease-in-out">Guardar</button>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <div id="relationships-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+    <div id="relationships-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+        <div class="relative top-0 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white animate-fade-in-up">
             <div class="mt-3">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Gestionar Relaciones de <span id="relationship-person-name" class="font-bold"></span></h3>
                 
-    <div class="space-y-4">
+                <div class="space-y-4">
                     <div>
-                        <h4 class="text-md font-semibold mb-2">Cónyuge</h4>
-                        <div id="current-spouse-display" class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                        <h4 class="text-md font-semibold mb-2 text-gray-700">Cónyuge</h4>
+                        <div id="current-spouse-display" class="flex items-center justify-between p-3 bg-gray-100 rounded-md border border-gray-200">
                             <p class="text-gray-500">No hay cónyuge asignado.</p>
                         </div>
                         <div class="mt-2 flex gap-2">
-                            <button id="add-new-spouse-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
-                            <button id="link-existing-spouse-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
+                            <button id="add-new-spouse-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition duration-300 ease-in-out">Agregar Nuevo</button>
+                            <button id="link-existing-spouse-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm transition duration-300 ease-in-out">Vincular Existente</button>
                         </div>
                     </div>
 
                     <div>
-                        <h4 class="text-md font-semibold mb-2">Padres</h4>
+                        <h4 class="text-md font-semibold mb-2 text-gray-700">Padres</h4>
                         <div id="current-parents-list" class="space-y-2">
                             <p class="text-gray-500">No hay padres asignados.</p>
                         </div>
                         <div class="mt-2 flex gap-2">
-                            <button id="add-new-parent-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
-                            <button id="link-existing-parent-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
+                            <button id="add-new-parent-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition duration-300 ease-in-out">Agregar Nuevo</button>
+                            <button id="link-existing-parent-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm transition duration-300 ease-in-out">Vincular Existente</button>
                         </div>
                     </div>
 
                     <div>
-                        <h4 class="text-md font-semibold mb-2">Hijos/as</h4>
+                        <h4 class="text-md font-semibold mb-2 text-gray-700">Hijos/as</h4>
                         <div id="current-children-list" class="space-y-2">
                             <p class="text-gray-500">No hay hijos/as asignados.</p>
                         </div>
                         <div class="mt-2 flex gap-2">
-                            <button id="add-new-child-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">Agregar Nuevo</button>
-                            <button id="link-existing-child-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">Vincular Existente</button>
+                            <button id="add-new-child-btn" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm transition duration-300 ease-in-out">Agregar Nuevo</button>
+                            <button id="link-existing-child-btn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm transition duration-300 ease-in-out">Vincular Existente</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="mt-6 flex justify-end">
-                    <button type="button" id="close-relationships-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cerrar</button>
+                    <button type="button" id="close-relationships-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300 ease-in-out">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="select-person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-10 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+    <div id="select-person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+        <div class="relative top-0 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white animate-fade-in-up">
             <div class="mt-3">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="select-modal-title">Seleccionar Persona</h3>
-                <input type="text" id="person-search-input" placeholder="Buscar por nombre..." class="w-full bg-gray-100 text-gray-900 p-2 rounded-lg focus:outline-none focus:shadow-outline mb-4">
+                <input type="text" id="person-search-input" placeholder="Buscar por nombre..." class="w-full bg-gray-100 text-gray-900 p-2 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200 mb-4">
                 <div id="person-list-container" class="max-h-60 overflow-y-auto border border-gray-200 rounded-md">
                     </div>
                 <div class="mt-4 flex justify-end">
-                    <button type="button" id="cancel-select-person-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+                    <button type="button" id="cancel-select-person-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300 ease-in-out">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -343,19 +508,18 @@
     <script type="module">
         let familyData = new Map();
         let selectedPersonId = null;
-        let modalMode = ''; // Puede ser 'add_descendant', 'add_ancestor', 'add_spouse', 'edit_person'
-        let relatedPersonId = null; // El ID de la persona seleccionada al abrir el modal para agregar
-        let relatedPersonSpouseId = null; // El ID del cónyuge de la persona seleccionada
-        // Nuevas variables para el modal de selección
-        let selectPersonMode = ''; // 'link_spouse', 'link_parent', 'link_child'
-        let personToLinkToId = null; // La persona a la que se vinculará la seleccionada
+        let modalMode = ''; 
+        let relatedPersonId = null; 
+        let relatedPersonSpouseId = null; 
 
+        let selectPersonMode = ''; 
+        let personToLinkToId = null; 
 
 
         const API_URL = 'api.php';
 
        
-                async function loadFamilyData() {
+        async function loadFamilyData() {
             try {
                 const response = await fetch(API_URL, {
                     method: 'GET',
@@ -382,24 +546,27 @@
                 });
 
                 console.log('Datos cargados en familyData (con IDs parseados):', familyData);
-                renderTree();
                 
-                // --- NUEVA LÓGICA PARA LEER EL ID DE LA URL ---
                 const urlParams = new URLSearchParams(window.location.search);
                 const idFromUrl = urlParams.get('personId');
 
+                // Lógica de carga y selección de la persona principal para el árbol
                 if (idFromUrl && familyData.has(parseInt(idFromUrl))) {
-                    selectedPersonId = parseInt(idFromUrl); // Establece el selectedPersonId global
-                    showPersonDetails(selectedPersonId);
+                    selectedPersonId = parseInt(idFromUrl); 
                 } else if (familyData.size > 0) {
-                    // Si no hay ID en la URL o es inválido, selecciona la primera persona
-                    // Opcional: Puedes intentar seleccionar una persona "principal" si existe, como 'Jefferson' (ID 1)
-                    if (familyData.has(1)) { // Si existe una persona con ID 1 (ej. 'Jefferson')
-                        showPersonDetails(1);
-                    } else { // Si no, selecciona el primer elemento disponible
-                        const firstPersonId = Array.from(familyData.keys())[0]; 
-                        showPersonDetails(firstPersonId);
+                    if (familyData.has(1)) { 
+                        selectedPersonId = 1; // Priorizar ID 1 si existe
+                    } else { 
+                        selectedPersonId = Array.from(familyData.keys())[0]; // Tomar la primera persona si no hay ID 1
                     }
+                } else {
+                    selectedPersonId = null; // No hay personas en la base de datos
+                }
+
+                renderTree(); // Llama a renderTree después de decidir la persona principal
+                
+                if (selectedPersonId) {
+                    showPersonDetails(selectedPersonId);
                 } else {
                     document.getElementById('details-content').innerHTML = '<p class="text-gray-500">No hay datos en el árbol. ¡Añade la primera persona!</p>';
                     document.getElementById('edit-buttons').classList.add('hidden');
@@ -411,7 +578,7 @@
             }
         }
 
-         async function sendDataToAPI(actionData) {
+        async function sendDataToAPI(actionData) {
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -443,240 +610,754 @@
             }
         }
 
-         // Función auxiliar para obtener todos los ancestros de una persona
-        function getAllAncestors(personId) {
-            const ancestors = new Set();
-            let queue = [personId];
+        // Función auxiliar para obtener todos los ancestros de una persona y su distancia generacional
+        // Retorna un Map<personId, distance> donde distance es 0 para la persona original, 1 para padres, etc.
+        function getAncestorsWithDistance(personId) {
+            const ancestors = new Map(); // Map<id, distance>
+            let queue = [{id: personId, dist: 0}];
             let head = 0;
+
             while(head < queue.length) {
-                const currentId = queue[head++];
+                const { id: currentId, dist: currentDist } = queue[head++];
+                if (ancestors.has(currentId) && ancestors.get(currentId) <= currentDist) {
+                    continue; // Ya visitado con una distancia menor o igual
+                }
+                ancestors.set(currentId, currentDist);
+
                 const person = familyData.get(currentId);
                 if (person && person.parentIds) {
                     person.parentIds.forEach(parentId => {
-                        if (familyData.has(parentId)) { // Solo añadir si el padre existe en los datos cargados
-                            ancestors.add(parentId);
-                            queue.push(parentId);
+                        // Solo añadir si el padre existe en los datos cargados y no se ha visitado o se encontró a mayor distancia
+                        if (familyData.has(parentId) && (!ancestors.has(parentId) || ancestors.get(parentId) > currentDist + 1)) {
+                            queue.push({id: parentId, dist: currentDist + 1});
                         }
                     });
                 }
             }
-            return Array.from(ancestors);
+            return ancestors;
         }
 
+        // Función auxiliar para obtener todos los descendientes de una persona y su distancia generacional
+        // Retorna un Map<personId, distance> donde distance es 0 para la persona original, 1 para hijos, etc.
+        function getDescendantsWithDistance(personId) {
+            const descendants = new Map(); // Map<id, distance>
+            let queue = [{id: personId, dist: 0}];
+            let head = 0;
 
-        async function updatePersonInDB(personData) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(personData),
+            while(head < queue.length) {
+                const { id: currentId, dist: currentDist } = queue[head++];
+                if (descendants.has(currentId) && descendants.get(currentId) <= currentDist) {
+                    continue; 
+                }
+                descendants.set(currentId, currentDist);
+
+                const person = familyData.get(currentId);
+                // Necesitamos encontrar personas que tengan a 'currentId' como uno de sus padres
+                const children = Array.from(familyData.values()).filter(p => p.parentIds && p.parentIds.includes(currentId));
+
+                children.forEach(child => {
+                    // Solo añadir si el hijo existe y no se ha visitado o se encontró a mayor distancia
+                    if (familyData.has(child.id) && (!descendants.has(child.id) || descendants.get(child.id) > currentDist + 1)) {
+                        queue.push({id: child.id, dist: currentDist + 1});
+                    }
                 });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-                }
-
-                const result = await response.json();
-                if (result.success) {
-                    console.log('Persona actualizada con éxito:', result.message);
-                    await loadFamilyData(); // Recarga los datos para reflejar los cambios
-                } else {
-                    console.error('Error al actualizar la persona en la base de datos:', result.message);
-                    alert('Error al guardar: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error de red o servidor al actualizar:', error);
-                alert('Error de conexión o servidor al guardar los datos.');
             }
+            return descendants;
         }
 
 
+        // --- INICIO DE CAMBIOS EN renderTree ---
         function renderTree() {
             const container = document.querySelector('.tree');
             if (!container) return;
 
-            console.log('Iniciando renderTree. Total de personas en familyData:', familyData.size);
+            container.innerHTML = ''; 
 
-            let potentialRoots = [];
-
-            familyData.forEach(person => {
-                // Una persona es "potencialmente raíz" si no tiene 'parentIds' o si sus padres NO están en el 'familyData' actual.
-                // Si 'parentIds' está vacío o no es un array válido, consideramos que no tiene padres cargados.
-                let hasParentsInLoadedData = false;
-                if (Array.isArray(person.parentIds) && person.parentIds.length > 0) {
-                    // Comprobamos si AL MENOS UNO de sus padres existe en nuestro familyData
-                    hasParentsInLoadedData = person.parentIds.some(pId => familyData.has(pId));
-                }
-                
-                if (!hasParentsInLoadedData) {
-                    potentialRoots.push(person);
-                }
-            });
-
-            console.log('Paso 1: Personas con parentIds vacíos o padres no cargados (potentialRoots):', potentialRoots.map(p => p.name + ' (ID: ' + p.id + ')'));
-
-            let rootsToRender = []; 
-            const processedIds = new Set(); // Para evitar duplicados en el árbol
-
-            // Ordenamos las raíces potenciales para procesar de forma consistente (ej. ID más bajo primero)
-            potentialRoots.sort((a, b) => a.id - b.id);
-
-            potentialRoots.forEach(person => {
-                if (processedIds.has(person.id)) {
-                    return; // Ya fue procesada como parte de una pareja o ya se añadió
-                }
-
-                // Si la persona tiene un cónyuge y el cónyuge también es una raíz potencial y no ha sido procesado
-                if (person.spouseId && familyData.has(person.spouseId)) {
-                    const spouse = familyData.get(person.spouseId);
-                    let spouseHasParentsInLoadedData = false;
-                    if (Array.isArray(spouse.parentIds) && spouse.parentIds.length > 0) {
-                        spouseHasParentsInLoadedData = spouse.parentIds.some(pId => familyData.has(pId));
-                    }
-
-                    // Si el cónyuge también es una "raíz" y no lo hemos procesado
-                    if (!spouseHasParentsInLoadedData && !processedIds.has(spouse.id)) {
-                        // Ambos forman una pareja raíz. Agregamos a la persona actual (ya ordenada por ID)
-                        rootsToRender.push(person);
-                        processedIds.add(person.id);
-                        processedIds.add(spouse.id); // Marcar también al cónyuge como procesado
-                        return;
-                    }
-                }
-                
-                // Si la persona es una raíz potencial y no fue procesada como parte de una pareja raíz
-                if (!processedIds.has(person.id)) {
-                     rootsToRender.push(person);
-                     processedIds.add(person.id);
-                }
-            });
-
-            // Ordenar las raíces finales para una visualización consistente (ej. bisabuelos primero)
-            rootsToRender.sort((a, b) => {
-                const getGenerationRank = (p) => {
-                    // Criterios de ordenación más específicos para generaciones
-                    if (p.relationship && p.relationship.includes('Bisabuelo')) return 1;
-                    if (p.relationship && p.relationship.includes('Bisabuela')) return 1;
-                    if (p.relationship && p.relationship.includes('Abuelo')) return 2;
-                    if (p.relationship && p.relationship.includes('Abuela')) return 2;
-                    if (p.relationship && (p.relationship.includes('Padre') || p.relationship.includes('Madre'))) return 3;
-                    if (p.relationship && p.relationship.includes('Cónyuge')) return 4; // Cónyuges de la generación principal
-                    if (p.relationship && p.relationship.includes('Hijo/a')) return 5;
-                    if (p.relationship && p.relationship.includes('Nieto/a')) return 6;
-                    if (p.relationship && p.relationship.includes('Bisnieto/a')) return 7;
-                    return 99; // Otros, al final
-                };
-                const rankA = getGenerationRank(a);
-                const rankB = getGenerationRank(b);
-
-                if (rankA !== rankB) {
-                    return rankA - rankB;
-                }
-                return a.name.localeCompare(b.name); // Fallback: ordenar alfabéticamente por nombre
-            });
-
-            console.log('Paso 2: Personas seleccionadas para el renderizado principal (rootsToRender):', rootsToRender.map(p => p.name + ' (ID: ' + p.id + ')'));
-
-            if (rootsToRender.length > 0) {
-                container.innerHTML = '<ul>' + rootsToRender.map(person => generatePersonHtml(person)).join('') + '</ul>';
-            } else {
-                container.innerHTML = '<p class="text-gray-500">No se pudieron encontrar personas raíz para renderizar el árbol.</p>';
+            if (!selectedPersonId || !familyData.has(selectedPersonId)) {
+                container.innerHTML = '<p class="text-gray-500 text-center">Selecciona una persona o agrega la primera para construir el árbol.</p>';
+                return;
             }
-            addClickListeners();
+
+            const centralPerson = familyData.get(selectedPersonId);
+            let finalRootsToRender = new Set(); // IDs de las personas que serán las raíces del árbol visualizado
+
+            // Si la persona central tiene padres, subimos por sus linajes para encontrar las raíces más altas
+            if (centralPerson.parentIds && centralPerson.parentIds.length > 0) {
+                const parentsToProcess = new Set(centralPerson.parentIds.filter(pId => familyData.has(pId)));
+                if (centralPerson.spouseId && familyData.has(centralPerson.spouseId) && familyData.get(centralPerson.spouseId).spouseId === centralPerson.id) {
+                    // Si la persona central tiene un cónyuge recíproco, también consideramos los padres del cónyuge
+                    const spouse = familyData.get(centralPerson.spouseId);
+                    if (spouse.parentIds) {
+                        spouse.parentIds.forEach(pId => {
+                            if (familyData.has(pId)) parentsToProcess.add(pId);
+                        });
+                    }
+                }
+
+                // Para cada padre (o cónyuge de padre) que influye en la rama central,
+                // encontramos su ancestro más alto que esté en familyData.
+                parentsToProcess.forEach(pId => {
+                    let currentAncestor = familyData.get(pId);
+                    if (!currentAncestor) return;
+
+                    let hasHigherParentInFamilyData = false;
+                    while (currentAncestor) {
+                        const directParentsInFamilyData = currentAncestor.parentIds
+                            ? currentAncestor.parentIds.filter(paId => familyData.has(paId))
+                            : [];
+
+                        if (directParentsInFamilyData.length > 0) {
+                            hasHigherParentInFamilyData = true;
+                            // Moverse al primer padre encontrado para seguir subiendo
+                            currentAncestor = familyData.get(directParentsInFamilyData[0]);
+                        } else {
+                            // No más padres cargados, esta es la raíz de esta rama ascendente
+                            break;
+                        }
+                    }
+                    // Si se encontró una raíz (no es null) Y esa raíz no tiene padres EN FAMILYDATA
+                    if (currentAncestor && !(currentAncestor.parentIds && currentAncestor.parentIds.some(pid => familyData.has(pid)))) {
+                         finalRootsToRender.add(currentAncestor.id);
+                    } else if (currentAncestor) { // Si currentAncestor no es null pero aún tiene padres en familyData
+                        finalRootsToRender.add(currentAncestor.id); // Lo agrega de todas formas como una potencial raíz de su sub-rama
+                    }
+                });
+
+                // Si no encontramos ninguna raíz a través de los padres (ej. solo tiene un padre que ya es la raíz),
+                // o si los padres mismos son las raíces más altas, las añadimos.
+                if (finalRootsToRender.size === 0) {
+                    parentsToProcess.forEach(id => finalRootsToRender.add(id));
+                }
+
+            } else {
+                // Si la persona central no tiene padres, ella misma es la raíz del árbol a mostrar.
+                finalRootsToRender.add(centralPerson.id);
+            }
+            
+            // Convertir el Set de IDs a un array de objetos Persona y ordenar
+            let displayRoots = Array.from(finalRootsToRender)
+                                .map(id => familyData.get(id))
+                                .filter(p => p !== undefined)
+                                .sort((a,b) => a.id - b.id); 
+
+            // Si después de toda la lógica no se tiene una raíz, usar la persona central como fallback
+            if (displayRoots.length === 0) {
+                displayRoots.push(centralPerson);
+            }
+
+            let treeHtmlContent = '';
+            const renderedIdsForWholeTree = new Set(); 
+
+            displayRoots.forEach(root => {
+                treeHtmlContent += generatePersonHtml(root, renderedIdsForWholeTree);
+            });
+
+            container.innerHTML = '<ul>' + treeHtmlContent + '</ul>';
+            addClickListeners(); 
+            
+            setTimeout(() => {
+                const selectedMemberElement = document.querySelector(`.member[data-id="${selectedPersonId}"]`);
+                if (selectedMemberElement) {
+                    const treeContainer = document.getElementById('family-tree-container');
+                    const offsetLeft = selectedMemberElement.offsetLeft - (treeContainer.offsetWidth / 2) + (selectedMemberElement.offsetWidth / 2);
+                    treeContainer.scrollLeft = offsetLeft;
+
+                    const offsetTop = selectedMemberElement.offsetTop - (treeContainer.offsetHeight / 3); 
+                    treeContainer.scrollTop = offsetTop;
+                }
+            }, 100); 
+        }
+        // --- FIN DE CAMBIOS EN renderTree ---
+
+
+        // Función auxiliar para obtener el ordinal para los grados de primos, tíos, etc.
+        function getOrdinal(n) {
+            const s = ["", "Segundo", "Tercer", "Cuarto", "Quinto", "Sexto", "Séptimo", "Octavo", "Noveno", "Décimo"];
+            if (n >= 1 && n <= s.length) {
+                return s[n - 1];
+            }
+            return `${n}º`; 
         }
 
-        // --- FUNCIÓN DE RENDERIZADO RECURSIVA ---
-        function generatePersonHtml(person) {
-            if (!person) return '';
 
-            // Lógica para calcular la edad en el nodo del árbol
+        // --- FUNCIÓN PRINCIPAL PARA CALCULAR LA RELACIÓN DINÁMICA ---
+        function generatePersonHtml(person, renderedIds = new Set()) {
+            if (!person || renderedIds.has(person.id)) return ''; 
+
+            renderedIds.add(person.id); 
+
+            const currentIsMale = (person.gender === 'Masculino');
+            const currentIsFemale = (person.gender === 'Femenino');
+
             let ageInTree = '';
-            if (person.dob && person.dob !== '0000-00-00' && (!person.dod || person.dod === '0000-00-00')) {
+                        if (person.dob && person.dob !== '0000-00-00') {
                 try {
                     const birthDate = new Date(person.dob);
-                    const today = new Date();
-                    if(!isNaN(birthDate.getTime())){
-                        let ageDiff = today.getFullYear() - birthDate.getFullYear();
-                        const m = today.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    let endDate = new Date(); // Por defecto, hoy
+
+                    const hasDeathDate = person.dod && person.dod !== '0000-00-00';
+                    if (hasDeathDate) {
+                        endDate = new Date(person.dod);
+                    }
+
+                    if(!isNaN(birthDate.getTime()) && !isNaN(endDate.getTime())){
+                        let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
+                        const m = endDate.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
                             ageDiff--;
                         }
-                        if (ageDiff >= 0) { // Asegurar que la edad no sea negativa
-                            ageInTree = `<div class="age">${ageDiff} años</div>`;
+                        if (ageDiff >= 0) { 
+                            ageInTree = `<div class="age">${ageDiff} años${hasDeathDate ? `${currentIsMale ? ' (fallecido)' : ' (fallecida)'}` : ''}</div>`;
                         }
                     }
                 } catch(e) { console.error("Error calculating age for tree node", e); }
             }
 
-            // --- 1. Crear el contenido del nodo (persona y cónyuge si existe) ---
-           let nodeContent = '<div class="node-content">';
+            // Determinar si la persona ha fallecido para añadir la clase 'deceased'
+            const isDeceased = person.dod && person.dod !== '0000-00-00';
+            
 
-        // Función auxiliar para acortar el nombre
-            const getShortName = (fullName) => {
+            let nodeContent = '<div class="node-content">';
+
+                        const getShortName = (fullName) => {
                 if (!fullName) return '';
-                const parts = fullName.split(' ').filter(part => part.trim() !== '');
-                if (parts.length === 0) return '';
-                
-                let shortName = parts[0]; // Primer nombre
-                if (parts.length > 1) {
-                    // Si hay más de una parte, intentamos encontrar el primer apellido
-                    // Suponemos que el primer apellido es la segunda palabra
-                    // Esto puede no ser infalible para todos los nombres, pero es un buen inicio.
-                    shortName += ' ' + parts[2];
-                }
-                return shortName;
+
+                const parts = fullName.trim().split(/\s+/); // separa por espacios
+
+                if (parts.length === 1) return parts[0]; // solo un nombre
+                if (parts.length === 2) return `${parts[0]} ${parts[1]}`; // nombre + apellido
+
+                const firstName = parts[0];
+                const lastName = parts[parts.length - 2]; // penúltima palabra = primer apellido
+
+                return `${firstName} ${lastName}`;
             };
 
-            // Obtener la URL de la foto y generar la etiqueta <img>
             const getProfilePicHtml = (photoUrl, name) => {
-                if (photoUrl) {
-                    return `<img src="${photoUrl}" alt="Foto de ${name}" class="profile-pic" onerror="this.onerror=null;this.src='https://placehold.co/60x60/E2E8F0/333333?text=Foto';">`;
+                const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
+                if (photoUrl && photoUrl.trim() !== '') {
+                    return `<img src="${photoUrl}" alt="Foto de ${name}" class="profile-pic" onerror="this.onerror=null;this.src='${defaultPhoto}';">`;
                 }
-                // Placeholder genérico si no hay foto
-                return `<img src="https://placehold.co/60x60/E2E8F0/333333?text=Foto" alt="Sin foto" class="profile-pic">`;
+                return `<img src="${defaultPhoto}" alt="Sin foto" class="profile-pic">`;
             };
 
+   
+
+            const calculateDynamicRelationship = (currentPersonId, referencePersonId) => {
+                const currentPerson = familyData.get(currentPersonId);
+                const referencePerson = familyData.get(referencePersonId);
+
+                if (!currentPerson || !referencePerson) {
+                    return 'Desconocido';
+                }
+                
+                const currentIsMale = (currentPerson.gender === 'Masculino');
+                const currentIsFemale = (currentPerson.gender === 'Femenino');
+
+
+                // 0. La persona misma
+                if (currentPersonId === referencePersonId) {
+                    return 'Tú';
+                }
+
+                // Caching de ancestros y descendientes para evitar recalcular
+                const refAncestorsWithDist = getAncestorsWithDistance(referencePersonId);
+                const refDescendantsWithDist = getDescendantsWithDistance(referencePersonId);
+                const currentAncestorsWithDist = getAncestorsWithDistance(currentPersonId);
+                const currentDescendantsWithDist = getDescendantsWithDistance(currentPersonId);
+
+
+                // 1. Cónyuge
+                if (currentPerson.spouseId === referencePersonId && referencePerson.spouseId === currentPersonId) {
+                    return 'Cónyuge';
+                }
+
+                // 2. Relaciones Directas Ascendentes (Padres, Abuelos, Bisabuelos, etc.)
+                const distToRefAnc = refAncestorsWithDist.get(currentPersonId);
+                if (distToRefAnc !== undefined) {
+                    if (distToRefAnc === 1) return currentIsMale ? 'Padre' : (currentIsFemale ? 'Madre' : 'Padre/Madre');
+                    if (distToRefAnc === 2) return currentIsMale ? 'Abuelo' : (currentIsFemale ? 'Abuela' : 'Abuelo/a');
+                    if (distToRefAnc === 3) return currentIsMale ? 'Bisabuelo' : (currentIsFemale ? 'Bisabuela' : 'Bisabuelo/a');
+                    if (distToRefAnc === 4) return currentIsMale ? 'Tatarabuelo' : (currentIsFemale ? 'Tatarabuela' : 'Tatarabuelo/a');
+                    if (distToRefAnc === 5) return currentIsMale ? 'Trastatarabuelo' : (currentIsFemale ? 'Trastatarabuela' : 'Trastatarabuelo/a');
+                }
+
+                // 3. Relaciones Directas Descendentes (Hijos, Nietos, Bisnietos, etc.)
+                const distToRefDesc = refDescendantsWithDist.get(currentPersonId);
+                if (distToRefDesc !== undefined) {
+                    if (distToRefDesc === 1) return currentIsMale ? 'Hijo' : (currentIsFemale ? 'Hija' : 'Hijo/a');
+                    if (distToRefDesc === 2) return currentIsMale ? 'Nieto' : (currentIsFemale ? 'Nieta' : 'Nieto/a');
+                    if (distToRefDesc === 3) return currentIsMale ? 'Bisnieto' : (currentIsFemale ? 'Bisnieta' : 'Bisnieto/a');
+                    if (distToRefDesc === 4) return currentIsMale ? 'Tataranieto' : (currentIsFemale ? 'Tataranieta' : 'Tataranieto/a');
+                    if (distToRefDesc === 5) return currentIsMale ? 'Trastataranieto' : (currentIsFemale ? 'Trastataranieta' : 'Trastataranieto/a');
+                }
+
+                // --- NUEVAS RELACIONES POLÍTICAS Y COLATERALES ---
+
+                // Padrastro/Madrastra: Cónyuge de un padre biológico de referencePerson, que no es el padre biológico
+                // referencePerson.parentIds son los padres biológicos de referencePerson.
+                // currentPerson es el cónyuge de uno de ellos y no es uno de ellos.
+                if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
+                    for (const parentId of referencePerson.parentIds) {
+                        const biologicalParent = familyData.get(parentId);
+                        if (biologicalParent && biologicalParent.spouseId === currentPersonId && currentPerson.spouseId === biologicalParent.id) {
+                            // currentPerson es el cónyuge del padre/madre de referencePerson
+                            // Y currentPerson NO es el padre/madre biológico de referencePerson
+                            if (!referencePerson.parentIds.includes(currentPersonId)) {
+                                return currentIsMale ? 'Padrastro' : (currentIsFemale ? 'Madrastra' : 'Padrastro/Madrastra');
+                            }
+                        }
+                    }
+                }
+
+                // Hijastros (Hijo/a de mi cónyuge pero no mío)
+                // currentPerson es hijo/a de referencePerson.spouseId, pero referencePerson no es padre de currentPerson
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse && Array.isArray(refSpouse.childrenIds) && refSpouse.childrenIds.includes(currentPersonId)) {
+                        // currentPerson es hijo de refSpouse
+                        // Ahora, verificar que referencePerson NO sea padre de currentPerson
+                        if (!Array.isArray(currentPerson.parentIds) || !currentPerson.parentIds.includes(referencePersonId)) {
+                            return currentIsMale ? 'Hijastro' : (currentIsFemale ? 'Hijastra' : 'Hijastro/a');
+                        }
+                    }
+                }
+
+                 // 4. Relaciones Colaterales - Hermanos (ya lo tienes, va antes de otras colaterales)
+                if (currentPerson.parentIds && referencePerson.parentIds) {
+                    const commonParents = currentPerson.parentIds.filter(pId => referencePerson.parentIds.includes(pId));
+                    if (commonParents.length > 0) {
+                        // Si ya se ha manejado la relación directa (Padre, Hijo),
+                        // esta es la comprobación para hermanos.
+                        if (currentPersonId !== referencePersonId) { // Asegurarse de que no sea la misma persona
+                            return currentIsMale ? 'Hermano' : (currentIsFemale ? 'Hermana' : 'Hermano/a');
+                        }
+                    }
+                }
+                
+                // 5. Relaciones Políticas
+                // Estas se evalúan ANTES que las relaciones colaterales complejas porque son muy específicas.
+
+                // Cuñados: (Cónyuge de un hermano/a) O (Hermano/a de un cónyuge)
+                // Caso 1: currentPerson es cónyuge de un hermano/a de referencePerson
+                if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
+                    const refParents = referencePerson.parentIds.map(id => familyData.get(id)).filter(p => p);
+                    for (const refParent of refParents) {
+                        if (refParent.childrenIds) {
+                            const siblingsOfRefPerson = refParent.childrenIds.filter(sId => sId !== referencePersonId && familyData.has(sId));
+                            for (const siblingId of siblingsOfRefPerson) {
+                                const sibling = familyData.get(siblingId);
+                                if (sibling && sibling.spouseId === currentPersonId && currentPerson.spouseId === siblingId) {
+                                    return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
+                                }
+                            }
+                        }
+                    }
+                }
+                // Caso 2: currentPerson es hermano/a del cónyuge de referencePerson
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse && currentPerson.parentIds && refSpouse.parentIds) {
+                        const commonParentsWithSpouse = currentPerson.parentIds.filter(pId => refSpouse.parentIds.includes(pId));
+                        if (commonParentsWithSpouse.length > 0 && currentPersonId !== refSpouse.id) {
+                            return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
+                        }
+                    }
+                }
+                
+                // Suegros: padre del cónyuge de referencePerson
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse && refSpouse.parentIds && refSpouse.parentIds.includes(currentPersonId)) {
+                        return currentIsMale ? 'Suegro' : (currentIsFemale ? 'Suegra' : 'Suegro/a');
+                    }
+                }
+                // Abuelos Políticos: abuelo del cónyuge de referencePerson
+                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                    const refSpouse = familyData.get(referencePerson.spouseId);
+                    if (refSpouse) {
+                        const refSpouseAncestors = getAncestorsWithDistance(refSpouse.id);
+                        if (refSpouseAncestors.has(currentPersonId) && refSpouseAncestors.get(currentPersonId) === 2) {
+                            return currentIsMale ? 'Abuelo Político' : (currentIsFemale ? 'Abuela Política' : 'Abuelo/a Político/a');
+                        }
+                    }
+                }
+                
+                // Yerno/Nuera: cónyuge de hijo/hija de referencePerson
+                if (referencePerson.childrenIds) {
+                    for (const childId of referencePerson.childrenIds) {
+                        const child = familyData.get(childId);
+                        if (child && child.spouseId === currentPersonId && currentPerson.spouseId === child.id) {
+                            return currentIsMale ? 'Yerno' : (currentIsFemale ? 'Nuera' : 'Yerno/Nuera');
+                        }
+                    }
+                }
+
+                // 6. Relaciones Colaterales con grados (Tíos, Sobrinos, Primos) - Se basa en el LCA
+                let lowestCommonAncestorId = null;
+                let minSumDistances = Infinity;
+
+                // Encontrar el LCA entre currentPerson y referencePerson
+                // Es importante que LCA no sea ni currentPerson ni referencePerson
+                for (let [idA, distA] of currentAncestorsWithDist.entries()) {
+                    if (refAncestorsWithDist.has(idA)) {
+                        const distB = refAncestorsWithDist.get(idA);
+                        // Asegurarse de que el LCA no es la persona de referencia ni la persona actual
+                        if (idA !== currentPersonId && idA !== referencePersonId) {
+                            if (distA + distB < minSumDistances) {
+                                minSumDistances = distA + distB;
+                                lowestCommonAncestorId = idA;
+                            }
+                        }
+                    }
+                }
+                
+                if (lowestCommonAncestorId !== null) {
+                    const distCurrentToLCA = currentAncestorsWithDist.get(lowestCommonAncestorId) || 0;
+                    const distRefToLCA = refAncestorsWithDist.get(lowestCommonAncestorId) || 0;
+                    
+                    const collateralDegree = Math.min(distCurrentToLCA, distRefToLCA) - 1; // Grado del "hermano" del ancestro común
+                    const generationalDiff = Math.abs(distCurrentToLCA - distRefToLCA); // Diferencia de generaciones desde el LCA
+
+                    // Tíos / Tías (ya manejado arriba, pero aquí en contexto de LCA)
+                    // Si el LCA es un padre de A (distancia 1) y de B (distancia > 1)
+                    if (distCurrentToLCA === 1 && distRefToLCA > 1 && distRefToLCA <= 5) { // current es padre del LCA, y LCA es abuelo de ref
+                         // Solo si currentPerson es el padre directo de un ancestro de referencePerson
+                         const isParentOfRefAnc = refAncestorsWithDist.has(lowestCommonAncestorId) && (currentPerson.childrenIds && currentPerson.childrenIds.includes(lowestCommonAncestorId));
+                         if (isParentOfRefAnc) {
+                             return currentIsMale ? 'Tío' : (currentIsFemale ? 'Tía' : 'Tío/a');
+                         }
+                    }
+                    // Sobrinos / Sobrinas (ya manejado arriba, pero aquí en contexto de LCA)
+                    if (distRefToLCA === 1 && distCurrentToLCA > 1 && distCurrentToLCA <= 5) { // ref es padre del LCA, y LCA es abuelo de current
+                        // Solo si referencePerson es el padre directo de un ancestro de currentPerson
+                        const isParentOfCurrentAnc = currentAncestorsWithDist.has(lowestCommonAncestorId) && (referencePerson.childrenIds && referencePerson.childrenIds.includes(lowestCommonAncestorId));
+                        if (isParentOfCurrentAnc) {
+                            return currentIsMale ? 'Sobrino' : (currentIsFemale ? 'Sobrina' : 'Sobrino/a');
+                        }
+                    }
+
+                     // Sobrino/a Político/a (pareja de mi sobrina)
+                    // currentPerson es el cónyuge de un sobrino/a de referencePerson
+                    if (refDescendantsWithDist.has(currentPerson.spouseId) && refDescendantsWithDist.get(currentPerson.spouseId) === 2) {
+                        // currentPerson.spouseId es un sobrino de referencePerson
+                        return currentIsMale ? 'Sobrino Político' : (currentIsFemale ? 'Sobrina Política' : 'Sobrino/a Político/a');
+                    }
+
+                    // Primos (ambos están a la misma distancia generacional del LCA)
+                    if (distCurrentToLCA === distRefToLCA && distCurrentToLCA > 1) {
+                        const degree = distCurrentToLCA - 1; // Grado del primo (Primo, Primo Segundo, etc.)
+                        return currentIsMale ? `Primo ${getOrdinal(degree)}` : (currentIsFemale ? `Prima ${getOrdinal(degree)}` : `Primo/a ${getOrdinal(degree)}`);
+                    }
+
+                    // Relaciones con grados de separación generacional (Tíos Abuelos, Sobrinos Nietos)
+                    if (generationalDiff > 0) {
+                        if (distCurrentToLCA < distRefToLCA) { // currentPerson es más viejo (Tío)
+                            // Tío Abuelo, Tío Bisabuelo, etc.
+                            return currentIsMale ? `Tío ${getOrdinal(generationalDiff)}` : (currentIsFemale ? `Tía ${getOrdinal(generationalDiff)}` : `Tío/a ${getOrdinal(generationalDiff)}`);
+                        } else { // currentPerson es más joven (Sobrino)
+                            // Sobrino Nieto, Sobrino Bisnieto, Tatarasobrino, etc.
+                            // Tatarasobrino: collateralDegree = 1 (hermanos), generationalDiff = 3 (hijo de bisnieto de hermano)
+                            if (collateralDegree === 1 && generationalDiff === 3) {
+                                return currentIsMale ? 'Tatarasobrino' : (currentIsFemale ? 'Tatarasobrina' : 'Tatarasobrino/a');
+                            }
+                            return currentIsMale ? `Sobrino ${getOrdinal(generationalDiff)}` : (currentIsFemale ? `Sobrina ${getOrdinal(generationalDiff)}` : `Sobrino/a ${getOrdinal(generationalDiff)}`);
+                        }
+                    }
+                }
+
+                // 7. Sobrino/a Político/a: Cónyuge de un sobrino/a
+                // Primero encontrar los sobrinos de referencePerson
+                const refChildren = new Set(referencePerson.childrenIds);
+                let potentialNephews = new Set();
+                refChildren.forEach(childId => {
+                    const child = familyData.get(childId);
+                    if (child && child.parentIds) {
+                        const commonParents = child.parentIds.filter(pId => referencePerson.parentIds && referencePerson.parentIds.includes(pId));
+                        if (commonParents.length > 0) { // Si child es hermano de refPerson
+                            // No, refChildren ya son hijos directos de referencePerson.
+                            // Para sobrinos, necesitamos hijos de hermanos de referencePerson.
+                            // Esto se calcula más arriba en la lógica de sobrinos.
+                        }
+                    }
+                });
+
+                // Tío Político: Pareja de mi Tío/a biológico/a
+                // currentPerson es cónyuge de X, y X es Tío/a biológico/a de referencePerson
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    // Si el cónyuge de currentPerson es tío/tía de referencePerson (ya sea directo o de grados superiores)
+                    // Usamos la misma lógica que para identificar Tíos biológicos
+                    let lcaForSpouse = null;
+                    let minSumDistancesForSpouseLCA = Infinity;
+
+                    for (let [idA, distA] of getAncestorsWithDistance(spouseOfCurrent.id).entries()) {
+                        if (refAncestorsWithDist.has(idA)) {
+                            const distB = refAncestorsWithDist.get(idA);
+                            if (distA + distB < minSumDistancesForSpouseLCA) {
+                                minSumDistancesForSpouseLCA = distA + distB;
+                                lcaForSpouse = idA;
+                            }
+                        }
+                    }
+
+                    if (lcaForSpouse !== null) {
+                        const distSpouseToLCA = getAncestorsWithDistance(spouseOfCurrent.id).get(lcaForSpouse) || 0;
+                        const distRefToLCA = refAncestorsWithDist.get(lcaForSpouse) || 0;
+                        
+                        // Condición para Tío/a biológico: (distancia cónyuge a LCA = 1) Y (distancia ref a LCA = 2)
+                        // O más general para tíos de grados superiores (ej. Tío abuelo)
+                        if (distSpouseToLCA < distRefToLCA) { // Spouse es más viejo que ref
+                            // Y si tienen un ancestro común
+                            // Para ser "Tío/a" (biológico), el cónyuge debe estar en una generación superior y colateral a referencePerson
+                            // Distancia de spouse a LCA es 1, 2, etc. (Ej. 1 = hermano del padre)
+                            // Distancia de ref a LCA es 2, 3, etc. (Ej. 2 = hijo de hermano del padre)
+                            if (distSpouseToLCA > 0 && distRefToLCA > 0 && distRefToLCA === distSpouseToLCA + 1) { // Spouse está a 1 generación por encima de ref colateral
+                                return currentIsMale ? 'Tío Político' : (currentIsFemale ? 'Tía Política' : 'Tío/a Político/a');
+                            }
+                            // Caso especial para tíos más lejanos (Tío Abuelo político, etc.)
+                            if (distSpouseToLCA > 0 && distRefToLCA > distSpouseToLCA) {
+                                return currentIsMale ? `Tío Político ${getOrdinal(distRefToLCA - distSpouseToLCA)}` : (currentIsFemale ? `Tía Política ${getOrdinal(distRefToLCA - distSpouseToLCA)}` : `Tío/a Político/a ${getOrdinal(distRefToLCA - distSpouseToLCA)}`);
+                            }
+                        }
+                    }
+                }
+
+                 // Cuñado (pareja de mi cuñada) / Cuñada (pareja de mi cuñado)
+                // Esto se refiere al cónyuge de tu hermano/a político/a.
+                // Es decir, currentPerson es el cónyuge de una persona X, donde X es cuñado/a de referencePerson.
+                // Para simplificar y evitar bucles, asumiremos que si currentPerson es cónyuge de alguien que ya es cuñado/a de referencePerson,
+                // entonces currentPerson es también un cuñado/a de referencePerson.
+                // Esta relación suele subsumirse bajo la categoría general de "Cuñado/a" si ya detectas al cuñado principal.
+                // Sin embargo, si quieres una etiqueta EXCLUSIVA para "pareja de mi cuñada":
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    // Si spouseOfCurrent es hermano/a del cónyuge de referencePerson
+                    if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
+                        const refSpouse = familyData.get(referencePerson.spouseId);
+                        if (refSpouse && spouseOfCurrent.parentIds && refSpouse.parentIds) {
+                            const commonParentsWithRefSpouse = spouseOfCurrent.parentIds.filter(pId => refSpouse.parentIds.includes(pId));
+                            if (commonParentsWithRefSpouse.length > 0 && spouseOfCurrent.id !== refSpouse.id) {
+                                // SpouseOfCurrent es hermano/a de refSpouse
+                                // Entonces currentPerson es el cónyuge del hermano/a de refSpouse
+                                return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
+                            }
+                        }
+                    }
+                    // O si spouseOfCurrent es cónyuge de un hermano/a de referencePerson
+                    if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
+                        const refParents = referencePerson.parentIds.map(id => familyData.get(id)).filter(p => p);
+                        for (const refParent of refParents) {
+                            if (refParent.childrenIds) {
+                                const siblingsOfRefPerson = refParent.childrenIds.filter(sId => sId !== referencePersonId && familyData.has(sId));
+                                for (const siblingId of siblingsOfRefPerson) {
+                                    const sibling = familyData.get(siblingId);
+                                    if (sibling && sibling.spouseId === spouseOfCurrent.id && spouseOfCurrent.spouseId === sibling.id) {
+                                        // SpouseOfCurrent es cónyuge de un hermano de referencePerson
+                                        // Entonces currentPerson es la pareja de mi cuñado/a
+                                        return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                 // Nieto Político (pareja de mi nieto/a biológico/a)
+                // currentPerson es el cónyuge de X, donde X es Nieto/a biológico/a de referencePerson
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id); // Distancia del cónyuge de currentPerson a referencePerson como descendiente
+                    
+                    if (distSpouseOfCurrentToRef === 2) { // Si el cónyuge de currentPerson es nieto/a de referencePerson
+                        return currentIsMale ? 'Nieto Político' : (currentIsFemale ? 'Nieta Política' : 'Nieto/a Político/a');
+                    }
+                }
+
+                // Bisnieto político (pareja de mi bisnieta)
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id);
+                    
+                    if (distSpouseOfCurrentToRef === 3) { // Si el cónyuge de currentPerson es bisnieto/a de referencePerson
+                        return currentIsMale ? 'Bisnieto Político' : (currentIsFemale ? 'Bisnieta Política' : 'Bisnieto/a Político/a');
+                    }
+                }
+
+                // Tataranieto Político (pareja de mi tataranieta)
+                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) { 
+                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
+                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id);
+                    
+                    if (distSpouseOfCurrentToRef === 4) { // Si el cónyuge de currentPerson es tataranieto/a de referencePerson
+                        return currentIsMale ? 'Tataranieto Político' : (currentIsFemale ? 'Tataranieta Política' : 'Tataranieto/a Político/a');
+                    }
+                }
+
+
+                // Si currentPerson es el cónyuge de un sobrino de referencePerson
+                // 1. Encuentra todos los sobrinos de referencePerson
+                // 2. Comprueba si currentPerson es el cónyuge de alguno de esos sobrinos
+                const refSiblings = Array.from(familyData.values()).filter(p => p.parentIds && referencePerson.parentIds && p.parentIds.some(rpId => referencePerson.parentIds.includes(rpId)) && p.id !== referencePersonId);
+                for (const sibling of refSiblings) {
+                    const siblingChildren = Array.from(familyData.values()).filter(p => p.parentIds && p.parentIds.includes(sibling.id));
+                    for (const nephew of siblingChildren) {
+                        if (nephew.spouseId === currentPersonId && currentPerson.spouseId === nephew.id) {
+                            return currentIsMale ? 'Sobrino Político' : (currentIsFemale ? 'Sobrina Política' : 'Sobrino/a Político/a');
+                        }
+                    }
+                }
+            
+                // Fallback a la relación de la DB si no se encuentra algo específico, o 'Familiar'
+                return currentPerson.relationship || 'Familiar';
+            };
+
+            const birthDate = new Date(person.dob);
+                    
+            // Obtener la fecha actual en horario de Santiago de Chile
+            // Lógica para el gorrito de cumpleaños
+            let birthdayClass = '';
+            if (person.dob && person.dob !== '0000-00-00') {
+                try {
+                    const dobParts = person.dob.split('-').map(Number); // [año, mes, día]
+                    const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] + 1 ));
+
+                    const now = new Date();
+                    const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
+                    const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
+                    const birthMonthDay = new Intl.DateTimeFormat('es-CL', options).format(birthDateUTC);
+
+                    if (santiagoDate === birthMonthDay) {
+                        birthdayClass = ' birthday';
+                    }
+                } catch (e) {
+                    console.error("Error calculando cumpleaños de la persona principal", e);
+                }
+            }
+
+
+
+             let childIcon = '';
+            // Calcular la edad numérica para la comprobación de < 10 años
+            let actualAge = -1; // Inicializar con un valor que indique que no se ha calculado
+            if (person.dob && person.dob !== '0000-00-00') {
+                 try {
+                    const birthDate = new Date(person.dob);
+                    const today = new Date();
+                    // Solo si está viva, calculamos la edad actual. Si ha fallecido, no tiene "edad actual"
+                    if (!isDeceased && !isNaN(birthDate.getTime())) {
+                        actualAge = today.getFullYear() - birthDate.getFullYear();
+                        const m = today.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            actualAge--;
+                        }
+                    } 
+                 } catch(e) { /* Error calculando edad, ignorar */ }
+            }
+
+            // Si la edad calculada es menor de 10 años (o si se murió antes de los 10 años)
+            if (actualAge >= 0 && actualAge < 10) { // Asegura que la edad es válida y menor de 10
+                childIcon = '<span class="icon-status icon-child">👶</span>'; // Bebé
+            }
+
+            const displayRelationship = calculateDynamicRelationship(person.id, selectedPersonId);
             const mainPersonShortName = getShortName(person.name);
-            const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name); // <--- NUEVA LÍNEA
+            const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name);
+
+
             const mainPersonHtml = `
-                <div class="member" data-id="${person.id}">
-                    ${mainPersonProfilePic} <div class="name">${mainPersonShortName}</div>
-                    <div class="relationship">${person.relationship || ''}</div>
+                <div class="member ${isDeceased ? ' deceased' : ''} ${birthdayClass} ${currentIsMale ? 'male' : 'female'}" data-id="${person.id}">
+                    ${childIcon}
+                    ${mainPersonProfilePic}
+                    <div class="name">${mainPersonShortName}</div>
+                    <div class="relationship">${displayRelationship}</div>
                     ${ageInTree}
                 </div>
             `;
 
-                        if (person.spouseId && familyData.has(person.spouseId)) {
+            if (person.spouseId && familyData.has(person.spouseId)) {
                 const spouse = familyData.get(person.spouseId);
-                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id) {
-                    // Lógica para calcular la edad del cónyuge en el nodo del árbol
+                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id && !renderedIds.has(spouse.id)) { 
+                    renderedIds.add(spouse.id); 
+                    
                     let spouseAgeInTree = '';
-                    if (spouse.dob && spouse.dob !== '0000-00-00' && (!spouse.dod || spouse.dod === '0000-00-00')) {
+                   if (spouse.dob && spouse.dob !== '0000-00-00') {
                         try {
                             const birthDate = new Date(spouse.dob);
-                            const today = new Date();
-                            if(!isNaN(birthDate.getTime())){
-                                let ageDiff = today.getFullYear() - birthDate.getFullYear();
-                                const m = today.getMonth() - birthDate.getMonth();
-                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                            let endDate = new Date(); // Por defecto, hoy
+
+                            const hasDeathDate = spouse.dod && spouse.dod !== '0000-00-00';
+                            if (hasDeathDate) {
+                                endDate = new Date(spouse.dod);
+                            }
+
+                            if(!isNaN(birthDate.getTime()) && !isNaN(endDate.getTime())){
+                                let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
+                                const m = endDate.getMonth() - birthDate.getMonth();
+                                if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
                                     ageDiff--;
                                 }
                                 if (ageDiff >= 0) {
-                                    spouseAgeInTree = `<div class="age">${ageDiff} años</div>`;
+                                    spouseAgeInTree = `<div class="age">${ageDiff} años${hasDeathDate ? `${currentIsMale ? ' (fallecida)' : ' (fallecido)'}` : ''}</div>`;
                                 }
                             }
                         } catch(e) { console.error("Error calculating spouse age for tree node", e); }
                     }
 
+                    const spouseDisplayRelationship = calculateDynamicRelationship(spouse.id, selectedPersonId);
                     const spouseShortName = getShortName(spouse.name);
-                    const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name); // <--- NUEVA LÍNEA
+                    const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name);
+                    // Determinar si la pareja ha fallecido para añadir la clase 'deceased'
+                    const isSpouseDeceased = spouse.dod && spouse.dod !== '0000-00-00';
+
+
+                     let spouseBirthdayClass = '';
+                        if (spouse.dob && spouse.dob !== '0000-00-00') {
+                            try {
+                                // MODIFICACIÓN CLAVE AQUÍ PARA CÓNYUGE
+                                const dobPartsSpouse = spouse.dob.split('-').map(Number);
+                                const birthDateSpouseUTC = new Date(Date.UTC(dobPartsSpouse[0], dobPartsSpouse[1] - 1, dobPartsSpouse[2] +1 ));
+                                const now = new Date();
+                                const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
+                                const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
+                                const birthMonthDaySpouse = new Intl.DateTimeFormat('es-CL', options).format(birthDateSpouseUTC);
+
+                                if (santiagoDate === birthMonthDaySpouse) {
+                                    spouseBirthdayClass = ' birthday';
+                                }
+                            } catch(e) {
+                                console.error("Error calculating spouse birthday for tree node", e);
+                            }
+                        }
+
+
+                    let spouseChildIcon = '';
+                    let spouseActualAge = -1;
+                    if (spouse.dob && spouse.dob !== '0000-00-00') {
+                        try {
+                            const birthDate = new Date(spouse.dob);
+                            const today = new Date();
+                            if (!isSpouseDeceased && !isNaN(birthDate.getTime())) {
+                                spouseActualAge = today.getFullYear() - birthDate.getFullYear();
+                                const m = today.getMonth() - birthDate.getMonth();
+                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                    spouseActualAge--;
+                                }
+                            } 
+                        } catch(e) { /* Error calculando edad, ignorar */ }
+                    }
+
+                    if (spouseActualAge >= 0 && spouseActualAge < 10) {
+                        spouseChildIcon = `<span class="icon-status icon-child" id="${spouse.id}">👶</span>`;
+                    }
+
+
                     const spouseHtml = `
-                        <div class="member" data-id="${spouse.id}">
-                            ${spouseProfilePic} <div class="name">${spouseShortName}</div>
-                            <div class="relationship">${spouse.relationship || ''}</div>
+                        <div class="member ${isSpouseDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${currentIsMale ? 'female' : 'male'}" data-id="${spouse.id}">
+                            ${spouseChildIcon}
+                            ${spouseProfilePic}
+                            <div class="name">${spouseShortName}</div>
+                            <div class="relationship">${spouseDisplayRelationship}</div>
                             ${spouseAgeInTree}
                         </div>
                     `;
@@ -695,47 +1376,26 @@
             }
             nodeContent += '</div>';
 
-            // --- 2. Recursivamente agregar los hijos ---
             let childrenHtml = '';
-            // Se obtienen los hijos de la persona principal o de su cónyuge si tienen hijos definidos
-            // Se combinan los childrenIds de la persona y su cónyuge para mostrar todos los hijos de la pareja.
-            let combinedChildrenIds = new Set();
-            if (person.childrenIds && person.childrenIds.length > 0) {
-                person.childrenIds.forEach(id => combinedChildrenIds.add(id));
-            }
-            // Importante: También considerar los hijos del cónyuge si el cónyuge existe y tiene hijos listados.
-            if (person.spouseId && familyData.has(person.spouseId)) {
-                const spouse = familyData.get(person.spouseId);
-                if (spouse && spouse.childrenIds && spouse.childrenIds.length > 0) {
-                    spouse.childrenIds.forEach(id => combinedChildrenIds.add(id));
-                }
-            }
             
-           const childrenToRender = Array.from(combinedChildrenIds)
-                                            .filter(childId => familyData.has(childId)) 
-                                            .map(childId => familyData.get(childId))
-                                            .filter(child => {
-                                                const childParents = child.parentIds || [];
-                                                const isChildOfThisPerson = childParents.includes(person.id);
-                                                
-                                                let isChildOfSpouse = false;
-                                                if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
-                                                    isChildOfSpouse = childParents.includes(person.spouseId);
-                                                }
-                                                return isChildOfThisPerson || isChildOfSpouse;
-                                            })
-                                            .sort((a,b) => a.name.localeCompare(b.name)); 
+            const parentIdsOfCurrentUnit = new Set();
+            parentIdsOfCurrentUnit.add(person.id);
+            if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                parentIdsOfCurrentUnit.add(person.spouseId);
+            }
 
-            console.log(`Persona: ${person.name}, Hijos encontrados para renderizar:`, childrenToRender.map(c => c.name));
+            const childrenOfThisFamilyUnit = Array.from(familyData.values())
+                                                .filter(child => {
+                                                    const childParents = child.parentIds || [];
+                                                    return Array.from(parentIdsOfCurrentUnit).some(pId => childParents.includes(pId));
+                                                })
+                                                .filter(child => !renderedIds.has(child.id))
+                                                .sort((a,b) => a.name.localeCompare(b.name));
 
-          if (childrenToRender.length > 0) {
+            if (childrenOfThisFamilyUnit.length > 0) {
                 childrenHtml += '<ul>';
-                const renderedChildrenInThisBranch = new Set();
-                childrenToRender.forEach(child => {
-                    if (!renderedChildrenInThisBranch.has(child.id)) {
-                        childrenHtml += generatePersonHtml(child);
-                        renderedChildrenInThisBranch.add(child.id);
-                    }
+                childrenOfThisFamilyUnit.forEach(child => {
+                    childrenHtml += generatePersonHtml(child, renderedIds); 
                 });
                 childrenHtml += '</ul>';
             }
@@ -743,12 +1403,13 @@
             return `<li>${nodeContent}${childrenHtml}</li>`;
         }
 
+
         function showPersonDetails(personId) {
-            selectedPersonId = personId;
+            selectedPersonId = personId; 
             const person = familyData.get(personId);
             const detailsContent = document.getElementById('details-content');
             const editButtons = document.getElementById('edit-buttons');
-                  const editPersonLink = document.getElementById('edit-person-link');
+            const editPersonLink = document.getElementById('edit-person-link');
 
             if (!person || !detailsContent || !editButtons || !editPersonLink) {
                 detailsContent.innerHTML = '<p class="text-gray-500">Selecciona una persona para ver su información.</p>';
@@ -757,79 +1418,72 @@
                 return;
             }
             
-             // Eliminar resaltado anterior
+            renderTree(); 
+
             document.querySelectorAll('.member').forEach(el => el.classList.remove('selected', 'highlighted', 'ancestor-spouse-highlight'));
             document.querySelectorAll('.tree li').forEach(li => li.classList.remove('highlighted-path'));
             document.querySelectorAll('.node-content').forEach(nc => nc.classList.remove('highlighted-path'));
 
-            // Resaltar la persona seleccionada
-            document.querySelector(`.member[data-id="${personId}"]`)?.classList.add('selected');
+            const currentSelectedMemberElement = document.querySelector(`.member[data-id="${personId}"]`);
+            if(currentSelectedMemberElement) {
+                currentSelectedMemberElement.classList.add('selected');
+            }
 
-            // --- LÓGICA DE RESALTADO DE ANCESTROS DIRECTOS (MEJORADA PARA AMBAS RAMAS) ---
-            let queue = [personId]; // Usaremos una cola para BFS (Breadth-First Search)
-            const visited = new Set(); // Para evitar bucles infinitos y duplicados
+            let queue = [personId]; 
+            const visitedForHighlight = new Set(); 
 
             while (queue.length > 0) {
-                const currentId = queue.shift(); // Saca el primer ID de la cola
+                const currentId = queue.shift(); 
                 
-                if (visited.has(currentId)) {
-                    continue; // Si ya lo visitamos, omítelo
+                if (visitedForHighlight.has(currentId)) {
+                    continue; 
                 }
-                visited.add(currentId); // Marca como visitado
+                visitedForHighlight.add(currentId); 
 
                 const currentPerson = familyData.get(currentId);
                 if (!currentPerson) {
-                    continue; // Si la persona no existe en los datos cargados, omítela
+                    continue; 
                 }
 
-                // Resaltar el nodo de la persona actual
                 const memberElement = document.querySelector(`.member[data-id="${currentPerson.id}"]`);
                 if (memberElement) {
                     memberElement.classList.add('highlighted');
                 }
 
-                // Si la persona actual tiene un cónyuge, resaltarlo también (y sus líneas)
                 if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
                     const spouse = familyData.get(currentPerson.spouseId);
-                    if (spouse.spouseId === currentPerson.id) { // Asegurarse que el vínculo es bidireccional
+                    if (spouse && spouse.spouseId === currentPerson.id) { 
                         const spouseElement = document.querySelector(`.member[data-id="${currentPerson.spouseId}"]`);
                         if (spouseElement) {
                             spouseElement.classList.add('ancestor-spouse-highlight');
                         }
-                        // Resaltar la línea horizontal entre la persona y su cónyuge
-                        const nodeContentElement = memberElement.closest('.node-content');
+                        const nodeContentElement = memberElement ? memberElement.closest('.node-content') : null;
                         if (nodeContentElement) {
                             nodeContentElement.classList.add('highlighted-path');
                         }
                     }
                 }
                 
-                // Resaltar las líneas (LI) que suben desde esta persona (y su cónyuge) a sus padres
                 const liElement = memberElement ? memberElement.closest('li') : null;
                 if (liElement) {
                     liElement.classList.add('highlighted-path');
-                    // Si este LI tiene un UL padre (significa que hay un nivel superior), resalta la línea vertical
-                    const parentUl = liElement.parentNode;
-                    if (parentUl && parentUl.tagName === 'UL') {
-                        const parentLi = parentUl.closest('li');
-                        if (parentLi) {
-                            parentLi.classList.add('highlighted-path'); // Esto resalta la LI del padre
-                        }
-                    }
                 }
 
-                // Añadir los padres a la cola para procesarlos en la siguiente iteración
-                if (currentPerson.parentIds && Array.isArray(currentPerson.parentIds)) {
-                    currentPerson.parentIds.forEach(parentId => {
-                        if (!visited.has(parentId) && familyData.has(parentId)) {
-                            queue.push(parentId);
-                        }
-                    });
-                }
+                const parentsOfCurrentPerson = Array.from(familyData.values())
+                    .filter(p => p.childrenIds && p.childrenIds.includes(currentId));
+
+                parentsOfCurrentPerson.forEach(parent => {
+                    if (!visitedForHighlight.has(parent.id) && familyData.has(parent.id)) {
+                        queue.push(parent.id);
+                    }
+                });
             }
+
 
             let age = '';
             let ageAtDeath = '';
+            let ageAtMarriage = ''; // Variable para la edad al matrimonio
+
             if(person.dob){
                 try {
                     const birthDate = new Date(person.dob);
@@ -837,27 +1491,44 @@
                     if(!isNaN(birthDate.getTime())){
                         let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
                         const m = endDate.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
+                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                             ageDiff--;
                         }
                         if(person.dod && person.dod !== '0000-00-00') {
                             ageAtDeath = `(falleció a los ${ageDiff} años)`;
-                        } else {
+                        } else if (ageDiff >= 0) { 
                             age = `${ageDiff} años`;
                         }
                     }
                 } catch(e) { console.error("Error calculating age", e); }
+            }
+
+            // Lógica para edad al matrimonio
+            if (person.dob && person.dom && person.dob !== '0000-00-00' && person.dom !== '0000-00-00') {
+                try {
+                    const birthDate = new Date(person.dob);
+                    const marriageDate = new Date(person.dom);
+                    if (!isNaN(birthDate.getTime()) && !isNaN(marriageDate.getTime())) {
+                        let ageDiff = marriageDate.getFullYear() - birthDate.getFullYear();
+                        const m = marriageDate.getMonth() - birthDate.getMonth();
+                        if (m < 0 || (m === 0 && marriageDate.getDate() < birthDate.getDate())) {
+                            ageDiff--;
+                        }
+                        if (ageDiff >= 0) {
+                            ageAtMarriage = `(se casó a los ${ageDiff} años)`;
+                        }
+                    }
+                } catch(e) { console.error("Error calculating age at marriage", e); }
             }
             
             const formatDate = (dateString) => {
                 if (!dateString || dateString === '0000-00-00') return 'No disponible';
                 try {
                     const date = new Date(dateString);
-                    // Ajuste para la zona horaria que puede afectar la fecha
-                    date.setDate(date.getDate() + 1); 
-                    if(isNaN(date.getTime())) return 'Fecha inválida';
-                    const options = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
-                    return date.toLocaleDateString('es-ES', options);
+                    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000); 
+                    if(isNaN(adjustedDate.getTime())) return 'Fecha inválida';
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    return adjustedDate.toLocaleDateString('es-ES', options);
                 } catch(e) {
                     return 'Fecha inválida';
                 }
@@ -872,13 +1543,13 @@
                     <p><strong>RUT:</strong> ${person.rut || 'No disponible'}</p>
                     <p><strong>Nacimiento:</strong> ${formatDate(person.dob)}</p>
                     ${age ? `<p><strong>Edad:</strong> ${age}</p>` : ''}
-                    <p><strong>Matrimonio:</strong> ${formatDate(person.dom)}</p>
+                    <p><strong>Matrimonio:</strong> ${formatDate(person.dom)} ${ageAtMarriage}</p>
                     <p><strong>Fallecimiento:</strong> ${formatDate(person.dod)} ${ageAtDeath}</p>
                 </div>
             `;
             editButtons.classList.remove('hidden');
 
-                        editPersonLink.href = `editar.php?id=${personId}`;
+            editPersonLink.href = `editar.php?id=${personId}`;
         }
 
         const modal = document.getElementById('person-modal');
@@ -889,13 +1560,13 @@
         const currentSpouseDisplay = document.getElementById('current-spouse-display');
         const currentParentsList = document.getElementById('current-parents-list');
         const currentChildrenList = document.getElementById('current-children-list');
-        const addnewSpouseBtn = document.getElementById('add-new-spouse-btn');
-             const linkExistingSpouseBtn = document.getElementById('link-existing-spouse-btn');
-        const addnewParentBtn = document.getElementById('add-new-parent-btn');
-                const linkExistingParentBtn = document.getElementById('link-existing-parent-btn');
-        const addnewChildBtn = document.getElementById('add-new-child-btn');
+        const addNewSpouseBtn = document.getElementById('add-new-spouse-btn'); 
+        const linkExistingSpouseBtn = document.getElementById('link-existing-spouse-btn');
+        const addNewParentBtn = document.getElementById('add-new-parent-btn'); 
+        const linkExistingParentBtn = document.getElementById('link-existing-parent-btn');
+        const addNewChildBtn = document.getElementById('add-new-child-btn'); 
+        const linkExistingChildBtn = document.getElementById('link-existing-child-btn');
 
-                const linkExistingChildBtn = document.getElementById('link-existing-child-btn');
         const closeRelationshipsModalBtn = document.getElementById('close-relationships-modal-btn');
 
         const selectPersonModal = document.getElementById('select-person-modal');
@@ -916,7 +1587,7 @@
             form.reset();
             personIdField.value = ''; 
 
-             if (mode.startsWith('add_') && personId !== null) {
+            if (mode.startsWith('add_') && personId !== null) {
                 const selectedPerson = familyData.get(personId);
                 if (!selectedPerson) return; 
                 relatedPersonSpouseId = selectedPerson.spouseId; 
@@ -932,10 +1603,11 @@
                     form.querySelector('#relationship').value = 'Cónyuge'; 
                 }
             }
+            
             modal.classList.remove('hidden');
         }
 
-      async function openRelationshipsModal(personId) {
+        async function openRelationshipsModal(personId) {
             selectedPersonId = personId; 
             const person = familyData.get(personId);
             if (!person) return;
@@ -1028,6 +1700,7 @@
 
             relationshipsModal.classList.remove('hidden');
         }
+
          function openSelectPersonModal(mode, currentPersonId) {
             selectPersonMode = mode;
             personToLinkToId = currentPersonId; 
@@ -1047,8 +1720,7 @@
             selectPersonModal.classList.remove('hidden');
         }
 
-        // Función para renderizar la lista de personas en el modal de selección
-       function renderSelectablePeopleList(searchTerm = '', excludeId = null) {
+        function renderSelectablePeopleList(searchTerm = '', excludeId = null) {
             personListContainer.innerHTML = '';
             const filteredPeople = Array.from(familyData.values()).filter(p => 
                 p.id !== excludeId && 
@@ -1064,13 +1736,11 @@
                 const div = document.createElement('div');
                 div.className = 'p-3 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition duration-150';
                 div.dataset.personId = person.id; 
-                div.innerText = `${person.name} (${person.relationship || 'sin relación'})`;
+                div.innerText = `${person.name}`;
                 personListContainer.appendChild(div);
             });
         }
         
-
-        // Event listener para el botón "Gestionar Relaciones"
         document.getElementById('manage-relationships-btn').addEventListener('click', () => {
             if (selectedPersonId) {
                 openRelationshipsModal(selectedPersonId);
@@ -1079,36 +1749,36 @@
             }
         });
 
-        // Event listener para cerrar el modal de relaciones
         closeRelationshipsModalBtn.addEventListener('click', () => {
             relationshipsModal.classList.add('hidden');
-            showPersonDetails(selectedPersonId);
+            if (selectedPersonId) {
+                showPersonDetails(selectedPersonId);
+            }
             loadFamilyData(); 
         });
 
-        // Event listeners para los botones de agregar en el modal de relaciones
-        addnewSpouseBtn.addEventListener('click', () => {
+        addNewSpouseBtn.addEventListener('click', () => {
             if (selectedPersonId) {
-                relationshipsModal.classList.add('hidden');
-                openPersonModal('add_spouse', selectedPersonId); // Abrir 
+                relationshipsModal.classList.add('hidden'); 
+                openPersonModal('add_spouse', selectedPersonId); 
             }
         });
 
-        addnewParentBtn.addEventListener('click', () => {
+        addNewParentBtn.addEventListener('click', () => {
            if (selectedPersonId) {
                 relationshipsModal.classList.add('hidden'); 
                 openPersonModal('add_ancestor', selectedPersonId); 
             }
         });
 
-        addnewChildBtn.addEventListener('click', () => {
+        addNewChildBtn.addEventListener('click', () => {
             if (selectedPersonId) {
-                relationshipsModal.classList.add('hidden'); // Cerrar este modal
-                openPersonModal('add_descendant', selectedPersonId); // Abrir el modal de persona para agregar descendiente
+                relationshipsModal.classList.add('hidden'); 
+                openPersonModal('add_descendant', selectedPersonId); 
             }
         });
 
-         linkExistingSpouseBtn.addEventListener('click', () => {
+        linkExistingSpouseBtn.addEventListener('click', () => {
             if (selectedPersonId) {
                 openSelectPersonModal('link_spouse', selectedPersonId);
             }
@@ -1126,7 +1796,6 @@
             }
         });
 
-        // Event listener para los botones de eliminar dentro del modal de relaciones (delegación de eventos)
         relationshipsModal.addEventListener('click', async (event) => {
             if (event.target.classList.contains('remove-relationship-btn')) {
                 const button = event.target;
@@ -1141,37 +1810,11 @@
                     }
                 } else if (action === 'remove_spouse') {
                     dataToSend.person_id = parseInt(button.dataset.personId);
-                   if (!confirm(`¿Estás seguro de que quieres eliminar el vínculo de cónyuge de ${familyData.get(dataToSend.person_id)?.name}? Esto también desvinculará a su cónyuge.`)) {
+                    if (!confirm(`¿Estás seguro de que quieres eliminar el vínculo de cónyuge de ${familyData.get(dataToSend.person_id)?.name}? Esto también desvinculará a su cónyuge.`)) {
                         return;
                     }
                 } else {
-                    return; // Acción desconocida
-                }
-
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(dataToSend),
-                    });
-
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-                    }
-
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('Vínculo eliminado con éxito:', result.message);
-                        await loadFamilyData(); // Recargar el árbol para reflejar los cambios
-                        openRelationshipsModal(selectedPersonId); // Volver a abrir el modal para ver los cambios
-                    } else {
-                        console.error('Error al eliminar vínculo:', result.message);
-                        alert('Error al eliminar vínculo: ' + result.message);
-                    }
-                } catch (error) {
-                    console.error('Error de red o servidor al eliminar vínculo:', error);
-                    alert('Error de conexión o servidor al eliminar vínculo.');
+                    return; 
                 }
 
                 const result = await sendDataToAPI(dataToSend);
@@ -1186,7 +1829,6 @@
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            // Recolectar datos del formulario
             const personData = {
                 name: form.querySelector('#name').value,
                 relationship: form.querySelector('#relationship').value,
@@ -1196,66 +1838,37 @@
                 dom: form.querySelector('#dom').value,
                 dod: form.querySelector('#dod').value,
                 photo: form.querySelector('#photo').value,
-                // spouseId se gestiona en las funciones de acción específicas si es necesario
             };
 
             let actionData = { _action: modalMode, personData: personData };
 
-            if (modalMode === 'edit_person') {
-                actionData.personData.id = parseInt(form.querySelector('#person-id').value);
-                // Si la persona editada tiene cónyuge, mantenerlo si no se cambia en el formulario
-                actionData.personData.spouseId = familyData.get(actionData.personData.id)?.spouseId;
-            } else { // Si es 'add_descendant', 'add_ancestor', 'add_spouse'
-                actionData.selectedPersonId = relatedPersonId;
-                actionData.selectedPersonSpouseId = relatedPersonSpouseId; // Pasar el cónyuge de la persona seleccionada
+            actionData.selectedPersonId = relatedPersonId;
+            if (modalMode === 'add_descendant') {
+                actionData.selectedPersonSpouseId = relatedPersonSpouseId;
             }
 
-            // Enviar los datos a la API
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(actionData),
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            const result = await sendDataToAPI(actionData);
+            if (result && result.success) {
+                modal.classList.add('hidden');
+                if (result.new_person_id) { 
+                    showPersonDetails(result.new_person_id);
+                } else if (relatedPersonId) {
+                    showPersonDetails(relatedPersonId);
                 }
-
-                const result = await response.json();
-                if (result.success) {
-                    console.log('Operación exitosa:', result.message);
-                    modal.classList.add('hidden');
-                    await loadFamilyData(); // Recargar el árbol
-                    if (result.new_person_id) { // Si se añadió una nueva persona, seleccionarla
-                        showPersonDetails(result.new_person_id);
-                    } else if (modalMode === 'edit_person') {
-                         showPersonDetails(actionData.personData.id); // Re-seleccionar la persona editada
-                    } else if (relatedPersonId) {
-                         showPersonDetails(relatedPersonId); // Re-seleccionar la persona original para ver su nuevo vínculo
-                    }
-                } else {
-                    console.error('Error en la operación:', result.message);
-                    alert('Error al guardar: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error de red o servidor al guardar:', error);
-                alert('Error de conexión o servidor al guardar los datos.');
             }
         });
 
         cancelBtn.addEventListener('click', () => {
              modal.classList.add('hidden');
+             if (relationshipsModal.classList.contains('hidden') && selectedPersonId) {
+                 openRelationshipsModal(selectedPersonId);
+             }
         });
 
         personSearchInput.addEventListener('input', (event) => {
             renderSelectablePeopleList(event.target.value, personToLinkToId); 
         });
 
-         // Manejador de clic en la lista de personas seleccionables (delegación de eventos)
         personListContainer.addEventListener('click', async (event) => {
             const selectedElement = event.target.closest('div[data-person-id]');
             if (selectedElement) {
@@ -1271,14 +1884,14 @@
                 } else if (selectPersonMode === 'link_parent') {
                     dataToSend = {
                         _action: 'link_existing_parent_child',
-                        parent_id: targetPersonId,
-                        child_id: personToLinkToId
+                        parent_id: targetPersonId, 
+                        child_id: personToLinkToId 
                     };
                 } else if (selectPersonMode === 'link_child') {
                     dataToSend = {
                         _action: 'link_existing_parent_child',
-                        parent_id: personToLinkToId,
-                        child_id: targetPersonId
+                        parent_id: personToLinkToId, 
+                        child_id: targetPersonId 
                     };
                 }
 
@@ -1292,11 +1905,11 @@
             }
         });
 
-       // Event listener para cerrar el modal de selección de persona
         cancelSelectPersonBtn.addEventListener('click', () => {
             selectPersonModal.classList.add('hidden');
-            // Al cancelar el select-person-modal, volvemos a mostrar el relationshipsModal
-            relationshipsModal.classList.remove('hidden'); 
+            if (selectedPersonId) {
+                openRelationshipsModal(selectedPersonId);
+            }
         });
 
         document.getElementById('add-descendant-btn').addEventListener('click', () => {
@@ -1323,6 +1936,16 @@
         
         document.addEventListener('DOMContentLoaded', () => {
             loadFamilyData();
+
+            const detailsHeader = document.getElementById('details-header');
+            const mainLayout = document.getElementById('main-layout');
+
+           if (detailsHeader && mainLayout) {
+                detailsHeader.addEventListener('click', () => {
+                    // Alterna la clase 'aside-collapsed' en el contenedor padre
+                    mainLayout.classList.toggle('aside-collapsed');
+                });
+            }
         });
 
     </script>

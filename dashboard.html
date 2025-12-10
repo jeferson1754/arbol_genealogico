@@ -230,7 +230,7 @@
         }
 
         .birthday-list {
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             padding: 10px 0;
         }
@@ -1552,7 +1552,7 @@
                 
                 // Fallecidos
                 birthdaysDeceased.forEach(persona => {
-                    const age = this.calculateAgeDeceased(persona.dob, persona.dod);
+                    const age = this.calculateAge(persona.dob);
                     const isBirthdayToday = isToday(persona.dob);
                     const item = document.createElement('div');
                     item.className = `birthday-item deceased${isBirthdayToday ? ' highlight' : ''}`;
@@ -1839,17 +1839,6 @@
                 return age;
             }
 
-        // Nuevo método para calcular la edad de los fallecidos en su cumpleaños actual
-        calculateAgeDeceased(birthDate, deathDate) {
-             const birth = new Date(birthDate);
-             const death = new Date(deathDate);
-             let age = death.getFullYear() - birth.getFullYear();
-             const monthDiff = death.getMonth() - birth.getMonth();
-             if (monthDiff < 0 || (monthDiff === 0 && death.getDate() < birth.getDate())) {
-                 age--;
-             }
-             return age;
-        }
     }
 
     // --- LÓGICA DE INICIALIZACIÓN DEL DASHBOARD ---

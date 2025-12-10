@@ -213,9 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['_document_action']))
     $updated_dom = (!empty($_POST['dom']) && $_POST['dom'] !== '0000-00-00') ? $_POST['dom'] : null;
     $updated_dod = (!empty($_POST['dod']) && $_POST['dod'] !== '0000-00-00') ? $_POST['dod'] : null;
 
-    // El spouse_id no se gestiona directamente en este formulario de edición simple.
-    // Se mantiene el spouse_id actual de la persona.
-    $current_spouse_id = $person_data['spouse_id'] ?? null;
+
 
     // --- Lógica para la imagen ---
     $photo_to_save = $current_photo_value; // Por defecto, mantener la imagen actual
@@ -265,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['_document_action']))
 
 
     $stmt_update = $conn->prepare(
-        "UPDATE people SET name=?, rut=?, gender=?, dob=?, dom=?, dod=?, photo=?, spouse_id=? WHERE id=?"
+        "UPDATE people SET name=?, rut=?, gender=?, dob=?, dom=?, dod=?, photo=? WHERE id=?"
     );
 
     if ($stmt_update) {
@@ -277,19 +275,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['_document_action']))
         $bind_dom = $updated_dom;
         $bind_dod = $updated_dod;
         $bind_photo = $photo_to_save; // Usamos el valor decidido por la lógica de imagen
-        $bind_spouse_id = $current_spouse_id;
         $bind_person_id = $person_id; // ID para la cláusula WHERE
 
         // Construir los tipos de bind_param dinámicamente y las referencias
-        // Asegúrate de que si spouse_id es null, se bindea como 's' para mysqli
-        // Si tienes la columna spouse_id como INT NULL en la DB, puedes forzar el tipo 'i'.
-        // Pero para ser super seguro con NULLs en mysqli, podrías usar:
-        // $types = "ssssssss" . ($bind_spouse_id === null ? "s" : "i") . "i";
-        // Y pasar $bind_spouse_id directamente.
 
-        // Mantendremos "ssssssssii" asumiendo que spouse_id es INT NULL y que mysqli lo maneja.
+
+ 
         // Si sigues teniendo warnings con 'i' para NULL, esa línea de types debe cambiar a 's'.
-        $types = "sssssssi"; // 8 strings (hasta photo), 1 integer (spouse_id)
+        $types = "ssssssi"; // 8 strings (hasta photo), 1 
 
         // Aquí pasamos las referencias para cada parámetro
         $params = [
@@ -300,7 +293,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['_document_action']))
             &$bind_dom,
             &$bind_dod,
             &$bind_photo,
-            &$bind_spouse_id, // ¡Asegúrate de que esta variable sea la misma que $spouse_id del POST!
             &$bind_person_id // El último es el ID para WHERE
         ];
 
@@ -317,8 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['_document_action']))
         // es la forma correcta de asegurar referencias si $bind_params_values se llenó con valores.
         // Pero en este código, $params se llena directamente con referencias, lo cual es más directo.
 
-        // Si el warning persiste, revisa que $person_data['spouse_id'] se inicialice correctamente.
-        // También, si la columna 'spouse_id' es INT NOT NULL, deberías darle un valor por defecto (ej. 0)
+
         // o manejarlo de otra forma. Si es INT NULL, lo que estamos haciendo debería funcionar.
 
         call_user_func_array([$stmt_update, 'bind_param'], $params);

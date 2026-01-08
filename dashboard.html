@@ -688,6 +688,72 @@
         font-weight: 600;
         margin-top: 10px;
       }
+
+      /* Estilo Base de las Pastillas */
+      .pill-nav {
+        display: flex;
+        justify-content: center; /* Centra horizontalmente */
+        align-items: center; /* Centra verticalmente */
+        gap: 1rem;
+        margin-top: 20px;
+        width: 100%; /* Ocupa el ancho disponible */
+        position: relative; /* Asegura que esté en su propia capa */
+        z-index: 10; /* Lo pone por encima de otros fondos */
+      }
+
+      .pill-button {
+        display: flex; /* Importante para el icono y texto */
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        cursor: pointer; /* Fuerza el cursor de mano */
+        pointer-events: auto; /* Asegura que capture el clic */
+      }
+
+      /* Pastilla Azul (Árbol) */
+      .pill-blue {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border-color: #dbeafe;
+      }
+
+      .pill-blue:hover {
+        background-color: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transform: translateY(-2px);
+      }
+
+      /* Pastilla Índigo (Auditoría) */
+      .pill-indigo {
+        background-color: #eef2ff;
+        color: #4f46e5;
+        border-color: #e0e7ff;
+      }
+
+      .pill-indigo:hover {
+        background-color: #4f46e5;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        transform: translateY(-2px);
+      }
+
+      @media (max-width: 600px) {
+        .pill-nav {
+          flex-direction: column; /* Apila los botones verticalmente */
+          align-items: center; /* Los mantiene centrados */
+        }
+      }
+
+      #genderChart{
+        margin-top: 20px;
+      }
     </style>
   </head>
   <body>
@@ -698,14 +764,17 @@
           <p>Análisis completo de datos poblacionales en tiempo real</p>
         </div>
 
-        <a
-          href="index.html"
-          style="color: white; text-decoration: none"
-          class="floating-button px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-md flex items-center space-x-2"
-        >
-          <i class="fas fa-sitemap mr-2"></i>
-          <span>Arbol Genealógico</span>
-        </a>
+        <nav class="pill-nav">
+          <a href="index.html" class="pill-button pill-blue">
+            <i class="fas fa-sitemap"></i>
+            <span>Árbol Genealógico</span>
+          </a>
+
+          <a href="auditoria.html" class="pill-button pill-indigo">
+            <i class="fas fa-tasks"></i>
+            <span>Auditoría de Datos</span>
+          </a>
+        </nav>
       </div>
 
       <div class="main-content">
@@ -2376,7 +2445,7 @@
                         <i class="fas fa-chart-pie"></i>
                         Distribución por Género
                     </h3>
-                    <div class="chart-container">
+                    <div class="chart-container mt-2">
                         <canvas id="genderChart"></canvas>
                     </div>
                 </div>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auditoría de Documentación - Árbol Genealógico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+      <div
+        class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4"
+      >
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">
+            Auditoría de Calidad de Datos
+          </h1>
+          <p class="text-gray-600">
+            Seguimiento de fechas y documentos obligatorios.
+          </p>
+        </div>
+        <a
+          href="index.html"
+          class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+        >
+          <i class="fas fa-arrow-left mr-2"></i> Volver al Árbol
+        </a>
+      </div>
+
+      <div
+        class="bg-white p-4 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center"
+      >
+        <div class="relative flex-grow responsive">
+          <span
+            class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"
+          >
+            <i class="fas fa-search"></i>
+          </span>
+          <input
+            type="text"
+            id="name-search"
+            placeholder="Buscar persona por nombre..."
+            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <div class="flex flex-wrap gap-2 w-full md:w-auto">
+          <button
+            id="filter-incomplete"
+            class="flex-1 md:flex-none px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 text-sm font-medium transition flex items-center justify-center"
+          >
+            <i class="fas fa-file-invoice mr-2"></i> Datos Incompletos
+          </button>
+
+          <button
+            id="filter-no-rut"
+            class="flex-1 md:flex-none px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium transition flex items-center justify-center"
+          >
+            <i class="fas fa-id-card-alt mr-2"></i> Sin RUT
+          </button>
+
+          <button
+            id="reset-filters"
+            class="flex-1 md:flex-none px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition flex items-center justify-center"
+          >
+            <i class="fas fa-users mr-2"></i> Ver Todos
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-4 text-sm font-medium text-gray-600">
+        Resultados encontrados:
+        <span id="results-count" class="text-blue-600 font-bold">0</span>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  onclick="sortTable('nombre_persona')"
+                  class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  Persona <i class="fas fa-sort ml-1"></i>
+                </th>
+                <th
+                  onclick="sortTable('rut')"
+                  class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  RUT <i class="fas fa-sort ml-1"></i>
+                </th>
+                <th
+                  onclick="sortTable('fecha_nacimiento')"
+                  class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  Fecha Nac. <i class="fas fa-sort ml-1"></i>
+                </th>
+                <th
+                  onclick="sortTable('tiene_nacimiento')"
+                  class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  Nac. <i class="fas fa-sort ml-1"></i>
+                </th>
+                <th
+                  onclick="sortTable('tiene_matrimonio')"
+                  class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  Matr. <i class="fas fa-sort ml-1"></i>
+                </th>
+                <th
+                  onclick="sortTable('tiene_defuncion')"
+                  class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  Def. <i class="fas fa-sort ml-1"></i>
+                </th>
+                <th
+                  onclick="sortTable('estado')"
+                  class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  Estado <i class="fas fa-sort ml-1"></i>
+                </th>
+                <th
+                  class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="audit-table-body"
+              class="bg-white divide-y divide-gray-200"
+            ></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Simulamos la carga de datos (deberías conectar esto a tu api.php)
+      let familyDataArray = [];
+
+      // Función auxiliar para actualizar el contador visual
+      const updateCounter = (count) => {
+        const counterElement = document.getElementById("results-count");
+        if (counterElement) counterElement.innerText = count;
+      };
+
+      async function loadAuditData() {
+        try {
+          // Cambia esto por tu URL real: fetch('api.php?action=get_family_data')
+          const response = await fetch("api_search.php?action=get_family_data");
+          const data = await response.json();
+
+          // Convertimos el objeto/mapa a un array para facilitar el filtrado
+          familyDataArray = Object.values(data);
+          renderAuditTable(familyDataArray);
+
+          // ACTUALIZACIÓN INICIAL DEL CONTADOR
+          updateCounter(familyDataArray.length);
+        } catch (error) {
+          console.error("Error cargando datos:", error);
+        }
+      }
+
+      let currentSortColumn = "";
+      let isAscending = true;
+
+      function sortTable(column) {
+        // Si se hace clic en la misma columna, invertimos el orden
+        if (currentSortColumn === column) {
+          isAscending = !isAscending;
+        } else {
+          currentSortColumn = column;
+          isAscending = true;
+        }
+
+        const sortedData = [...familyDataArray].sort((a, b) => {
+          let valA, valB;
+
+          if (column === "estado") {
+            // Lógica especial para ordenar por "Estado"
+            // Un "Completo" (OK) vale 1, un "Incompleto" (ALERTA) vale 0
+            valA =
+              a.tiene_nacimiento === "Sí" &&
+              a.fecha_nacimiento &&
+              a.fecha_nacimiento !== "0000-00-00"
+                ? 1
+                : 0;
+            valB =
+              b.tiene_nacimiento === "Sí" &&
+              b.fecha_nacimiento &&
+              b.fecha_nacimiento !== "0000-00-00"
+                ? 1
+                : 0;
+          } else {
+            // Valores genéricos
+            valA = a[column] ? a[column].toString().toLowerCase() : "";
+            valB = b[column] ? b[column].toString().toLowerCase() : "";
+          }
+
+          // Comparación para strings y números
+          if (valA < valB) return isAscending ? -1 : 1;
+          if (valA > valB) return isAscending ? 1 : -1;
+          return 0;
+        });
+
+        renderAuditTable(sortedData);
+      }
+
+      function renderAuditTable(data) {
+        const tbody = document.getElementById("audit-table-body");
+        tbody.innerHTML = "";
+
+        data.forEach((person) => {
+          // Ahora validamos contra "Sí" según tu SQL
+          const hasBirthCert = person.tiene_nacimiento === "Sí";
+          const hasMarriageCert = person.tiene_matrimonio === "Sí";
+          const hasDeathCert = person.tiene_defuncion === "Sí";
+
+          // Validación de RUT y Fecha (usando los alias de tu consulta)
+          const hasRut = person.rut && person.rut.trim() !== "";
+          const hasDate =
+            person.fecha_nacimiento && person.fecha_nacimiento !== "0000-00-00";
+
+          const row = document.createElement("tr");
+          row.className =
+            "hover:bg-gray-50 transition border-b border-gray-100";
+
+          row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                ${person.nombre_persona}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <span class="px-2 py-1 rounded ${
+                  hasRut ? "bg-gray-100" : "bg-red-100 text-red-700 font-bold"
+                }">
+                    ${person.rut}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                ${
+                  hasDate
+                    ? person.fecha_nacimiento
+                    : '<span class="text-red-400 italic">Pendiente</span>'
+                }
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${renderCheck(
+              hasBirthCert
+            )}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${renderCheck(
+              hasMarriageCert
+            )}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${renderCheck(
+              hasDeathCert
+            )}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+                ${
+                  hasBirthCert && hasDate
+                    ? '<span class="text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs font-bold">OK</span>'
+                    : '<span class="text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs font-bold">ALERTA</span>'
+                }
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+            <div class="flex gap-3 justify-center">
+                <a href="editar.php?id=${person.id}" 
+                title="Editar información"
+                target="_blanck"
+                class="group flex items-center justify-center w-10 h-10 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm border border-blue-100">
+                <i class="fas fa-edit text-base"></i>
+                </a>
+
+                <a href="index.html?personId=${person.id}" 
+                title="Ver en el árbol"
+                target="_blanck"
+                class="group flex items-center justify-center w-10 h-10 bg-green-50 text-green-600 rounded-full hover:bg-green-600 hover:text-white transition-all duration-300 shadow-sm border border-green-100">
+                <i class="fas fa-tree text-base"></i>
+                </a>
+            </div>
+            </td>
+        `;
+          tbody.appendChild(row);
+        });
+      }
+
+      function renderCheck(isValid) {
+        return isValid
+          ? '<i class="fas fa-check-circle text-green-500 text-lg"></i>'
+          : '<i class="fas fa-times-circle text-gray-300 text-lg"></i>';
+      }
+
+      // --- LÓGICA DEL BUSCADOR ---
+      document.getElementById("name-search").addEventListener("input", (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filtered = familyDataArray.filter(
+          (p) =>
+            p.nombre_persona.toLowerCase().includes(searchTerm) ||
+            p.rut.includes(searchTerm)
+        );
+        renderAuditTable(filtered);
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Inicializar contador al cargar
+        updateCounter(familyDataArray.length);
+
+        // 1. FILTRO: DATOS INCOMPLETOS (Solo si TIENEN RUT)
+        document
+          .getElementById("filter-incomplete")
+          .addEventListener("click", () => {
+            const filtered = familyDataArray.filter((p) => {
+              // Verificamos que SI tenga RUT
+              const tieneRut = p.rut && p.rut.trim() !== "" && p.rut !== "0";
+
+              // Verificamos si le faltan datos básicos
+              const faltaFecha =
+                !p.fecha_nacimiento || p.fecha_nacimiento === "0000-00-00";
+              const faltaNacimiento = p.tiene_nacimiento === "No";
+
+              // Condición: (Le falta algo) Y (Tiene RUT)
+              return (faltaFecha || faltaNacimiento) && tieneRut;
+            });
+
+            renderAuditTable(filtered);
+            updateCounter(filtered.length); // Actualizar contador
+          });
+
+        // 2. FILTRO: SIN RUT
+        document
+          .getElementById("filter-no-rut")
+          .addEventListener("click", () => {
+            const filtered = familyDataArray.filter(
+              (p) => !p.rut || p.rut.trim() === "" || p.rut === "0"
+            );
+            renderAuditTable(filtered);
+            updateCounter(filtered.length); // Actualizar contador
+          });
+
+        // 3. BOTÓN: VER TODOS (Reset)
+        // 3. BOTÓN: VER TODOS (Muestra todos los que SI tienen RUT)
+        document
+          .getElementById("reset-filters")
+          .addEventListener("click", () => {
+            // 1. Limpiamos el buscador visualmente
+            const searchInput = document.getElementById("name-search");
+            if (searchInput) searchInput.value = "";
+
+            // 2. Filtramos el array original para obtener solo los que tienen RUT
+            const filtered = familyDataArray.filter((p) => {
+              const tieneRut = p.rut && p.rut.trim() !== "" && p.rut !== "0";
+              return tieneRut;
+            });
+
+            // 3. Renderizamos los datos filtrados (no el array completo sin filtrar)
+            renderAuditTable(filtered);
+
+            // 4. Actualizamos el contador con el largo del array filtrado
+            updateCounter(filtered.length);
+          });
+      });
+
+      // Iniciar carga
+      document.addEventListener("DOMContentLoaded", loadAuditData);
+    </script>
+  </body>
+</html>

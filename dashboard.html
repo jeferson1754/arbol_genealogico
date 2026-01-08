@@ -751,7 +751,7 @@
         }
       }
 
-      #genderChart{
+      #genderChart {
         margin-top: 20px;
       }
     </style>
@@ -1798,88 +1798,89 @@
         }
 
         updateBirthdayList() {
-          const birthdaysAlive = this.data.birthdays_alive;
-          const birthdaysDeceased = this.data.birthdays_deceased;
+          const birthdaysAlive = this.data.birthdays_alive || [];
+          const birthdaysDeceased = this.data.birthdays_deceased || [];
           const container = document.getElementById("birthdayList");
           if (!container) return;
 
-          if (birthdaysAlive.length === 0 && birthdaysDeceased.length === 0) {
+          // 1. Unificar listas marcando quién está vivo y quién no
+          const allBirthdays = [
+            ...birthdaysAlive.map((p) => ({ ...p, alive: true })),
+            ...birthdaysDeceased.map((p) => ({ ...p, alive: false })),
+          ];
+
+          if (allBirthdays.length === 0) {
             container.innerHTML =
               '<div class="no-data">No hay cumpleaños este mes.</div>';
             return;
           }
 
-          container.innerHTML = "";
-
-          const monthName = this.getMonthName(new Date().getMonth());
-
-          // Función auxiliar para verificar si es hoy
-          const isToday = (dob) => {
-            const today = new Date();
-            const birthday = new Date(dob);
-            // Usar Date.UTC para evitar problemas de zona horaria
-            return (
-              today.getUTCDate() === birthday.getUTCDate() &&
-              today.getUTCMonth() === birthday.getUTCMonth()
-            );
-          };
-
-          // Vivos
-          birthdaysAlive.forEach((persona) => {
-            const age = this.calculateAge(persona.dob);
-            const isBirthdayToday = isToday(persona.dob);
-            const item = document.createElement("div");
-            item.className = `birthday-card${
-              isBirthdayToday ? " highlight" : ""
-            }`; // Clase 'highlight' si es hoy
-
-            const birthDate = new Date(persona.dob);
-            birthDate.setDate(birthDate.getDate() + 1);
-
-            item.innerHTML = `
-    
-                            <div class="card-avatar">
-                                ${this.getInitials(persona.name)}
-                            </div>
-                            <div class="card-name">${persona.name}${
-              isBirthdayToday
-                ? ' <i class="fas fa-gift text-yellow-500"></i>'
-                : ""
-            }</div>
-                            <div class="card-date">${birthDate.getDate()} de ${monthName}</div>
-                            <div class="card-age">Cumple ${age} años</div>
-                 
-                        `;
-            container.appendChild(item);
+          // 2. Ordenar por día del mes (independientemente de si están vivos o muertos)
+          allBirthdays.sort((a, b) => {
+            const dayA = new Date(a.dob).getUTCDate();
+            const dayB = new Date(b.dob).getUTCDate();
+            return dayA - dayB;
           });
 
-          // Fallecidos
-          birthdaysDeceased.forEach((persona) => {
-            const age = this.calculateAge(persona.dob);
-            const isBirthdayToday = isToday(persona.dob);
-            const item = document.createElement("div");
-            item.className = `birthday-card deceased${
-              isBirthdayToday ? " highlight" : ""
-            }`;
+          container.innerHTML = "";
+          const today = new Date();
+          const currentDay = today.getUTCDate();
+          const monthName = this.getMonthName(today.getMonth());
 
+          allBirthdays.forEach((persona) => {
             const birthDate = new Date(persona.dob);
-            birthDate.setDate(birthDate.getDate() + 1);
+            const day = birthDate.getUTCDate();
+            const isBirthdayToday =
+              day === currentDay &&
+              birthDate.getUTCMonth() === today.getUTCMonth();
+            const age = this.calculateAge(persona.dob);
+
+            // 3. Determinar el texto según si ya pasó o no la fecha
+            let ageText = "";
+            if (isBirthdayToday) {
+              ageText = persona.alive
+                ? `Cumple ${age} años hoy`
+                : `Hubiera cumplido ${age} años hoy`;
+            } else if (day < currentDay) {
+              ageText = persona.alive
+                ? `Cumplió ${age} años`
+                : `Hubiera cumplido ${age} años`;
+            } else {
+              ageText = persona.alive
+                ? `Cumplirá ${age} años`
+                : `Hubiera cumplido ${age} años`;
+            }
+
+            const item = document.createElement("div");
+            // Clase 'deceased' si no está vivo, 'highlight' si es hoy
+            item.className = `birthday-card ${
+              persona.alive ? "" : "deceased"
+            } ${isBirthdayToday ? "highlight" : ""}`;
 
             item.innerHTML = `
-  
-                            <div class="card-avatar" style="background: linear-gradient(135deg, #6b7280, #374151);">
-                                <i class="fas fa-cross"></i>
-                                ${this.getInitials(persona.name)}
-                            </div>
-                            <div class="card-name">${persona.name}${
-              isBirthdayToday
-                ? ' <i class="fas fa-gift text-yellow-500"></i>'
+            <div class="card-avatar" ${
+              !persona.alive
+                ? 'style="background: linear-gradient(135deg, #6b7280, #374151);"'
                 : ""
-            }</div>
-                            <div class="card-date">${birthDate.getDate()} de ${monthName}</div>
-                            <div class="card-age">Hubiera cumplido ${age} años</div>
-
-                    `;
+            }>
+                ${
+                  !persona.alive
+                    ? '<i class="fas fa-cross" style="font-size: 0.6rem; margin-bottom: 2px;"></i>'
+                    : ""
+                }
+                ${this.getInitials(persona.name)}
+            </div>
+            <div class="card-name">
+                ${persona.name}
+                ${
+                  isBirthdayToday
+                    ? ' <i class="fas fa-gift text-yellow-500"></i>'
+                    : ""
+                }
+            </div>
+            <div class="card-date">${day} de ${monthName}</div>
+            <div class="card-age">${ageText}</div>
+        `;
 
             container.appendChild(item);
           });

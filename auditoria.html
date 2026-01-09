@@ -293,13 +293,22 @@
       }
 
       // --- LÓGICA DEL BUSCADOR ---
+      // --- LÓGICA DEL BUSCADOR CORREGIDA ---
       document.getElementById("name-search").addEventListener("input", (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filtered = familyDataArray.filter(
-          (p) =>
-            p.nombre_persona.toLowerCase().includes(searchTerm) ||
-            p.rut.includes(searchTerm)
-        );
+        // Convertimos el término de búsqueda a minúsculas y quitamos espacios extra
+        const searchTerm = e.target.value.toLowerCase().trim();
+
+        // Filtramos sobre el array original de datos
+        const filtered = familyDataArray.filter((person) => {
+          // Obtenemos los valores o strings vacíos si son nulos/undefined
+          const nombre = (person.nombre_persona || "").toLowerCase();
+          const rut = (person.rut || "").toLowerCase();
+
+          // Verificamos si el término está incluido en el nombre o en el RUT
+          return nombre.includes(searchTerm) || rut.includes(searchTerm);
+        });
+
+        // Volvemos a renderizar la tabla con los resultados filtrados
         renderAuditTable(filtered);
       });
 

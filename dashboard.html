@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -1097,19 +1097,19 @@
             "totalPersonas",
             0,
             parseInt(stats.total_personas),
-            1000
+            1000,
           );
           this.animateValue(
             "personasVivas",
             0,
             parseInt(stats.personas_vivas),
-            1200
+            1200,
           );
           this.animateValue(
             "personasMuertas",
             0,
             parseInt(stats.personas_fallecidas),
-            1400
+            1400,
           );
 
           const cumpleanosEsteMes =
@@ -1240,13 +1240,13 @@
           });
 
           const birthsData = allMonthsData.map((item) =>
-            parseInt(item.total_nacimientos)
+            parseInt(item.total_nacimientos),
           );
           const marriagesData = allMonthsData.map((item) =>
-            parseInt(item.total_matrimonios)
+            parseInt(item.total_matrimonios),
           );
           const deathsData = allMonthsData.map((item) =>
-            parseInt(item.total_muertes)
+            parseInt(item.total_muertes),
           );
 
           const ctx = document.getElementById("eventsByMonthChart");
@@ -1385,10 +1385,10 @@
           const birthDeathData = this.data.births_deaths_by_decade;
           const decades = birthDeathData.map((item) => item.decada + "s");
           const births = birthDeathData.map((item) =>
-            parseInt(item.total_nacimientos)
+            parseInt(item.total_nacimientos),
           );
           const deaths = birthDeathData.map((item) =>
-            parseInt(item.total_muertes)
+            parseInt(item.total_muertes),
           );
 
           const ctx = document.getElementById("birthDeathDecadeChart");
@@ -1507,7 +1507,7 @@
           const data = this.data.longevity_by_birth_decade;
           const labels = data.map((item) => `${item.decada_nacimiento}s`);
           const values = data.map((item) =>
-            parseFloat(item.edad_promedio_fallecimiento).toFixed(1)
+            parseFloat(item.edad_promedio_fallecimiento).toFixed(1),
           );
 
           const ctx = document.getElementById("longevityByDecadeChart");
@@ -1758,7 +1758,7 @@
                       ) {
                         const total = chartData.datasets[0].data.reduce(
                           (acc, current) => acc + current,
-                          0
+                          0,
                         );
                         return chartData.labels.map((label, i) => {
                           const value = chartData.datasets[0].data[i]; // <-- Acceder correctamente al valor
@@ -1785,7 +1785,7 @@
                       const value = context.parsed;
                       const total = context.dataset.data.reduce(
                         (acc, current) => acc + current,
-                        0
+                        0,
                       );
                       const percentage = ((value / total) * 100).toFixed(1);
                       return `${label}: ${percentage}% (${value})`;
@@ -1835,20 +1835,22 @@
               birthDate.getUTCMonth() === today.getUTCMonth();
             const age = this.calculateAge(persona.dob);
 
-            // 3. Determinar el texto según si ya pasó o no la fecha
             let ageText = "";
             if (isBirthdayToday) {
               ageText = persona.alive
                 ? `Cumple ${age} años hoy`
                 : `Hubiera cumplido ${age} años hoy`;
             } else if (day < currentDay) {
+              // Si ya pasó, la edad calculada ya es la nueva
               ageText = persona.alive
                 ? `Cumplió ${age} años`
                 : `Hubiera cumplido ${age} años`;
             } else {
+              // SI NO HA PASADO: La edad que cumple es la edad actual + 1
+              const nextAge = age + 1;
               ageText = persona.alive
-                ? `Cumplirá ${age} años`
-                : `Hubiera cumplido ${age} años`;
+                ? `Cumplirá ${nextAge} años`
+                : `Hubiera cumplido ${nextAge} años`;
             }
 
             const item = document.createElement("div");
@@ -2089,7 +2091,7 @@
         createAgeDifferenceChart() {
           const data = this.data.age_difference_distribution;
           const labels = data.map(
-            (item) => `${item.rango_diferencia_edad} años`
+            (item) => `${item.rango_diferencia_edad} años`,
           );
           const values = data.map((item) => parseInt(item.total_parejas));
 
@@ -2151,7 +2153,7 @@
         updateLongevityDistributionTable() {
           const data = this.data.longevity_distribution;
           const tbody = document.getElementById(
-            "longevityDistributionTableBody"
+            "longevityDistributionTableBody",
           );
           if (!tbody) return;
 
@@ -2189,16 +2191,17 @@
         calculateAge(birthDate) {
           const birth = new Date(birthDate);
           const today = new Date();
-          let age = today.getFullYear() - birth.getFullYear();
-          const monthDiff = today.getMonth() - birth.getMonth();
+
+          // Usamos años UTC para evitar saltos de zona horaria
+          let age = today.getUTCFullYear() - birth.getUTCFullYear();
+          const monthDiff = today.getUTCMonth() - birth.getUTCMonth();
 
           if (
             monthDiff < 0 ||
-            (monthDiff === 0 && today.getDate() < birth.getDate())
+            (monthDiff === 0 && today.getUTCDate() < birth.getUTCDate())
           ) {
             age--;
           }
-
           return age;
         }
       }

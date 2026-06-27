@@ -1828,8 +1828,8 @@
           const monthName = this.getMonthName(today.getMonth());
 
           allBirthdays.forEach((persona) => {
-            const birthDate = new Date(persona.dob);
-            const day = birthDate.getUTCDate();
+            const birthDate = new Date(persona.dob.replace(/-/g, '\/'));
+            const day = birthDate.getDate(); // Ya no necesitas getUTCDate(), usas getDate() normal
             const isBirthdayToday =
               day === currentDay &&
               birthDate.getUTCMonth() === today.getUTCMonth();

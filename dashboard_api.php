@@ -5,7 +5,7 @@ require_once 'db.php';
 
 // Asegurarse de que la respuesta sea JSON
 header('Content-Type: application/json');
-
+date_default_timezone_set('America/Santiago');
 
 // Definir la zona horaria de Santiago
 $santiago_timezone = new DateTimeZone('America/Santiago');

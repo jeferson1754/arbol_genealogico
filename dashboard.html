@@ -754,6 +754,11 @@
       #genderChart {
         margin-top: 20px;
       }
+
+      .design3 .card-name a:hover {
+        color: #4f46e5;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
@@ -1866,6 +1871,7 @@
             } ${isBirthdayToday ? "highlight" : ""}`;
 
             item.innerHTML = `
+            <a href="index.html?personId=${persona.id}" style="color: inherit; text-decoration: none;" title="Ver en el árbol">
             <div class="card-avatar" ${
               !persona.alive
                 ? 'style="background: linear-gradient(135deg, #6b7280, #374151);"'
@@ -1879,7 +1885,9 @@
                 ${this.getInitials(persona.name)}
             </div>
             <div class="card-name">
+             
                 ${persona.name}
+              </a>
                 ${
                   isBirthdayToday
                     ? ' <i class="fas fa-gift text-yellow-500"></i>'
@@ -1888,6 +1896,14 @@
             </div>
             <div class="card-date">${day} de ${monthName}</div>
             <div class="card-age">${ageText}</div>
+            <div style="margin-top: 12px; display: flex; justify-content: center; gap: 8px;">
+                <a href="index.html?personId=${persona.id}" class="pill-button pill-blue" style="padding: 4px 12px; font-size: 0.75rem;">
+                    <i class="fas fa-sitemap"></i> Ver en árbol
+                </a>
+                <a href="editar.php?id=${persona.id}&action=edit" class="pill-button pill-indigo" style="padding: 4px 12px; font-size: 0.75rem;">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+            </div>
         `;
 
             container.appendChild(item);

@@ -37,6 +37,7 @@ $stmt->close();
 // Usaremos las variables de fecha de Santiago
 $sql_birthdays_alive = "
     SELECT
+        id,
         name,
         dob
     FROM
@@ -56,6 +57,7 @@ $stmt->close();
 // Cumpleaños fallecidos
 $sql_birthdays_deceased = "
     SELECT
+        id,
         name,
         dob,
         dod

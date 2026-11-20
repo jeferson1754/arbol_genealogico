@@ -1120,7 +1120,11 @@
 
         animateValue(id, start, end, duration) {
           const element = document.getElementById(id);
-          if (!element) return; // Asegurarse de que el elemento existe
+          if (!element) return;
+          if (start === end) {
+            element.textContent = end;
+            return;
+          }
 
           const range = end - start;
           let current = start;
@@ -1815,24 +1819,26 @@
             return;
           }
 
-          // 2. Ordenar por día del mes (independientemente de si están vivos o muertos)
+        // 2. Ordenar por día del mes
           allBirthdays.sort((a, b) => {
-            const dayA = new Date(a.dob).getUTCDate();
-            const dayB = new Date(b.dob).getUTCDate();
+            const dayA = parseInt(a.dob.split("-")[2], 10);
+            const dayB = parseInt(b.dob.split("-")[2], 10);
             return dayA - dayB;
           });
 
           container.innerHTML = "";
           const today = new Date();
-          const currentDay = today.getUTCDate();
+          const currentDay = today.getDate(); // Hora local en lugar de getUTCDate()
+          const currentMonth = today.getMonth() + 1; // Hora local (1-12)
           const monthName = this.getMonthName(today.getMonth());
 
           allBirthdays.forEach((persona) => {
-            const birthDate = new Date(persona.dob.replace(/-/g, '\/'));
-            const day = birthDate.getDate(); // Ya no necesitas getUTCDate(), usas getDate() normal
+            const parts = persona.dob.split("-");
+            const birthMonth = parseInt(parts[1], 10);
+            const day = parseInt(parts[2], 10);
+
             const isBirthdayToday =
-              day === currentDay &&
-              birthDate.getUTCMonth() === today.getUTCMonth();
+              day === currentDay && birthMonth === currentMonth;
             const age = this.calculateAge(persona.dob);
 
             let ageText = "";
@@ -2189,16 +2195,18 @@
 
         // Lógica de cálculo de edad para vivos (se mantiene)
         calculateAge(birthDate) {
-          const birth = new Date(birthDate);
-          const today = new Date();
+          const parts = birthDate.split("-");
+          const birthYear = parseInt(parts[0], 10);
+          const birthMonth = parseInt(parts[1], 10) - 1;
+          const birthDay = parseInt(parts[2], 10);
 
-          // Usamos años UTC para evitar saltos de zona horaria
-          let age = today.getUTCFullYear() - birth.getUTCFullYear();
-          const monthDiff = today.getUTCMonth() - birth.getUTCMonth();
+          const today = new Date();
+          let age = today.getFullYear() - birthYear;
+          const monthDiff = today.getMonth() - birthMonth;
 
           if (
             monthDiff < 0 ||
-            (monthDiff === 0 && today.getUTCDate() < birth.getUTCDate())
+            (monthDiff === 0 && today.getDate() < birthDay)
           ) {
             age--;
           }

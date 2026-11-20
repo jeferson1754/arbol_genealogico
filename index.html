@@ -783,6 +783,44 @@
             return `${n}º`; 
         }
 
+        const getShortName = (fullName) => {
+            if (!fullName) return '';
+            const parts = fullName.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0];
+            if (parts.length === 2) return `${parts[0]} ${parts[1]}`;
+            return `${parts[0]} ${parts[parts.length - 2]}`;
+        };
+
+        function getFirstChildInfo(person) {
+            if (!person || !person.dob || person.dob === '0000-00-00') return null;
+            if (!Array.isArray(person.childrenIds) || person.childrenIds.length === 0) return null;
+
+            const validChildren = person.childrenIds
+                .map(id => familyData.get(Number(id)))
+                .filter(child => child && child.dob && child.dob !== '0000-00-00');
+
+            if (validChildren.length === 0) return null;
+
+            validChildren.sort((a, b) => a.dob.localeCompare(b.dob));
+            const firstChild = validChildren[0];
+
+            const [pYear, pMonth, pDay] = person.dob.split('-').map(Number);
+            const [cYear, cMonth, cDay] = firstChild.dob.split('-').map(Number);
+
+            let ageAtFirstChild = cYear - pYear;
+            if (cMonth < pMonth || (cMonth === pMonth && cDay < pDay)) {
+                ageAtFirstChild--;
+            }
+
+            if (ageAtFirstChild < 0) return null;
+
+            return {
+                age: ageAtFirstChild,
+                childName: getShortName(firstChild.name),
+                childGender: firstChild.gender
+            };
+        }
+
 
         // --- FUNCIÓN PRINCIPAL PARA CALCULAR LA RELACIÓN DINÁMICA ---
         function generatePersonHtml(person, renderedIds = new Set()) {
@@ -822,20 +860,6 @@
             
 
             let nodeContent = '<div class="node-content">';
-
-                        const getShortName = (fullName) => {
-                if (!fullName) return '';
-
-                const parts = fullName.trim().split(/\s+/); // separa por espacios
-
-                if (parts.length === 1) return parts[0]; // solo un nombre
-                if (parts.length === 2) return `${parts[0]} ${parts[1]}`; // nombre + apellido
-
-                const firstName = parts[0];
-                const lastName = parts[parts.length - 2]; // penúltima palabra = primer apellido
-
-                return `${firstName} ${lastName}`;
-            };
 
             const getProfilePicHtml = (photoUrl, name) => {
                 const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
@@ -1268,7 +1292,6 @@
             const mainPersonShortName = getShortName(person.name);
             const mainPersonProfilePic = getProfilePicHtml(person.photo, person.name);
 
-
             const mainPersonHtml = `
                 <div class="member ${isDeceased ? ' deceased' : ''} ${birthdayClass} ${currentIsMale ? 'male' : 'female'}" data-id="${person.id}">
                     ${childIcon}
@@ -1354,7 +1377,6 @@
                     if (spouseActualAge >= 0 && spouseActualAge < 10) {
                         spouseChildIcon = `<span class="icon-status icon-child" id="${spouse.id}">👶</span>`;
                     }
-
 
                     const spouseHtml = `
                         <div class="member ${isSpouseDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${currentIsMale ? 'female' : 'male'}" data-id="${spouse.id}">
@@ -1495,7 +1517,7 @@
                     if(!isNaN(birthDate.getTime())){
                         let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
                         const m = endDate.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
                             ageDiff--;
                         }
                         if(person.dod && person.dod !== '0000-00-00') {
@@ -1538,7 +1560,19 @@
                 }
             };
 
-            detailsContent.innerHTML = `
+            // Texto personalizado según género para el primer hijo/a
+            const firstChildInfo = getFirstChildInfo(person);
+            let firstChildDetailHtml = '';
+            if (firstChildInfo) {
+                const roleText = person.gender === 'Femenino' 
+                    ? 'Madre por 1ª vez' 
+                    : (person.gender === 'Masculino' ? 'Padre por 1ª vez' : '1er hijo/a');
+                const childLabel = firstChildInfo.childGender === 'Femenino' ? 'hija' : 'hijo';
+                
+                firstChildDetailHtml = `<p><strong>${roleText}:</strong> A los ${firstChildInfo.age} años (${firstChildInfo.childName}, ${childLabel})</p>`;
+            }
+
+           detailsContent.innerHTML = `
                 <img src="${person.photo || 'https://placehold.co/120x120/E2E8F0/333333?text=Foto'}" alt="Foto de ${person.name}" class="w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/120x120/E2E8F0/333333?text=Foto';">
                 <h3 class="text-xl font-bold">${person.name}</h3>
                 <p class="text-sm text-gray-500 mb-4">${person.relationship || ''}</p>
@@ -1547,6 +1581,7 @@
                     <p><strong>RUT:</strong> ${person.rut || 'No disponible'}</p>
                     <p><strong>Nacimiento:</strong> ${formatDate(person.dob)}</p>
                     ${age ? `<p><strong>Edad:</strong> ${age}</p>` : ''}
+                    ${firstChildDetailHtml}
                     <p><strong>Matrimonio:</strong> ${formatDate(person.dom)} ${ageAtMarriage}</p>
                     <p><strong>Fallecimiento:</strong> ${formatDate(person.dod)} ${ageAtDeath}</p>
                 </div>

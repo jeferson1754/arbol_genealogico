@@ -14,11 +14,40 @@
             background-color: #f0f2f5;
         }
         /* --- ESTILOS MEJORADOS PARA EL ÁRBOL GENEALÓGICO --- */
+
+        /* --- CONTENEDOR DE ÁRBOL CON ENCUADRE AUTOMÁTICO (PC Y CELULAR) --- */
         .tree-container {
             width: 100%;
-            overflow-x: auto;
+            overflow: auto;
             padding: 1em;
+            position: relative;
+            min-height: 460px;
+            max-height: 78vh;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 18px 18px;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
         }
+
+        @media (max-width: 1023px) {
+            .tree-container {
+                min-height: 62vh;
+                max-height: 74vh;
+                padding: 0.5em;
+            }
+        }
+
+        #tree-zoom-stage {
+            transform-origin: 0 0;
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        #tree-zoom-stage.no-transition {
+            transition: none;
+        }
+
 
         .tree {
             display: inline-flex;
@@ -168,7 +197,7 @@
             align-items: center;
         }
 
-        .tree-down li::before, .tree-down li::after::before, #dynamic-map-stage li::after {
+        .tree-down li::before, .tree-down li::after {
             content: '';
             position: absolute;
             top: 0;
@@ -178,34 +207,34 @@
             height: 20px;
         }
 
-        .tree-down li::after::after {
+        .tree-down li::after {
             right: auto;
             left: 50%;
             border-left: 2px solid #ccc;
         }
 
-        .tree-down li:only-child::after, .tree-down li:only-child::before:only-child::after, #dynamic-map-stage li:only-child::before {
+        .tree-down li:only-child::after, .tree-down li:only-child::before {
             display: none;
         }
 
-        .tree-down li:only-child:only-child {
+        .tree-down li:only-child {
             padding-top: 0;
         }
 
-        .tree-down li:first-child::before, .tree-down li:last-child::after:first-child::before, #dynamic-map-stage li:last-child::after {
+        .tree-down li:first-child::before, .tree-down li:last-child::after {
             border: 0 none;
         }
 
-        .tree-down li:last-child::before:last-child::before {
+        .tree-down li:last-child::before {
             border-right: 2px solid #ccc;
             border-radius: 0 5px 0 0;
         }
 
-        .tree-down li:first-child::after:first-child::after {
+        .tree-down li:first-child::after {
             border-radius: 5px 0 0 0;
         }
 
-        .tree-down ul ul::before ul::before {
+        .tree-down ul ul::before {
             content: '';
             position: absolute;
             top: 0;
@@ -535,9 +564,32 @@
 
         <div id="main-layout" class="flex flex-col lg:flex-row gap-8">
             <main id="main-content" class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
+                <!-- Barra de Encuadre y Zoom del Árbol (PC y Celular) -->
+                <div id="tree-controls-bar" class="flex flex-wrap items-center justify-between gap-2 mb-3 bg-gray-50 border border-gray-200 rounded-xl p-2">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" id="btn-tree-fit" title="Ajustar todas las personas visibles a la pantalla"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+                            <span>⛶</span>
+                            <span>Encuadrar Todo</span>
+                        </button>
+                        <button type="button" id="btn-tree-focus" title="Centrar y acercar en la persona seleccionada"
+                            class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-semibold text-xs sm:text-sm px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                            <span>🎯</span>
+                            <span>Centrar Persona</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1 shadow-xs">
+                        <button type="button" id="btn-tree-zoom-out" title="Alejar" class="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 font-bold text-gray-700 text-base">−</button>
+                        <span id="tree-zoom-label" class="text-xs font-bold text-gray-600 px-1.5 min-w-[44px] text-center">100%</span>
+                        <button type="button" id="btn-tree-zoom-in" title="Acercar" class="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 font-bold text-gray-700 text-base">+</button>
+                    </div>
+                </div>
+
                 <!-- Vista de Árbol -->
                 <div id="family-tree-container" class="tree-container">
-                    <div class="tree"></div>
+                    <div id="tree-zoom-stage">
+                        <div class="tree"></div>
+                    </div>
                 </div>
                 <!-- Vista Agrupada (Signo, Generación, Década, Género) -->
                 <div id="grouped-view-container" class="hidden space-y-6"></div>
@@ -697,6 +749,7 @@
         let familyData = new Map();
         let selectedPersonId = null;
         let currentViewMode = 'tree'; // 'tree', 'zodiac', 'generation', 'decade', 'gender'
+        let treeZoomScale = 1;
 
         let modalMode = ''; 
         let relatedPersonId = null; 
@@ -900,11 +953,14 @@
             treeContainer.classList.add('hidden');
             groupedContainer.classList.add('hidden');
 
+            const treeControlsBar = document.getElementById('tree-controls-bar');
             if (currentViewMode === 'tree') {
                 treeContainer.classList.remove('hidden');
+                if (treeControlsBar) treeControlsBar.classList.remove('hidden');
                 badge.textContent = `Vista jerárquica · ${familyData.size} personas`;
                 renderTree();
             } else {
+                if (treeControlsBar) treeControlsBar.classList.add('hidden');
                 groupedContainer.classList.remove('hidden');
                 renderGroupedView(currentViewMode);
             }
@@ -1031,6 +1087,97 @@
             addClickListeners();
         }
 
+
+
+        // --- FUNCIONES DE ENCUADRE AUTOMÁTICO Y ZOOM PARA EL ÁRBOL (PC Y CELULAR) ---
+        function setTreeZoom(newScale, instant = false) {
+            const stage = document.getElementById('tree-zoom-stage');
+            const treeEl = stage ? stage.querySelector('.tree') : null;
+            const label = document.getElementById('tree-zoom-label');
+            if (!stage || !treeEl) return;
+
+            treeZoomScale = Math.max(0.2, Math.min(1.6, newScale));
+            if (instant) stage.classList.add('no-transition');
+            else stage.classList.remove('no-transition');
+
+            stage.style.transform = `scale(${treeZoomScale})`;
+            // Ajustar el tamaño real del contenedor interno para que las barras de scroll coincidan con el tamaño escalado
+            const rawW = treeEl.scrollWidth;
+            const rawH = treeEl.scrollHeight;
+            stage.style.width = `${rawW}px`;
+            stage.style.height = `${rawH}px`;
+            stage.style.marginRight = `${-(rawW * (1 - treeZoomScale))}px`;
+            stage.style.marginBottom = `${-(rawH * (1 - treeZoomScale))}px`;
+
+            if (label) {
+                label.textContent = `${Math.round(treeZoomScale * 100)}%`;
+            }
+        }
+
+        function fitTreeToViewport(instant = false) {
+            const container = document.getElementById('family-tree-container');
+            const stage = document.getElementById('tree-zoom-stage');
+            const treeEl = stage ? stage.querySelector('.tree') : null;
+            if (!container || !stage || !treeEl) return;
+
+            // Resetear escala temporalmente para medir dimensiones reales del árbol
+            stage.classList.add('no-transition');
+            stage.style.transform = 'scale(1)';
+            stage.style.marginRight = '0px';
+            stage.style.marginBottom = '0px';
+
+            const contentW = treeEl.scrollWidth;
+            const contentH = treeEl.scrollHeight;
+            const viewW = container.clientWidth - 24;
+            const viewH = container.clientHeight - 24;
+
+            if (!contentW || !contentH || viewW <= 0 || viewH <= 0) return;
+
+            const scaleX = viewW / contentW;
+            const scaleY = viewH / contentH;
+            const fitScale = Math.max(0.22, Math.min(1, Math.min(scaleX, scaleY)));
+
+            setTreeZoom(fitScale, instant);
+
+            setTimeout(() => {
+                container.scrollLeft = Math.max(0, (contentW * fitScale - container.clientWidth) / 2);
+                container.scrollTop = 0;
+            }, 30);
+        }
+
+        function focusSelectedInTree(targetScale = null) {
+            const container = document.getElementById('family-tree-container');
+            const selectedMemberElement = document.querySelector(`.tree .member[data-id="${selectedPersonId}"]`);
+            if (!container || !selectedMemberElement) return;
+
+            const desiredScale = targetScale !== null
+                ? targetScale
+                : (window.innerWidth < 1024 ? 0.85 : 1);
+
+            setTreeZoom(desiredScale, false);
+
+            setTimeout(() => {
+                // Calcular posición acumulada dentro de #tree-zoom-stage
+                const stage = document.getElementById('tree-zoom-stage');
+                let left = 0;
+                let top = 0;
+                let el = selectedMemberElement;
+                while (el && el !== stage) {
+                    left += el.offsetLeft;
+                    top += el.offsetTop;
+                    el = el.offsetParent;
+                }
+
+                const scaledCenterX = (left + selectedMemberElement.offsetWidth / 2) * treeZoomScale;
+                const scaledCenterY = (top + selectedMemberElement.offsetHeight / 2) * treeZoomScale;
+
+                container.scrollTo({
+                    left: Math.max(0, scaledCenterX - container.clientWidth / 2),
+                    top: Math.max(0, scaledCenterY - container.clientHeight / 2),
+                    behavior: 'smooth'
+                });
+            }, 60);
+        }
 
         function renderTree() {
             const container = document.querySelector('.tree');
@@ -1266,17 +1413,9 @@
 
             addClickListeners();
 
-            setTimeout(() => {
-                const selectedMemberElement = document.querySelector(`.tree .member[data-id="${selectedPersonId}"]`);
-                if (selectedMemberElement) {
-                    const treeContainer = document.getElementById('family-tree-container');
-                    const offsetLeft = selectedMemberElement.offsetLeft - (treeContainer.offsetWidth / 2) + (selectedMemberElement.offsetWidth / 2);
-                    treeContainer.scrollLeft = Math.max(0, offsetLeft);
-
-                    const offsetTop = selectedMemberElement.offsetTop - (treeContainer.offsetHeight / 2);
-                    treeContainer.scrollTop = Math.max(0, offsetTop);
-                }
-            }, 80);
+            requestAnimationFrame(() => {
+                fitTreeToViewport(true);
+            });
         }
 
         function getOrdinal(n) {
@@ -2531,7 +2670,15 @@
                 scale: 2,
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                onclone: (clonedDoc) => {
+                    const clonedStage = clonedDoc.getElementById('tree-zoom-stage');
+                    if (clonedStage) {
+                        clonedStage.style.transform = 'scale(1)';
+                        clonedStage.style.marginRight = '0px';
+                        clonedStage.style.marginBottom = '0px';
+                    }
+                }
             };
 
             html2canvas(targetElement, options).then(canvas => {
@@ -2643,6 +2790,26 @@
                 });
             }
 
+
+
+            // Controles de Encuadre Automático y Zoom del Árbol (PC y Celular)
+            const btnTreeFit = document.getElementById('btn-tree-fit');
+            const btnTreeFocus = document.getElementById('btn-tree-focus');
+            const btnTreeZoomIn = document.getElementById('btn-tree-zoom-in');
+            const btnTreeZoomOut = document.getElementById('btn-tree-zoom-out');
+
+            if (btnTreeFit) {
+                btnTreeFit.addEventListener('click', () => fitTreeToViewport(false));
+            }
+            if (btnTreeFocus) {
+                btnTreeFocus.addEventListener('click', () => focusSelectedInTree());
+            }
+            if (btnTreeZoomIn) {
+                btnTreeZoomIn.addEventListener('click', () => setTreeZoom(treeZoomScale + 0.15, false));
+            }
+            if (btnTreeZoomOut) {
+                btnTreeZoomOut.addEventListener('click', () => setTreeZoom(treeZoomScale - 0.15, false));
+            }
 
             const exportPngBtn = document.getElementById('export-tree-png');
             const exportPdfBtn = document.getElementById('export-tree-pdf');

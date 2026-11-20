@@ -21,7 +21,7 @@
         }
 
         .tree {
-            display: inline-flex; /* Clave para que el contenedor se ajuste al contenido y permita scroll */
+            display: inline-flex;
             flex-direction: column;
             align-items: center;
             min-width: 100%;
@@ -35,13 +35,13 @@
         }
 
         .member .profile-pic {
-            width: 60px; /* Tamaño de la imagen */
+            width: 60px;
             height: 60px;
-            border-radius: 50%; /* Hacer la imagen redonda */
-            object-fit: cover; /* Asegurar que la imagen cubra el área sin distorsionarse */
-            border: 2px solid #ddd; /* Pequeño borde */
-            margin-bottom: 5px; /* Margen debajo de la imagen y el nombre */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra suave */
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin: 0 auto;
         }
 
@@ -55,9 +55,123 @@
             align-items: center;
         }
 
-        /* --- Conectores --- */
-        /* Línea vertical hacia abajo desde el nodo */
-        .tree li::before, .tree li::after {
+
+        /* --- ESTILOS PARA ÁRBOL GENEALÓGICO UNIFICADO (PEDIGRÍ ASCENDENTE + DESCENDENCIA) --- */
+        .pedigree-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 2rem;
+            min-width: max-content;
+            margin: 0 auto;
+        }
+
+        /* 1. RAMA ASCENDENTE (Pedigrí hacia arriba: Padres arriba -> Hijo abajo) */
+        .pedigree-up {
+            display: flex;
+            justify-content: center;
+        }
+
+        .pedigree-up ul {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            padding-top: 0 !important;
+            padding-bottom: 24px !important;
+        }
+
+        .pedigree-up li {
+            list-style-type: none;
+            position: relative;
+            padding: 0 8px 24px 8px !important;
+            display: flex;
+            flex-direction: column-reverse !important;
+            align-items: center;
+        }
+
+        /* Línea horizontal que une a Padre y Madre por DEBAJO de sus tarjetas */
+        .pedigree-up li::before,
+        .pedigree-up li::after {
+            content: '';
+            position: absolute;
+            top: auto !important;
+            bottom: 0 !important;
+            right: 50%;
+            border-top: none !important;
+            border-bottom: 2px solid #10b981 !important;
+            width: 50%;
+            height: 24px;
+        }
+
+        .pedigree-up li::after {
+            right: auto;
+            left: 50%;
+            border-left: 2px solid #10b981 !important;
+            border-right: none !important;
+        }
+
+        .pedigree-up li:only-child::after,
+        .pedigree-up li:only-child::before {
+            display: none !important;
+        }
+
+        .pedigree-up li:only-child {
+            padding-bottom: 0 !important;
+        }
+
+        .pedigree-up li:first-child::before,
+        .pedigree-up li:last-child::after {
+            border: 0 none !important;
+        }
+
+        .pedigree-up li:last-child::before {
+            border-right: 2px solid #10b981 !important;
+            border-radius: 0 0 6px 0 !important;
+        }
+
+        .pedigree-up li:first-child::after {
+            border-radius: 0 0 0 6px !important;
+        }
+
+        /* Línea vertical que baja desde la barra de los padres hacia el hijo */
+        .pedigree-up ul ul::before {
+            content: '';
+            position: absolute;
+            top: auto !important;
+            bottom: 0 !important;
+            left: 50%;
+            border-left: 2px solid #10b981 !important;
+            width: 0;
+            height: 24px;
+        }
+
+        .pedigree-up > ul > li::before,
+        .pedigree-up > ul > li::after {
+            display: none !important;
+        }
+
+        /* 2. RAMA DESCENDENTE Y MAPA DINÁMICO (Padres arriba -> Hijos abajo) */
+        .tree-down ul,
+        #dynamic-map-stage ul {
+            position: relative;
+            padding-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tree-down li,
+        #dynamic-map-stage li {
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tree-down li::before, .tree-down li::after,
+        #dynamic-map-stage li::before, #dynamic-map-stage li::after {
             content: '';
             position: absolute;
             top: 0;
@@ -67,40 +181,41 @@
             height: 20px;
         }
 
-        /* Línea horizontal */
-        .tree li::after {
+        .tree-down li::after,
+        #dynamic-map-stage li::after {
             right: auto;
             left: 50%;
             border-left: 2px solid #ccc;
         }
 
-        /* Ocultar conectores innecesarios para nodos únicos */
-        .tree li:only-child::after, .tree li:only-child::before {
+        .tree-down li:only-child::after, .tree-down li:only-child::before,
+        #dynamic-map-stage li:only-child::after, #dynamic-map-stage li:only-child::before {
             display: none;
         }
 
-        .tree li:only-child {
+        .tree-down li:only-child,
+        #dynamic-map-stage li:only-child {
             padding-top: 0;
         }
 
-        /* Eliminar borde izquierdo del primer hijo y derecho del último */
-        .tree li:first-child::before, .tree li:last-child::after {
+        .tree-down li:first-child::before, .tree-down li:last-child::after,
+        #dynamic-map-stage li:first-child::before, #dynamic-map-stage li:last-child::after {
             border: 0 none;
         }
 
-        /* Conector derecho para el último hijo */
-        .tree li:last-child::before {
+        .tree-down li:last-child::before,
+        #dynamic-map-stage li:last-child::before {
             border-right: 2px solid #ccc;
             border-radius: 0 5px 0 0;
         }
 
-        /* Conector izquierdo para el primer hijo */
-        .tree li:first-child::after {
+        .tree-down li:first-child::after,
+        #dynamic-map-stage li:first-child::after {
             border-radius: 5px 0 0 0;
         }
 
-        /* Conector vertical para la lista de hijos */
-        .tree ul ul::before {
+        .tree-down ul ul::before,
+        #dynamic-map-stage ul ul::before {
             content: '';
             position: absolute;
             top: 0;
@@ -109,17 +224,17 @@
             width: 0;
             height: 20px;
         }
-        
-        /* Ocultar líneas que suben desde los nodos raíz */
-        .tree > ul > li::before, .tree > ul > li::after {
-             display: none;
+
+        .dynamic-tree-branch > ul > li::before,
+        .dynamic-tree-branch > ul > li::after {
+            display: none;
         }
 
         .node-content {
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative; /* Para la línea del cónyuge */
+            position: relative;
         }
 
         .member {
@@ -133,12 +248,13 @@
             background-color: #fff;
             min-width: 140px;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            display: flex; /* Usar flexbox para alinear contenido */
-            flex-direction: column; /* Apilar elementos verticalmente */
-            align-items: center; /* Centrar horizontalmente */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .tree li .member:hover, .tree li .member.selected {
+        .tree li .member:hover, .tree li .member.selected,
+        .group-card:hover, .group-card.selected {
             background-color: #e0f2fe;
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
@@ -146,7 +262,7 @@
 
         .member .name {
             font-weight: 600;
-            margin-top: 5px; /* Espacio entre la imagen y el nombre */
+            margin-top: 5px;
         }
 
         .member .relationship {
@@ -155,47 +271,41 @@
         }
 
         .member .age {
-            font-size: 0.7em; /* Un poco más pequeña que la relación */
+            font-size: 0.7em;
             color: #999;
-            margin-top: 0.2em; /* Pequeño margen superior */
+            margin-top: 0.2em;
         }
         
-        /* Línea que une a los cónyuges */
         .spouse-line {
             height: 2px;
-            width: 20px; /* Ancho de la línea */
+            width: 20px;
             background-color: #ccc;
         }
 
-        /* Estilos para el panel de detalles para que sea sticky y responsivo */
-        @media (min-width: 1024px) { /* lg breakpoint */
+        @media (min-width: 1024px) {
             .sticky-lg {
                 position: sticky;
-                top: 2rem; /* Distancia desde la parte superior */
+                top: 2rem;
             }
         }
 
-        /* --- ESTILOS PARA RESALTADO DE ANCESTROS (Mantenidos) --- */
+        /* --- ESTILOS PARA RESALTADO DE ANCESTROS --- */
         .member.highlighted {
-            border-color: #10b981  !important;
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1) ;
+            border-color: #10b981 !important;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
         }
 
-
-        /* Para la línea vertical que une la lista de hijos (de la pareja resaltada) */
         .tree li.highlighted-path ul::before {
-            border-left-color: #10b981 ;
+            border-left-color: #10b981;
         }
 
-        /* Asegurarse de que el cónyuge de un ancestro también tenga la línea resaltada */
         .node-content.highlighted-path .spouse-line {
             background-color: #10b981 !important;
         }
         
-        /* Para asegurar que el cónyuge del ancestro directo también se vea resaltado visualmente */
         .member.ancestor-spouse-highlight {
-            background-color: #d1fae5; /* Mismo verde para el cónyuge del ancestro */
-            border-color: #10b981  !important;
+            background-color: #d1fae5;
+            border-color: #10b981 !important;
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.1);
         }
 
@@ -210,7 +320,7 @@
         }
 
         .deceased {
-            opacity: 0.8;
+            opacity: 0.85;
             position: relative;
         }
 
@@ -230,18 +340,16 @@
             font-size: 0.8rem;
         }
 
-        /* Nuevo estilo para el gorrito de cumpleaños */
         .member.birthday::before {
-            content: '🎂'; /* Emoji de pastel o gorrito */
+            content: '🎂';
             position: absolute;
-            top: -10px; /* Ajusta la posición vertical */
-            right: -10px; /* Ajusta la posición horizontal */
-            font-size: 1.5em; /* Tamaño del gorrito */
-            z-index: 10; /* Asegura que esté por encima del cuadro del miembro */
-            transform: rotate(15deg); /* Pequeña rotación para efecto divertido */
+            top: -10px;
+            right: -10px;
+            font-size: 1.5em;
+            z-index: 10;
+            transform: rotate(15deg);
         }
 
-         /* Nuevos estilos para los iconos condicionales */
         .member .icon-status {
             position: absolute;
             font-size: 0.9em;
@@ -249,95 +357,60 @@
             border-radius: 50%;
             padding: 2px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            z-index: 5; /* Por encima del miembro, pero debajo del gorrito */
+            z-index: 5;
         }
-
 
         .member .icon-child {
-            top: -5px; /* Posición superior izquierda */
-            /*left: -5px;*/
-            font-size: 1.1em; /* Un poco más grande para el icono de niño */
+            top: -5px;
+            font-size: 1.1em;
         }
 
-       /* --- ESTILOS PARA EL COLAPSO HORIZONTAL DEL PANEL DE DETALLES --- */
-
-        /* Nuevo selector para el contenedor <aside> */
+        /* --- ESTILOS PARA EL COLAPSO HORIZONTAL DEL PANEL DE DETALLES --- */
         .details-panel-container {
-            /* Prepara la transición para el ancho */
             transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
-            width: 100%; /* Ancho completo en móviles */
+            width: 100%;
             min-width: 100%;
         }
 
-        /* Reglas para pantallas grandes (lg: - 1024px y más) */
         @media (min-width: 1024px) {
-     
-
             .details-panel-container.collapsed-horizontal {
-                /* Estado Colapsado: solo ancho suficiente para el encabezado */
-                overflow: hidden; /* Oculta el contenido que sobresale */
+                overflow: hidden;
             }
 
-            /* Ocultar el contenido interno cuando está colapsado */
             .details-panel-container.collapsed-horizontal #collapsible-content {
                 visibility: hidden;
                 opacity: 0;
-                transition: opacity 0.1s; /* Transición rápida para ocultar el contenido */
+                transition: opacity 0.1s;
             }
-        }
 
-        /* Rotación del icono para indicar el estado */
-        #collapse-icon {
-            /* Estado Inicial (Expandido): Rotación para apuntar a la IZQUIERDA */
-            transform: rotate(-90deg); 
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .details-panel-container.collapsed-horizontal #collapse-icon {
-            /* Estado Colapsado: Rotación para apuntar a la DERECHA */
-            transform: rotate(90deg); 
-        }
-
-        /* --- ESTILOS BASE Y TRANSICIÓN --- */
-
-        /* Contenedor principal para la gestión de ancho (flexbox en pantallas grandes) */
-        @media (min-width: 1024px) {
             #main-layout {
                 display: flex;
                 flex-direction: row;
             }
 
-            /* El contenido principal debe tener transición de ancho */
             #main-content {
                 transition: width 0.3s ease-in-out;
                 height: 100%;
             }
 
-            /* El panel lateral debe tener transición de ancho */
             #aside-container {
-                width: 25%; /* Ancho inicial (1/4) */
-                min-width: 300px; /* Asegura un ancho legible */
+                width: 28%;
+                min-width: 320px;
                 overflow: hidden;
-                          height: 100%;
+                height: 100%;
                 transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
             }
 
-            /* --- ESTADO COLAPSADO (Se aplica a #main-layout) --- */
-
             #main-layout.aside-collapsed #main-content {
-                /* El Main Content se expande para ocupar todo el espacio restante */
                 width: calc(100% - 50px);
             }
 
             #main-layout.aside-collapsed #aside-container {
-                /* El Aside se colapsa a un ancho fijo (por ejemplo, 50px para solo mostrar el título/icono) */
                 width: 50px; 
                 min-width: 50px;
                 height: 700px;
-      
             }
 
-            /* Ocultar el contenido interno (detalles, botones) cuando está colapsado */
             #main-layout.aside-collapsed #collapsible-content {
                 visibility: hidden;
                 opacity: 0;
@@ -345,58 +418,223 @@
             }
         }
 
-        /* --- ROTACIÓN DEL ICONO --- */
-
         #collapse-icon {
-            /* Estado Inicial (Expandido): Apunta a la IZQUIERDA */
             transform: rotate(90deg); 
             transition: transform 0.3s ease-in-out;
         }
 
         #main-layout.aside-collapsed #collapse-icon {
-            /* Estado Colapsado: Apunta a la DERECHA (después de colapsarse, el icono debe rotar) */
             transform: rotate(-90deg); 
         }
 
+
+        /* --- PANEL DE DETALLES EN MÓVIL (< 1024px) COMO PANEL APARTE (DRAWER / BOTTOM SHEET) --- */
+        @media (max-width: 1023px) {
+            #aside-container {
+                position: fixed;
+                inset: 0;
+                z-index: 45;
+                background-color: rgba(17, 24, 39, 0.55);
+                backdrop-filter: blur(2px);
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s ease;
+            }
+
+            #aside-container.mobile-open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            #aside-container #details-panel {
+                width: 100%;
+                max-width: 600px;
+                max-height: 88vh;
+                overflow-y: auto;
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                border-top-left-radius: 1.25rem;
+                border-top-right-radius: 1.25rem;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+                transform: translateY(100%);
+                transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+                padding-top: 0.75rem;
+            }
+
+            #aside-container.mobile-open #details-panel {
+                transform: translateY(0);
+            }
+
+            #collapse-icon {
+                display: none;
+            }
+        }
+
+        /* Estilos para enlaces familiares rápidos en el panel de detalles */
+        .family-link {
+            color: #2563eb;
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.15s ease;
+        }
+        .family-link:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+
+        /* --- VISTA DINÁMICA CON ZOOM AUTOMÁTICO (MAPA COMPLETO) --- */
+        #dynamic-map-wrapper {
+            position: relative;
+            width: 100%;
+            height: 74vh;
+            min-height: 500px;
+            overflow: hidden;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        #dynamic-map-wrapper:active {
+            cursor: grabbing;
+        }
+        #dynamic-map-stage {
+            transform-origin: 0 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            padding: 3rem;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        #dynamic-map-stage.dragging {
+            transition: none;
+        }
+        .dynamic-tree-branch {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Estilos para la barra de agrupación */
+        .view-btn {
+            transition: all 0.2s ease;
+        }
+        .view-btn.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div class="mx-auto p-4 md:p-8">
-        <header class="mb-8 relative"> 
-            <div class="flex justify-between items-start"> 
-                <div class="flex-grow"></div> 
+        <header class="mb-6 relative"> 
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4"> 
+                <div class="hidden md:block flex-grow"></div> 
                 
                 <div class="text-center"> 
                     <h1 class="text-3xl md:text-5xl font-bold text-gray-800">Árbol Genealógico Familiar</h1>
                     <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
                 </div>
 
-           
-                <div class="flex-grow text-right">
-                      <a href="dashboard.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 mr-2">
-                        <i class="fas fa-chart-bar mr-2"></i> Ver Dashboard
+                <div class="flex-grow text-center md:text-right">
+                    <a href="dashboard.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 mr-2 inline-block">
+                        Ver Dashboard
                     </a>
-                    <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1">Buscar Personas</a>
-                  
+                    <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 inline-block">Buscar Personas</a>
                 </div>
             </div>
         </header>
+
+        <!-- Barra de botones para reorganizar / agrupar personas -->
+        <div id="view-filters-bar" class="bg-white p-3 rounded-lg shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3 border border-gray-200">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm font-semibold text-gray-600 mr-1">Organizar vista por:</span>
+                <button type="button" data-view="tree" class="view-btn active px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    🌳 Árbol Familiar
+                </button>
+                <button type="button" data-view="dynamic" class="view-btn px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    🔭 Vista Dinámica (Todos)
+                </button>
+                <button type="button" data-view="zodiac" class="view-btn px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    ♈ Signo Zodiacal
+                </button>
+                <button type="button" data-view="generation" class="view-btn px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    ⏳ Generación
+                </button>
+                <button type="button" data-view="decade" class="view-btn px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    📅 Década de Nacimiento
+                </button>
+                <button type="button" data-view="gender" class="view-btn px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
+                    ⚥ Género
+                </button>
+            </div>
+            <div id="view-counter-badge" class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
+                Vista jerárquica activa
+            </div>
+        </div>
+
         <div id="main-layout" class="flex flex-col lg:flex-row gap-8">
             <main id="main-content" class="w-full lg:w-3/4 bg-white p-6 rounded-lg shadow-lg">
+                <!-- Vista de Árbol -->
                 <div id="family-tree-container" class="tree-container">
-                    <div class="tree">
+                    <div class="tree"></div>
+                </div>
+                <!-- Vista Agrupada (Signo, Generación, Década, Género) -->
+                <div id="grouped-view-container" class="hidden space-y-6"></div>
+                <!-- Vista Dinámica Completa con Zoom Automático -->
+                <div id="dynamic-view-container" class="hidden">
+                    <div id="dynamic-map-wrapper">
+                        <div id="dynamic-map-stage" class="tree"></div>
+                        <!-- Controles flotantes de Zoom -->
+                        <div class="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur border border-gray-200 shadow-md rounded-xl p-1.5">
+                            <button type="button" id="zoom-out-btn" title="Alejar (-)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 font-bold text-gray-700 text-lg">−</button>
+                            <span id="zoom-level-label" class="text-xs font-semibold text-gray-600 px-2 min-w-[46px] text-center">100%</span>
+                            <button type="button" id="zoom-in-btn" title="Acercar (+)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 font-bold text-gray-700 text-lg">+</button>
+                            <div class="w-px h-5 bg-gray-200 mx-0.5"></div>
+                            <button type="button" id="zoom-fit-btn" title="Ajustar todas las personas a la pantalla" class="px-2.5 h-8 flex items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs">
+                                ⛶ Ajustar Todo
+                            </button>
+                            <button type="button" id="zoom-focus-btn" title="Hacer zoom en la persona seleccionada" class="px-2.5 h-8 flex items-center justify-center rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs">
+                                🎯 Centrar Persona
+                            </button>
                         </div>
+                        <div class="absolute top-3 left-3 z-20 bg-white/90 backdrop-blur border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-lg shadow-sm pointer-events-none">
+                            Arrastra para mover · Rueda del ratón para zoom · Clic para enfocar
+                        </div>
+                    </div>
                 </div>
             </main>
-           <aside id="aside-container" class="w-full details-panel-container">
+            <aside id="aside-container" class="w-full details-panel-container">
                 <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky-lg">
-                    
-                    <h2 id="details-header" class="text-2xl font-bold mb-4 border-b pb-2 text-center cursor-pointer flex justify-between items-center">
-                        Detalles de la Persona
+                    <!-- Barra superior exclusiva para móvil -->
+                    <div class="lg:hidden flex flex-col items-center mb-2">
+                        <div class="w-12 h-1.5 bg-gray-300 rounded-full mb-3"></div>
+                    </div>
+                    <h2 id="details-header" class="text-xl lg:text-2xl font-bold mb-4 border-b pb-2 text-center cursor-pointer flex justify-between items-center">
+                        <span>Detalles de la Persona</span>
                         <span id="collapse-icon" class="text-xl transition-transform duration-300">
                             &#9660; 
                         </span>
+                        <button type="button" id="close-mobile-details-btn" class="lg:hidden text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold" aria-label="Cerrar panel">
+                            ✕
+                        </button>
                     </h2>
                     
                     <div id="collapsible-content">
@@ -408,8 +646,8 @@
                             <button id="add-ancestor-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Agregar Ascendencia</button>
                             <button id="manage-relationships-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Gestionar Relaciones</button> 
                             <a id="edit-person-link" href="#" class="w-full text-center bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 mb-2 rounded-lg block transition duration-300 ease-in-out transform hover:-translate-y-1">Editar Persona</a>
-                            <button id="export-tree-png" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Exportar Árbol (PNG)</button>
-                            <button id="export-tree-pdf" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1">Exportar Árbol (PDF)</button>
+                            <button id="export-tree-png" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg mb-2 transition duration-300 ease-in-out transform hover:-translate-y-1">Exportar Vista (PNG)</button>
+                            <button id="export-tree-pdf" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1">Exportar Vista (PDF)</button>
                         </div>
                     </div>
                 </div>
@@ -417,6 +655,7 @@
         </div>
     </div>
     
+    <!-- Modal Agregar Persona -->
     <div id="person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
       <div class="relative top-0 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white animate-fade-in-up">
         <div class="mt-3">
@@ -447,6 +686,7 @@
       </div>
     </div>
 
+    <!-- Modal Gestionar Relaciones -->
     <div id="relationships-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
         <div class="relative top-0 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white animate-fade-in-up">
             <div class="mt-3">
@@ -494,13 +734,13 @@
         </div>
     </div>
 
+    <!-- Modal Seleccionar Persona -->
     <div id="select-person-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
         <div class="relative top-0 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white animate-fade-in-up">
             <div class="mt-3">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="select-modal-title">Seleccionar Persona</h3>
                 <input type="text" id="person-search-input" placeholder="Buscar por nombre..." class="w-full bg-gray-100 text-gray-900 p-2 rounded-lg focus:outline-none focus:shadow-outline focus:border-blue-500 border border-gray-200 transition duration-200 mb-4">
-                <div id="person-list-container" class="max-h-60 overflow-y-auto border border-gray-200 rounded-md">
-                    </div>
+                <div id="person-list-container" class="max-h-60 overflow-y-auto border border-gray-200 rounded-md"></div>
                 <div class="mt-4 flex justify-end">
                     <button type="button" id="cancel-select-person-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300 ease-in-out">Cancelar</button>
                 </div>
@@ -509,9 +749,37 @@
     </div>
 
 
+
+
+    <!-- Botón flotante en móvil para abrir la ficha de la persona seleccionada -->
+    <button
+        id="open-mobile-details-btn"
+        type="button"
+        class="lg:hidden fixed bottom-6 left-6 z-40 hidden bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300"
+    >
+        <span>👤</span>
+        <span id="mobile-selected-name-btn" class="text-sm max-w-[140px] truncate">Ver Ficha</span>
+    </button>
+
+    <!-- Botón flotante de acceso rápido para volver arriba / filtros -->
+    <button
+        id="back-to-top-btn"
+        type="button"
+        title="Volver arriba a los filtros"
+        class="fixed bottom-6 right-6 z-40 hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+    >
+        <span class="text-base leading-none">↑</span>
+        <span class="text-sm">Filtros / Arriba</span>
+    </button>
+
     <script type="module">
         let familyData = new Map();
         let selectedPersonId = null;
+        let currentViewMode = 'tree'; // 'tree', 'dynamic', 'zodiac', 'generation', 'decade', 'gender'
+        let mapZoom = 1;
+        let mapPanX = 0;
+        let mapPanY = 0;
+
         let modalMode = ''; 
         let relatedPersonId = null; 
         let relatedPersonSpouseId = null; 
@@ -519,10 +787,37 @@
         let selectPersonMode = ''; 
         let personToLinkToId = null; 
 
-
         const API_URL = 'api.php';
 
-       
+
+        function openMobileDetailsPanel() {
+            if (window.innerWidth < 1024) {
+                const aside = document.getElementById('aside-container');
+                if (aside) {
+                    aside.classList.add('mobile-open');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        }
+
+        function closeMobileDetailsPanel() {
+            const aside = document.getElementById('aside-container');
+            if (aside) {
+                aside.classList.remove('mobile-open');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Exponer showPersonDetails globalmente para los enlaces rápidos en el panel lateral
+        window.selectPersonFromDetails = (id) => {
+            if (familyData.has(id)) {
+                showPersonDetails(id);
+                openMobileDetailsPanel();
+                const panel = document.getElementById('details-panel');
+                if (panel) panel.scrollTop = 0;
+            }
+        };
+
         async function loadFamilyData() {
             try {
                 const response = await fetch(API_URL, {
@@ -542,35 +837,34 @@
                 data.forEach(person => {
                     person.id = parseInt(person.id);
                     person.spouseId = person.spouse_id !== null ? parseInt(person.spouse_id) : null;
-                    
                     person.childrenIds = Array.isArray(person.children_ids) ? person.children_ids.map(id => parseInt(id)) : [];
                     person.parentIds = Array.isArray(person.parent_ids) ? person.parent_ids.map(id => parseInt(id)) : [];
-
                     familyData.set(person.id, person);
                 });
 
-                console.log('Datos cargados en familyData (con IDs parseados):', familyData);
-                
                 const urlParams = new URLSearchParams(window.location.search);
-                const idFromUrl = urlParams.get('personId');
+                const idFromUrl = urlParams.get('personId') || urlParams.get('id');
+                const actionFromUrl = urlParams.get('action');
 
-                // Lógica de carga y selección de la persona principal para el árbol
                 if (idFromUrl && familyData.has(parseInt(idFromUrl))) {
                     selectedPersonId = parseInt(idFromUrl); 
                 } else if (familyData.size > 0) {
                     if (familyData.has(1)) { 
-                        selectedPersonId = 1; // Priorizar ID 1 si existe
+                        selectedPersonId = 1;
                     } else { 
-                        selectedPersonId = Array.from(familyData.keys())[0]; // Tomar la primera persona si no hay ID 1
+                        selectedPersonId = Array.from(familyData.keys())[0];
                     }
                 } else {
-                    selectedPersonId = null; // No hay personas en la base de datos
+                    selectedPersonId = null;
                 }
 
-                renderTree(); // Llama a renderTree después de decidir la persona principal
+                renderCurrentView();
                 
                 if (selectedPersonId) {
                     showPersonDetails(selectedPersonId);
+                    if (actionFromUrl === 'edit') {
+                        window.location.href = `editar.php?id=${selectedPersonId}`;
+                    }
                 } else {
                     document.getElementById('details-content').innerHTML = '<p class="text-gray-500">No hay datos en el árbol. ¡Añade la primera persona!</p>';
                     document.getElementById('edit-buttons').classList.add('hidden');
@@ -599,11 +893,9 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    console.log('Operación exitosa:', result.message);
                     await loadFamilyData(); 
                     return result; 
                 } else {
-                    console.error('Error en la operación en la base de datos:', result.message);
                     alert('Error al guardar: ' + result.message + (result.error ? `\nDetalles: ${result.error}` : ''));
                     return null;
                 }
@@ -614,24 +906,21 @@
             }
         }
 
-        // Función auxiliar para obtener todos los ancestros de una persona y su distancia generacional
-        // Retorna un Map<personId, distance> donde distance es 0 para la persona original, 1 para padres, etc.
         function getAncestorsWithDistance(personId) {
-            const ancestors = new Map(); // Map<id, distance>
+            const ancestors = new Map();
             let queue = [{id: personId, dist: 0}];
             let head = 0;
 
             while(head < queue.length) {
                 const { id: currentId, dist: currentDist } = queue[head++];
                 if (ancestors.has(currentId) && ancestors.get(currentId) <= currentDist) {
-                    continue; // Ya visitado con una distancia menor o igual
+                    continue;
                 }
                 ancestors.set(currentId, currentDist);
 
                 const person = familyData.get(currentId);
                 if (person && person.parentIds) {
                     person.parentIds.forEach(parentId => {
-                        // Solo añadir si el padre existe en los datos cargados y no se ha visitado o se encontró a mayor distancia
                         if (familyData.has(parentId) && (!ancestors.has(parentId) || ancestors.get(parentId) > currentDist + 1)) {
                             queue.push({id: parentId, dist: currentDist + 1});
                         }
@@ -641,10 +930,8 @@
             return ancestors;
         }
 
-        // Función auxiliar para obtener todos los descendientes de una persona y su distancia generacional
-        // Retorna un Map<personId, distance> donde distance es 0 para la persona original, 1 para hijos, etc.
         function getDescendantsWithDistance(personId) {
-            const descendants = new Map(); // Map<id, distance>
+            const descendants = new Map();
             let queue = [{id: personId, dist: 0}];
             let head = 0;
 
@@ -655,12 +942,9 @@
                 }
                 descendants.set(currentId, currentDist);
 
-                const person = familyData.get(currentId);
-                // Necesitamos encontrar personas que tengan a 'currentId' como uno de sus padres
                 const children = Array.from(familyData.values()).filter(p => p.parentIds && p.parentIds.includes(currentId));
 
                 children.forEach(child => {
-                    // Solo añadir si el hijo existe y no se ha visitado o se encontró a mayor distancia
                     if (familyData.has(child.id) && (!descendants.has(child.id) || descendants.get(child.id) > currentDist + 1)) {
                         queue.push({id: child.id, dist: currentDist + 1});
                     }
@@ -669,13 +953,364 @@
             return descendants;
         }
 
+        // --- CAMBIO DE VISTA (ÁRBOL VS AGRUPACIONES) ---
+        function setViewMode(mode) {
+            currentViewMode = mode;
 
-        // --- INICIO DE CAMBIOS EN renderTree ---
+            // Actualizar estado visual de los botones
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                if (btn.dataset.view === mode) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            renderCurrentView();
+        }
+
+        function renderCurrentView() {
+            const treeContainer = document.getElementById('family-tree-container');
+            const groupedContainer = document.getElementById('grouped-view-container');
+            const dynamicContainer = document.getElementById('dynamic-view-container');
+            const badge = document.getElementById('view-counter-badge');
+
+            treeContainer.classList.add('hidden');
+            groupedContainer.classList.add('hidden');
+            dynamicContainer.classList.add('hidden');
+
+            if (currentViewMode === 'tree') {
+                treeContainer.classList.remove('hidden');
+                badge.textContent = `Vista jerárquica · ${familyData.size} personas`;
+                renderTree();
+            } else if (currentViewMode === 'dynamic') {
+                dynamicContainer.classList.remove('hidden');
+                badge.textContent = `Mapa dinámico completo · ${familyData.size} personas`;
+                renderDynamicAllView();
+            } else {
+                groupedContainer.classList.remove('hidden');
+                renderGroupedView(currentViewMode);
+            }
+        }
+
+        function renderGroupedView(mode) {
+            const container = document.getElementById('grouped-view-container');
+            const badge = document.getElementById('view-counter-badge');
+            if (!container) return;
+
+            const allPeople = Array.from(familyData.values());
+            const groups = new Map();
+
+            const getGroupKeyAndOrder = (person) => {
+                if (mode === 'zodiac') {
+                    if (!isValidDateStr(person.dob)) return { key: 'Sin fecha de nacimiento', order: 99 };
+                    const [, month, day] = person.dob.split('-').map(Number);
+                    if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return { key: '♈ Aries (21 Mar - 19 Abr)', order: 1 };
+                    if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return { key: '♉ Tauro (20 Abr - 20 May)', order: 2 };
+                    if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return { key: '♊ Géminis (21 May - 20 Jun)', order: 3 };
+                    if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return { key: '♋ Cáncer (21 Jun - 22 Jul)', order: 4 };
+                    if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return { key: '♌ Leo (23 Jul - 22 Ago)', order: 5 };
+                    if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return { key: '♍ Virgo (23 Ago - 22 Sep)', order: 6 };
+                    if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return { key: '♎ Libra (23 Sep - 22 Oct)', order: 7 };
+                    if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return { key: '♏ Escorpio (23 Oct - 21 Nov)', order: 8 };
+                    if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return { key: '♐ Sagitario (22 Nov - 21 Dic)', order: 9 };
+                    if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return { key: '♑ Capricornio (22 Dic - 19 Ene)', order: 10 };
+                    if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return { key: '♒ Acuario (20 Ene - 18 Feb)', order: 11 };
+                    return { key: '♓ Piscis (19 Feb - 20 Mar)', order: 12 };
+                }
+
+                if (mode === 'generation') {
+                    if (!isValidDateStr(person.dob)) return { key: 'Sin fecha de nacimiento', order: 99 };
+                    const year = parseInt(person.dob.split('-')[0], 10);
+                    if (year <= 1927) return { key: 'Generación Grandiosa (≤ 1927)', order: 1 };
+                    if (year <= 1945) return { key: 'Generación Silenciosa (1928 - 1945)', order: 2 };
+                    if (year <= 1964) return { key: 'Baby Boomers (1946 - 1964)', order: 3 };
+                    if (year <= 1980) return { key: 'Generación X (1965 - 1980)', order: 4 };
+                    if (year <= 1996) return { key: 'Millennials (1981 - 1996)', order: 5 };
+                    if (year <= 2012) return { key: 'Generación Z (1997 - 2012)', order: 6 };
+                    return { key: 'Generación Alfa (2013 - Actualidad)', order: 7 };
+                }
+
+                if (mode === 'decade') {
+                    if (!isValidDateStr(person.dob)) return { key: 'Sin fecha de nacimiento', order: 9999 };
+                    const year = parseInt(person.dob.split('-')[0], 10);
+                    const decade = Math.floor(year / 10) * 10;
+                    return { key: `Década de ${decade}s`, order: decade };
+                }
+
+                if (mode === 'gender') {
+                    const g = (person.gender || '').trim();
+                    if (g === 'Femenino') return { key: '♀️ Mujeres', order: 1 };
+                    if (g === 'Masculino') return { key: '♂️ Hombres', order: 2 };
+                    return { key: '⚧ Otro / No especificado', order: 3 };
+                }
+
+                return { key: 'Otros', order: 99 };
+            };
+
+            allPeople.forEach(person => {
+                const { key, order } = getGroupKeyAndOrder(person);
+                if (!groups.has(key)) {
+                    groups.set(key, { key, order, members: [] });
+                }
+                groups.get(key).members.push(person);
+            });
+
+            const sortedGroups = Array.from(groups.values()).sort((a, b) => a.order - b.order);
+            badge.textContent = `${sortedGroups.length} grupos · ${allPeople.length} personas`;
+
+            const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
+
+            container.innerHTML = sortedGroups.map(group => {
+                // Ordenar integrantes dentro de cada grupo por fecha de nacimiento o nombre
+                group.members.sort((a, b) => {
+                    if (isValidDateStr(a.dob) && isValidDateStr(b.dob)) {
+                        return a.dob.localeCompare(b.dob);
+                    }
+                    if (isValidDateStr(a.dob)) return -1;
+                    if (isValidDateStr(b.dob)) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
+                const cardsHtml = group.members.map(p => {
+                    const isMale = p.gender === 'Masculino';
+                    const isDeceased = isValidDateStr(p.dod);
+                    const isSelected = p.id === selectedPersonId;
+                    const photoSrc = (p.photo && p.photo.trim() !== '') ? p.photo : defaultPhoto;
+
+                    let ageText = 'Sin fecha';
+                    if (isValidDateStr(p.dob)) {
+                        const years = calculateYearsBetween(p.dob, isDeceased ? p.dod : null);
+                        const birthYear = p.dob.split('-')[0];
+                        if (years !== null) {
+                            ageText = `${years} años (${birthYear})${isDeceased ? ' ✝' : ''}`;
+                        }
+                    }
+
+                    return `
+                        <div class="member group-card ${isDeceased ? 'deceased' : ''} ${isMale ? 'male' : 'female'} ${isSelected ? 'selected' : ''}" data-id="${p.id}">
+                            <img src="${photoSrc}" alt="Foto de ${p.name}" class="profile-pic" onerror="this.onerror=null;this.src='${defaultPhoto}';">
+                            <div class="name text-sm">${getShortName(p.name)}</div>
+                            <div class="age">${ageText}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <section class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800">${group.key}</h3>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                                ${group.members.length} ${group.members.length === 1 ? 'persona' : 'personas'}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+                            ${cardsHtml}
+                        </div>
+                    </section>
+                `;
+            }).join('');
+
+            addClickListeners();
+        }
+
+
+        // --- VISTA DINÁMICA CON TODAS LAS PERSONAS Y ZOOM AUTOMÁTICO ---
+        function applyMapTransform() {
+            const stage = document.getElementById('dynamic-map-stage');
+            const label = document.getElementById('zoom-level-label');
+            if (stage) {
+                stage.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+            }
+            if (label) {
+                label.textContent = `${Math.round(mapZoom * 100)}%`;
+            }
+        }
+
+        function fitDynamicMapToScreen() {
+            const wrapper = document.getElementById('dynamic-map-wrapper');
+            const stage = document.getElementById('dynamic-map-stage');
+            if (!wrapper || !stage) return;
+
+            const wRect = wrapper.getBoundingClientRect();
+            const contentW = stage.scrollWidth;
+            const contentH = stage.scrollHeight;
+            if (!contentW || !contentH || !wRect.width || !wRect.height) return;
+
+            const scaleX = (wRect.width - 40) / contentW;
+            const scaleY = (wRect.height - 40) / contentH;
+            mapZoom = Math.max(0.08, Math.min(1, Math.min(scaleX, scaleY)));
+
+            mapPanX = (wRect.width - contentW * mapZoom) / 2;
+            mapPanY = Math.max(20, (wRect.height - contentH * mapZoom) / 2);
+            applyMapTransform();
+        }
+
+        function zoomToPersonInDynamicMap(personId, targetScale = 0.95) {
+            const wrapper = document.getElementById('dynamic-map-wrapper');
+            const stage = document.getElementById('dynamic-map-stage');
+            if (!wrapper || !stage) return;
+
+            const targetEl = stage.querySelector(`.member[data-id="${personId}"]`);
+            if (!targetEl) {
+                fitDynamicMapToScreen();
+                return;
+            }
+
+            // Calcular posición relativa del nodo dentro de #dynamic-map-stage
+            let offsetLeft = 0;
+            let offsetTop = 0;
+            let el = targetEl;
+            while (el && el !== stage) {
+                offsetLeft += el.offsetLeft;
+                offsetTop += el.offsetTop;
+                el = el.offsetParent;
+            }
+
+            const wRect = wrapper.getBoundingClientRect();
+            mapZoom = targetScale;
+            const nodeCenterX = offsetLeft + targetEl.offsetWidth / 2;
+            const nodeCenterY = offsetTop + targetEl.offsetHeight / 2;
+
+            mapPanX = (wRect.width / 2) - (nodeCenterX * mapZoom);
+            mapPanY = (wRect.height / 2) - (nodeCenterY * mapZoom);
+            applyMapTransform();
+        }
+
+
+        // Renderizador ligero y ultra rápido para la Vista Dinámica Completa (300+ personas sin congelar el navegador)
+        function generateFastDynamicPersonHtml(person, renderedIds = new Set()) {
+            if (!person || renderedIds.has(person.id)) return '';
+            renderedIds.add(person.id);
+
+            const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
+
+            const buildCard = (p) => {
+                const isMale = p.gender === 'Masculino';
+                const isDeceased = isValidDateStr(p.dod);
+                const photoSrc = (p.photo && p.photo.trim() !== '') ? p.photo : defaultPhoto;
+
+                let ageHtml = '';
+                if (isValidDateStr(p.dob)) {
+                    const years = calculateYearsBetween(p.dob, isDeceased ? p.dod : null);
+                    const birthYear = p.dob.split('-')[0];
+                    if (years !== null) {
+                        ageHtml = `<div class="age">${years} años (${birthYear})${isDeceased ? ' ✝' : ''}</div>`;
+                    }
+                }
+
+                return `
+                    <div class="member ${isDeceased ? 'deceased' : ''} ${isMale ? 'male' : 'female'}" data-id="${p.id}">
+                        <img src="${photoSrc}" loading="lazy" alt="Foto de ${p.name}" class="profile-pic" onerror="this.onerror=null;this.src='${defaultPhoto}';">
+                        <div class="name">${getShortName(p.name)}</div>
+                        ${ageHtml}
+                    </div>
+                `;
+            };
+
+            let nodeContent = '<div class="node-content">';
+            const mainHtml = buildCard(person);
+
+            if (person.spouseId && familyData.has(person.spouseId)) {
+                const spouse = familyData.get(person.spouseId);
+                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id && !renderedIds.has(spouse.id)) {
+                    renderedIds.add(spouse.id);
+                    const spouseHtml = buildCard(spouse);
+                    const spouseLine = '<div class="spouse-line"></div>';
+                    nodeContent += (person.id < spouse.id)
+                        ? (mainHtml + spouseLine + spouseHtml)
+                        : (spouseHtml + spouseLine + mainHtml);
+                } else {
+                    nodeContent += mainHtml;
+                }
+            } else {
+                nodeContent += mainHtml;
+            }
+            nodeContent += '</div>';
+
+            const parentIdsOfUnit = new Set([person.id]);
+            if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                parentIdsOfUnit.add(person.spouseId);
+            }
+
+            const childrenOfUnit = Array.from(familyData.values())
+                .filter(child => (child.parentIds || []).some(pId => parentIdsOfUnit.has(pId)))
+                .filter(child => !renderedIds.has(child.id))
+                .sort((a, b) => (a.dob || '9999').localeCompare(b.dob || '9999'));
+
+            let childrenHtml = '';
+            if (childrenOfUnit.length > 0) {
+                childrenHtml = '<ul>' + childrenOfUnit.map(c => generateFastDynamicPersonHtml(c, renderedIds)).join('') + '</ul>';
+            }
+
+            return `<li>${nodeContent}${childrenHtml}</li>`;
+        }
+
+        function renderDynamicAllView() {
+            const stage = document.getElementById('dynamic-map-stage');
+            if (!stage) return;
+
+            if (familyData.size === 0) {
+                stage.innerHTML = '<p class="text-gray-500">No hay personas registradas aún.</p>';
+                return;
+            }
+
+            const allPeople = Array.from(familyData.values());
+            // Encontrar todas las personas raíz (sin padres registrados en familyData)
+            const rootCandidates = allPeople
+                .filter(p => !p.parentIds || p.parentIds.filter(pid => familyData.has(pid)).length === 0)
+                .sort((a, b) => a.id - b.id);
+
+            const renderedIds = new Set();
+            const branchesHtml = [];
+
+            // 1. Renderizar cada árbol familiar completo a partir de sus raíces
+            rootCandidates.forEach(root => {
+                if (renderedIds.has(root.id)) return;
+                // Evitar renderizar por separado al cónyuge si su pareja también es raíz y se renderizará junto a él
+                if (root.spouseId && familyData.has(root.spouseId)) {
+                    const spouse = familyData.get(root.spouseId);
+                    const spouseHasParents = spouse.parentIds && spouse.parentIds.some(pid => familyData.has(pid));
+                    if (!spouseHasParents && spouse.id < root.id && !renderedIds.has(spouse.id)) {
+                        return;
+                    }
+                }
+                const treeHtml = generateFastDynamicPersonHtml(root, renderedIds);
+                if (treeHtml) {
+                    branchesHtml.push(`<div class="dynamic-tree-branch"><ul>${treeHtml}</ul></div>`);
+                }
+            });
+
+            // 2. Asegurar que si quedó algún nodo aislado o ciclo sin renderizar, también aparezca
+            allPeople.forEach(p => {
+                if (!renderedIds.has(p.id)) {
+                    const extraHtml = generateFastDynamicPersonHtml(p, renderedIds);
+                    if (extraHtml) {
+                        branchesHtml.push(`<div class="dynamic-tree-branch"><ul>${extraHtml}</ul></div>`);
+                    }
+                }
+            });
+
+            stage.innerHTML = branchesHtml.join('');
+            addClickListeners();
+
+            // Resaltar persona seleccionada si existe
+            if (selectedPersonId) {
+                const sel = stage.querySelector(`.member[data-id="${selectedPersonId}"]`);
+                if (sel) sel.classList.add('selected');
+            }
+
+            // Zoom automático inicial para encuadrar a TODAS las personas en pantalla
+            requestAnimationFrame(() => {
+                fitDynamicMapToScreen();
+            });
+        }
+
         function renderTree() {
             const container = document.querySelector('.tree');
             if (!container) return;
 
-            container.innerHTML = ''; 
+            container.innerHTML = '';
 
             if (!selectedPersonId || !familyData.has(selectedPersonId)) {
                 container.innerHTML = '<p class="text-gray-500 text-center">Selecciona una persona o agrega la primera para construir el árbol.</p>';
@@ -683,98 +1318,202 @@
             }
 
             const centralPerson = familyData.get(selectedPersonId);
-            let finalRootsToRender = new Set(); // IDs de las personas que serán las raíces del árbol visualizado
+            const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
 
-            // Si la persona central tiene padres, subimos por sus linajes para encontrar las raíces más altas
-            if (centralPerson.parentIds && centralPerson.parentIds.length > 0) {
-                const parentsToProcess = new Set(centralPerson.parentIds.filter(pId => familyData.has(pId)));
-                if (centralPerson.spouseId && familyData.has(centralPerson.spouseId) && familyData.get(centralPerson.spouseId).spouseId === centralPerson.id) {
-                    // Si la persona central tiene un cónyuge recíproco, también consideramos los padres del cónyuge
-                    const spouse = familyData.get(centralPerson.spouseId);
-                    if (spouse.parentIds) {
-                        spouse.parentIds.forEach(pId => {
-                            if (familyData.has(pId)) parentsToProcess.add(pId);
-                        });
+            const getRelationshipLabel = (targetId) => {
+                if (targetId === centralPerson.id) return 'Tú';
+                const target = familyData.get(targetId);
+                if (!target) return '';
+                const isMale = target.gender === 'Masculino';
+                const isFemale = target.gender === 'Femenino';
+
+                if (centralPerson.spouseId === targetId && target.spouseId === centralPerson.id) {
+                    return 'Cónyuge';
+                }
+
+                const ancMap = getAncestorsWithDistance(centralPerson.id);
+                if (ancMap.has(targetId)) {
+                    const d = ancMap.get(targetId);
+                    if (d === 1) return isMale ? 'Padre' : (isFemale ? 'Madre' : 'Padre/Madre');
+                    if (d === 2) return isMale ? 'Abuelo' : (isFemale ? 'Abuela' : 'Abuelo/a');
+                    if (d === 3) return isMale ? 'Bisabuelo' : (isFemale ? 'Bisabuela' : 'Bisabuelo/a');
+                    if (d === 4) return isMale ? 'Tatarabuelo' : (isFemale ? 'Tatarabuela' : 'Tatarabuelo/a');
+                    if (d === 5) return isMale ? 'Trastatarabuelo' : (isFemale ? 'Trastatarabuela' : 'Trastatarabuelo/a');
+                    return isMale ? `Ancestro (${d}ª gen.)` : (isFemale ? `Ancestra (${d}ª gen.)` : `Ancestro/a (${d}ª gen.)`);
+                }
+
+                const descMap = getDescendantsWithDistance(centralPerson.id);
+                if (descMap.has(targetId)) {
+                    const d = descMap.get(targetId);
+                    if (d === 1) return isMale ? 'Hijo' : (isFemale ? 'Hija' : 'Hijo/a');
+                    if (d === 2) return isMale ? 'Nieto' : (isFemale ? 'Nieta' : 'Nieto/a');
+                    if (d === 3) return isMale ? 'Bisnieto' : (isFemale ? 'Bisnieta' : 'Bisnieto/a');
+                    if (d === 4) return isMale ? 'Tataranieto' : (isFemale ? 'Tataranieta' : 'Tataranieto/a');
+                    if (d === 5) return isMale ? 'Trastataranieto' : (isFemale ? 'Trastataranieta' : 'Trastataranieto/a');
+                    return `Descendiente (${d}ª gen.)`;
+                }
+
+                return target.relationship || 'Familiar';
+            };
+
+            const buildCardHtml = (person, extraClasses = '') => {
+                const isMale = person.gender === 'Masculino';
+                const isDeceased = isValidDateStr(person.dod);
+                const photoSrc = (person.photo && person.photo.trim() !== '') ? person.photo : defaultPhoto;
+
+                let ageHtml = '';
+                if (isValidDateStr(person.dob)) {
+                    const years = calculateYearsBetween(person.dob, isDeceased ? person.dod : null);
+                    if (years !== null) {
+                        ageHtml = `<div class="age">${years} años${isDeceased ? (isMale ? ' (fallecido)' : ' (fallecida)') : ''}</div>`;
                     }
                 }
 
-                // Para cada padre (o cónyuge de padre) que influye en la rama central,
-                // encontramos su ancestro más alto que esté en familyData.
-                parentsToProcess.forEach(pId => {
-                    let currentAncestor = familyData.get(pId);
-                    if (!currentAncestor) return;
-
-                    let hasHigherParentInFamilyData = false;
-                    while (currentAncestor) {
-                        const directParentsInFamilyData = currentAncestor.parentIds
-                            ? currentAncestor.parentIds.filter(paId => familyData.has(paId))
-                            : [];
-
-                        if (directParentsInFamilyData.length > 0) {
-                            hasHigherParentInFamilyData = true;
-                            // Moverse al primer padre encontrado para seguir subiendo
-                            currentAncestor = familyData.get(directParentsInFamilyData[0]);
-                        } else {
-                            // No más padres cargados, esta es la raíz de esta rama ascendente
-                            break;
+                let birthdayClass = '';
+                if (isValidDateStr(person.dob)) {
+                    try {
+                        const [y, m, d] = person.dob.split('-').map(Number);
+                        const birthDateUTC = new Date(Date.UTC(y, m - 1, d + 1));
+                        const now = new Date();
+                        const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
+                        if (new Intl.DateTimeFormat('es-CL', options).format(now) === new Intl.DateTimeFormat('es-CL', options).format(birthDateUTC)) {
+                            birthdayClass = ' birthday';
                         }
-                    }
-                    // Si se encontró una raíz (no es null) Y esa raíz no tiene padres EN FAMILYDATA
-                    if (currentAncestor && !(currentAncestor.parentIds && currentAncestor.parentIds.some(pid => familyData.has(pid)))) {
-                         finalRootsToRender.add(currentAncestor.id);
-                    } else if (currentAncestor) { // Si currentAncestor no es null pero aún tiene padres en familyData
-                        finalRootsToRender.add(currentAncestor.id); // Lo agrega de todas formas como una potencial raíz de su sub-rama
-                    }
-                });
-
-                // Si no encontramos ninguna raíz a través de los padres (ej. solo tiene un padre que ya es la raíz),
-                // o si los padres mismos son las raíces más altas, las añadimos.
-                if (finalRootsToRender.size === 0) {
-                    parentsToProcess.forEach(id => finalRootsToRender.add(id));
+                    } catch (e) {}
                 }
 
+                let childIcon = '';
+                const actualAge = !isDeceased ? calculateYearsBetween(person.dob) : null;
+                if (actualAge !== null && actualAge < 10) {
+                    childIcon = '<span class="icon-status icon-child">👶</span>';
+                }
+
+                const relLabel = getRelationshipLabel(person.id);
+
+                return `
+                    <div class="member ${isDeceased ? 'deceased' : ''} ${birthdayClass} ${isMale ? 'male' : 'female'} ${extraClasses}" data-id="${person.id}">
+                        ${childIcon}
+                        <img src="${photoSrc}" alt="Foto de ${person.name}" class="profile-pic" onerror="this.onerror=null;this.src='${defaultPhoto}';">
+                        <div class="name">${getShortName(person.name)}</div>
+                        <div class="relationship">${relLabel}</div>
+                        ${ageHtml}
+                    </div>
+                `;
+            };
+
+            // 1. Construir rama ASCENDENTE recursiva (Padres -> Abuelos -> Bisabuelos -> Tatarabuelos -> Trastatarabuelos)
+            const buildAncestorsBranch = (person, visited = new Set()) => {
+                if (!person || visited.has(person.id)) return '';
+                const nextVisited = new Set(visited);
+                nextVisited.add(person.id);
+
+                const validParents = (person.parentIds || [])
+                    .map(pid => familyData.get(pid))
+                    .filter(Boolean)
+                    // Ordenar padre a la izquierda, madre a la derecha
+                    .sort((a, b) => (a.gender === 'Masculino' ? -1 : 1));
+
+                if (validParents.length === 0) return '';
+
+                const parentsListItems = validParents.map(parent => {
+                    const upperAncestors = buildAncestorsBranch(parent, nextVisited);
+                    const card = buildCardHtml(parent, 'highlighted');
+                    return `<li><div class="node-content">${card}</div>${upperAncestors}</li>`;
+                }).join('');
+
+                return `<ul>${parentsListItems}</ul>`;
+            };
+
+            const ancestorsHtml = buildAncestorsBranch(centralPerson);
+
+            // 2. Construir rama DESCENDENTE recursiva (Hijos -> Nietos -> Bisnietos...)
+            const buildDescendantsBranch = (person, visited = new Set()) => {
+                if (!person) return '';
+                const unitParentIds = new Set([person.id]);
+                if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
+                    unitParentIds.add(person.spouseId);
+                }
+
+                const children = Array.from(familyData.values())
+                    .filter(c => !visited.has(c.id) && (c.parentIds || []).some(pid => unitParentIds.has(pid)))
+                    .sort((a, b) => (a.dob || '9999').localeCompare(b.dob || '9999'));
+
+                if (children.length === 0) return '';
+
+                const childrenItems = children.map(child => {
+                    visited.add(child.id);
+                    let childNode = '<div class="node-content">';
+                    const mainCard = buildCardHtml(child);
+
+                    if (child.spouseId && familyData.has(child.spouseId)) {
+                        const cSpouse = familyData.get(child.spouseId);
+                        if (cSpouse && cSpouse.spouseId === child.id && !visited.has(cSpouse.id)) {
+                            visited.add(cSpouse.id);
+                            const spouseCard = buildCardHtml(cSpouse);
+                            childNode += (child.id < cSpouse.id)
+                                ? `${mainCard}<div class="spouse-line"></div>${spouseCard}`
+                                : `${spouseCard}<div class="spouse-line"></div>${mainCard}`;
+                        } else {
+                            childNode += mainCard;
+                        }
+                    } else {
+                        childNode += mainCard;
+                    }
+                    childNode += '</div>';
+
+                    const subChildren = buildDescendantsBranch(child, visited);
+                    return `<li>${childNode}${subChildren}</li>`;
+                }).join('');
+
+                return `<ul>${childrenItems}</ul>`;
+            };
+
+            const visitedDesc = new Set([centralPerson.id]);
+            if (centralPerson.spouseId) visitedDesc.add(centralPerson.spouseId);
+            const descendantsHtml = buildDescendantsBranch(centralPerson, visitedDesc);
+
+            // 3. Nodo CENTRAL (Persona seleccionada + Cónyuge)
+            let centralNodeContent = '<div class="node-content highlighted-path">';
+            const centralCard = buildCardHtml(centralPerson, 'selected highlighted');
+
+            if (centralPerson.spouseId && familyData.has(centralPerson.spouseId)) {
+                const spouse = familyData.get(centralPerson.spouseId);
+                if (spouse && spouse.spouseId === centralPerson.id) {
+                    const spouseCard = buildCardHtml(spouse, 'ancestor-spouse-highlight');
+                    centralNodeContent += (centralPerson.id < spouse.id)
+                        ? `${centralCard}<div class="spouse-line"></div>${spouseCard}`
+                        : `${spouseCard}<div class="spouse-line"></div>${centralCard}`;
+                } else {
+                    centralNodeContent += centralCard;
+                }
             } else {
-                // Si la persona central no tiene padres, ella misma es la raíz del árbol a mostrar.
-                finalRootsToRender.add(centralPerson.id);
+                centralNodeContent += centralCard;
             }
-            
-            // Convertir el Set de IDs a un array de objetos Persona y ordenar
-            let displayRoots = Array.from(finalRootsToRender)
-                                .map(id => familyData.get(id))
-                                .filter(p => p !== undefined)
-                                .sort((a,b) => a.id - b.id); 
+            centralNodeContent += '</div>';
 
-            // Si después de toda la lógica no se tiene una raíz, usar la persona central como fallback
-            if (displayRoots.length === 0) {
-                displayRoots.push(centralPerson);
-            }
+            // Ensamblar el árbol unificado: Ancestros arriba -> Persona en el centro -> Descendientes abajo
+            container.innerHTML = `
+                <div class="pedigree-wrapper">
+                    ${ancestorsHtml ? `<div class="pedigree-up"><ul><li>${centralNodeContent}${ancestorsHtml}</li></ul></div>` : centralNodeContent}
+                    ${descendantsHtml ? `<div class="tree-down">${descendantsHtml}</div>` : ''}
+                </div>
+            `;
 
-            let treeHtmlContent = '';
-            const renderedIdsForWholeTree = new Set(); 
+            addClickListeners();
 
-            displayRoots.forEach(root => {
-                treeHtmlContent += generatePersonHtml(root, renderedIdsForWholeTree);
-            });
-
-            container.innerHTML = '<ul>' + treeHtmlContent + '</ul>';
-            addClickListeners(); 
-            
             setTimeout(() => {
-                const selectedMemberElement = document.querySelector(`.member[data-id="${selectedPersonId}"]`);
+                const selectedMemberElement = document.querySelector(`.tree .member[data-id="${selectedPersonId}"]`);
                 if (selectedMemberElement) {
                     const treeContainer = document.getElementById('family-tree-container');
                     const offsetLeft = selectedMemberElement.offsetLeft - (treeContainer.offsetWidth / 2) + (selectedMemberElement.offsetWidth / 2);
-                    treeContainer.scrollLeft = offsetLeft;
+                    treeContainer.scrollLeft = Math.max(0, offsetLeft);
 
-                    const offsetTop = selectedMemberElement.offsetTop - (treeContainer.offsetHeight / 3); 
-                    treeContainer.scrollTop = offsetTop;
+                    const offsetTop = selectedMemberElement.offsetTop - (treeContainer.offsetHeight / 2);
+                    treeContainer.scrollTop = Math.max(0, offsetTop);
                 }
-            }, 100); 
+            }, 80);
         }
-        // --- FIN DE CAMBIOS EN renderTree ---
 
-
-        // Función auxiliar para obtener el ordinal para los grados de primos, tíos, etc.
         function getOrdinal(n) {
             const s = ["", "Segundo", "Tercer", "Cuarto", "Quinto", "Sexto", "Séptimo", "Octavo", "Noveno", "Décimo"];
             if (n >= 1 && n <= s.length) {
@@ -791,73 +1530,242 @@
             return `${parts[0]} ${parts[parts.length - 2]}`;
         };
 
+        // --- FUNCIONES DE CÁLCULO DE DETALLES DEMOGRÁFICOS Y FAMILIARES ---
+
+        function isValidDateStr(dateStr) {
+            return Boolean(dateStr && dateStr !== '0000-00-00');
+        }
+
+        function calculateYearsBetween(startDateStr, endDateStr = null) {
+            if (!isValidDateStr(startDateStr)) return null;
+            const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+            let eYear, eMonth, eDay;
+
+            if (endDateStr && isValidDateStr(endDateStr)) {
+                [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+            } else {
+                const now = new Date();
+                eYear = now.getFullYear();
+                eMonth = now.getMonth() + 1;
+                eDay = now.getDate();
+            }
+
+            let years = eYear - sYear;
+            if (eMonth < sMonth || (eMonth === sMonth && eDay < sDay)) {
+                years--;
+            }
+            return years >= 0 ? years : null;
+        }
+
+        // 1. Edad al tener su primer hijo/a
         function getFirstChildInfo(person) {
-            if (!person || !person.dob || person.dob === '0000-00-00') return null;
+            if (!person || !isValidDateStr(person.dob)) return null;
             if (!Array.isArray(person.childrenIds) || person.childrenIds.length === 0) return null;
 
             const validChildren = person.childrenIds
                 .map(id => familyData.get(Number(id)))
-                .filter(child => child && child.dob && child.dob !== '0000-00-00');
+                .filter(child => child && isValidDateStr(child.dob));
 
             if (validChildren.length === 0) return null;
 
             validChildren.sort((a, b) => a.dob.localeCompare(b.dob));
             const firstChild = validChildren[0];
+            const ageAtFirstChild = calculateYearsBetween(person.dob, firstChild.dob);
 
-            const [pYear, pMonth, pDay] = person.dob.split('-').map(Number);
-            const [cYear, cMonth, cDay] = firstChild.dob.split('-').map(Number);
-
-            let ageAtFirstChild = cYear - pYear;
-            if (cMonth < pMonth || (cMonth === pMonth && cDay < pDay)) {
-                ageAtFirstChild--;
-            }
-
-            if (ageAtFirstChild < 0) return null;
+            if (ageAtFirstChild === null) return null;
 
             return {
                 age: ageAtFirstChild,
                 childName: getShortName(firstChild.name),
-                childGender: firstChild.gender
+                childGender: firstChild.gender,
+                childId: firstChild.id
             };
         }
 
+        // 2. Edad de sus padres cuando nació esta persona
+        function getParentsAgeAtBirth(person) {
+            if (!person || !isValidDateStr(person.dob) || !Array.isArray(person.parentIds)) return [];
+            const results = [];
+            person.parentIds.forEach(pId => {
+                const parent = familyData.get(pId);
+                if (parent && isValidDateStr(parent.dob)) {
+                    const ageAtBirth = calculateYearsBetween(parent.dob, person.dob);
+                    if (ageAtBirth !== null) {
+                        const role = parent.gender === 'Femenino' ? 'Madre' : (parent.gender === 'Masculino' ? 'Padre' : 'Progenitor');
+                        results.push(`${role}: ${ageAtBirth} años`);
+                    }
+                }
+            });
+            return results;
+        }
 
-        // --- FUNCIÓN PRINCIPAL PARA CALCULAR LA RELACIÓN DINÁMICA ---
+        // 3. Posición entre hermanos (ej. 2° de 4 hijos)
+        function getSiblingPosition(person) {
+            if (!person || !Array.isArray(person.parentIds) || person.parentIds.length === 0) return null;
+            const siblingIds = new Set([person.id]);
+            person.parentIds.forEach(pId => {
+                const parent = familyData.get(pId);
+                if (parent && Array.isArray(parent.childrenIds)) {
+                    parent.childrenIds.forEach(cId => {
+                        if (familyData.has(cId)) siblingIds.add(cId);
+                    });
+                }
+            });
+
+            if (siblingIds.size <= 1) return 'Hijo/a único/a';
+
+            const siblings = Array.from(siblingIds).map(id => familyData.get(id)).filter(Boolean);
+            const datedSiblings = siblings.filter(s => isValidDateStr(s.dob)).sort((a, b) => a.dob.localeCompare(b.dob));
+
+            if (isValidDateStr(person.dob) && datedSiblings.length === siblings.length) {
+                const pos = datedSiblings.findIndex(s => s.id === person.id) + 1;
+                const label = person.gender === 'Femenino' ? 'hija' : 'hijo';
+                return `${pos}° de ${siblings.length} ${label}s`;
+            }
+            return `Tiene ${siblings.length - 1} hermano(s)`;
+        }
+
+        // 4. Descendencia total (Hijos, Nietos, Bisnietos, Tataranietos)
+        function getDescendantsSummary(person) {
+            const descendantsMap = getDescendantsWithDistance(person.id);
+            const counts = {};
+
+            for (const [id, dist] of descendantsMap.entries()) {
+                if (dist > 0 && familyData.has(id)) {
+                    counts[dist] = (counts[dist] || 0) + 1;
+                }
+            }
+
+            const labels = {
+                1: ['hijo', 'hijos'],
+                2: ['nieto', 'nietos'],
+                3: ['bisnieto', 'bisnietos'],
+                4: ['tataranieto', 'tataranietos'],
+                5: ['trastataranieto', 'trastataranietos']
+            };
+
+            const parts = [];
+            const maxDist = Math.max(0, ...Object.keys(counts).map(Number));
+
+            for (let d = 1; d <= maxDist; d++) {
+                const count = counts[d] || 0;
+                if (count > 0) {
+                    const [singular, plural] = labels[d] || [`descendiente (${d}ª gen.)`, `descendientes (${d}ª gen.)`];
+                    parts.push(`${count} ${count === 1 ? singular : plural}`);
+                }
+            }
+
+            return parts.length > 0 ? parts.join(', ') : null;
+        }
+
+        // 5. Signo Zodiacal y Generación
+        function getZodiacAndGeneration(dobStr) {
+            if (!isValidDateStr(dobStr)) return null;
+            const [year, month, day] = dobStr.split('-').map(Number);
+
+            let sign = '';
+            if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) sign = 'Aries ♈';
+            else if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) sign = 'Tauro ♉';
+            else if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) sign = 'Géminis ♊';
+            else if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) sign = 'Cáncer ♋';
+            else if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) sign = 'Leo ♌';
+            else if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) sign = 'Virgo ♍';
+            else if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) sign = 'Libra ♎';
+            else if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) sign = 'Escorpio ♏';
+            else if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) sign = 'Sagitario ♐';
+            else if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) sign = 'Capricornio ♑';
+            else if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) sign = 'Acuario ♒';
+            else sign = 'Piscis ♓';
+
+            let gen = '';
+            if (year <= 1927) gen = 'Gen. Grandiosa';
+            else if (year <= 1945) gen = 'Gen. Silenciosa';
+            else if (year <= 1964) gen = 'Baby Boomer';
+            else if (year <= 1980) gen = 'Generación X';
+            else if (year <= 1996) gen = 'Millennial';
+            else if (year <= 2012) gen = 'Generación Z';
+            else gen = 'Generación Alfa';
+
+            return `${sign} · ${gen}`;
+        }
+
+        // 6. Días para el próximo cumpleaños (solo vivos)
+        function getDaysUntilBirthday(dobStr, dodStr) {
+            if (!isValidDateStr(dobStr) || isValidDateStr(dodStr)) return null;
+            const [, bMonth, bDay] = dobStr.split('-').map(Number);
+
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let nextBday = new Date(now.getFullYear(), bMonth - 1, bDay);
+
+            if (nextBday < today) {
+                nextBday = new Date(now.getFullYear() + 1, bMonth - 1, bDay);
+            }
+
+            const diffDays = Math.round((nextBday - today) / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return '🎂 ¡Hoy está de cumpleaños!';
+            if (diffDays === 1) return 'Falta 1 día para su cumpleaños';
+            return `Faltan ${diffDays} días para su cumpleaños`;
+        }
+
+        // 7. Años de matrimonio y diferencia de edad con cónyuge
+        function getMarriageDetails(person) {
+            const details = [];
+            const spouse = (person.spouseId && familyData.has(person.spouseId)) ? familyData.get(person.spouseId) : null;
+
+            if (isValidDateStr(person.dom)) {
+                let endMarriageDate = null;
+                let suffix = 'casados';
+
+                if (isValidDateStr(person.dod) && spouse && isValidDateStr(spouse.dod)) {
+                    endMarriageDate = person.dod < spouse.dod ? person.dod : spouse.dod;
+                    suffix = 'de matrimonio';
+                } else if (isValidDateStr(person.dod)) {
+                    endMarriageDate = person.dod;
+                    suffix = 'de matrimonio';
+                } else if (spouse && isValidDateStr(spouse.dod)) {
+                    endMarriageDate = spouse.dod;
+                    suffix = 'de matrimonio';
+                }
+
+                const yearsMarried = calculateYearsBetween(person.dom, endMarriageDate);
+                if (yearsMarried !== null) {
+                    details.push(`${yearsMarried} año${yearsMarried !== 1 ? 's' : ''} ${suffix}`);
+                }
+            }
+
+            if (spouse && isValidDateStr(person.dob) && isValidDateStr(spouse.dob)) {
+                if (person.dob !== spouse.dob) {
+                    const isOlder = person.dob < spouse.dob;
+                    const diffYears = isOlder
+                        ? calculateYearsBetween(person.dob, spouse.dob)
+                        : calculateYearsBetween(spouse.dob, person.dob);
+
+                    if (diffYears !== null && diffYears > 0) {
+                        details.push(`${diffYears} año${diffYears !== 1 ? 's' : ''} ${isOlder ? 'mayor' : 'menor'} que su cónyuge`);
+                    }
+                }
+            }
+
+            return details;
+        }
+
+        // --- FUNCIÓN PRINCIPAL PARA RENDERIZAR CADA TARJETA EN EL ÁRBOL ---
         function generatePersonHtml(person, renderedIds = new Set()) {
             if (!person || renderedIds.has(person.id)) return ''; 
 
             renderedIds.add(person.id); 
 
             const currentIsMale = (person.gender === 'Masculino');
-            const currentIsFemale = (person.gender === 'Femenino');
+            const isDeceased = isValidDateStr(person.dod);
 
             let ageInTree = '';
-                        if (person.dob && person.dob !== '0000-00-00') {
-                try {
-                    const birthDate = new Date(person.dob);
-                    let endDate = new Date(); // Por defecto, hoy
-
-                    const hasDeathDate = person.dod && person.dod !== '0000-00-00';
-                    if (hasDeathDate) {
-                        endDate = new Date(person.dod);
-                    }
-
-                    if(!isNaN(birthDate.getTime()) && !isNaN(endDate.getTime())){
-                        let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
-                        const m = endDate.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
-                            ageDiff--;
-                        }
-                        if (ageDiff >= 0) { 
-                            ageInTree = `<div class="age">${ageDiff} años${hasDeathDate ? `${currentIsMale ? ' (fallecido)' : ' (fallecida)'}` : ''}</div>`;
-                        }
-                    }
-                } catch(e) { console.error("Error calculating age for tree node", e); }
+            if (isValidDateStr(person.dob)) {
+                const ageDiff = calculateYearsBetween(person.dob, isDeceased ? person.dod : null);
+                if (ageDiff !== null) {
+                    ageInTree = `<div class="age">${ageDiff} años${isDeceased ? `${currentIsMale ? ' (fallecido)' : ' (fallecida)'}` : ''}</div>`;
+                }
             }
-
-            // Determinar si la persona ha fallecido para añadir la clase 'deceased'
-            const isDeceased = person.dod && person.dod !== '0000-00-00';
-            
 
             let nodeContent = '<div class="node-content">';
 
@@ -868,8 +1776,6 @@
                 }
                 return `<img src="${defaultPhoto}" alt="Sin foto" class="profile-pic">`;
             };
-
-   
 
             const calculateDynamicRelationship = (currentPersonId, referencePersonId) => {
                 const currentPerson = familyData.get(currentPersonId);
@@ -882,25 +1788,18 @@
                 const currentIsMale = (currentPerson.gender === 'Masculino');
                 const currentIsFemale = (currentPerson.gender === 'Femenino');
 
-
-                // 0. La persona misma
                 if (currentPersonId === referencePersonId) {
                     return 'Tú';
                 }
 
-                // Caching de ancestros y descendientes para evitar recalcular
                 const refAncestorsWithDist = getAncestorsWithDistance(referencePersonId);
                 const refDescendantsWithDist = getDescendantsWithDistance(referencePersonId);
                 const currentAncestorsWithDist = getAncestorsWithDistance(currentPersonId);
-                const currentDescendantsWithDist = getDescendantsWithDistance(currentPersonId);
 
-
-                // 1. Cónyuge
                 if (currentPerson.spouseId === referencePersonId && referencePerson.spouseId === currentPersonId) {
                     return 'Cónyuge';
                 }
 
-                // 2. Relaciones Directas Ascendentes (Padres, Abuelos, Bisabuelos, etc.)
                 const distToRefAnc = refAncestorsWithDist.get(currentPersonId);
                 if (distToRefAnc !== undefined) {
                     if (distToRefAnc === 1) return currentIsMale ? 'Padre' : (currentIsFemale ? 'Madre' : 'Padre/Madre');
@@ -908,9 +1807,9 @@
                     if (distToRefAnc === 3) return currentIsMale ? 'Bisabuelo' : (currentIsFemale ? 'Bisabuela' : 'Bisabuelo/a');
                     if (distToRefAnc === 4) return currentIsMale ? 'Tatarabuelo' : (currentIsFemale ? 'Tatarabuela' : 'Tatarabuelo/a');
                     if (distToRefAnc === 5) return currentIsMale ? 'Trastatarabuelo' : (currentIsFemale ? 'Trastatarabuela' : 'Trastatarabuelo/a');
+                    if (distToRefAnc > 5) return currentIsMale ? `Ancestro (${distToRefAnc}ª gen.)` : (currentIsFemale ? `Ancestra (${distToRefAnc}ª gen.)` : `Ancestro/a (${distToRefAnc}ª gen.)`);
                 }
 
-                // 3. Relaciones Directas Descendentes (Hijos, Nietos, Bisnietos, etc.)
                 const distToRefDesc = refDescendantsWithDist.get(currentPersonId);
                 if (distToRefDesc !== undefined) {
                     if (distToRefDesc === 1) return currentIsMale ? 'Hijo' : (currentIsFemale ? 'Hija' : 'Hijo/a');
@@ -920,17 +1819,10 @@
                     if (distToRefDesc === 5) return currentIsMale ? 'Trastataranieto' : (currentIsFemale ? 'Trastataranieta' : 'Trastataranieto/a');
                 }
 
-                // --- NUEVAS RELACIONES POLÍTICAS Y COLATERALES ---
-
-                // Padrastro/Madrastra: Cónyuge de un padre biológico de referencePerson, que no es el padre biológico
-                // referencePerson.parentIds son los padres biológicos de referencePerson.
-                // currentPerson es el cónyuge de uno de ellos y no es uno de ellos.
                 if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
                     for (const parentId of referencePerson.parentIds) {
                         const biologicalParent = familyData.get(parentId);
                         if (biologicalParent && biologicalParent.spouseId === currentPersonId && currentPerson.spouseId === biologicalParent.id) {
-                            // currentPerson es el cónyuge del padre/madre de referencePerson
-                            // Y currentPerson NO es el padre/madre biológico de referencePerson
                             if (!referencePerson.parentIds.includes(currentPersonId)) {
                                 return currentIsMale ? 'Padrastro' : (currentIsFemale ? 'Madrastra' : 'Padrastro/Madrastra');
                             }
@@ -938,36 +1830,22 @@
                     }
                 }
 
-                // Hijastros (Hijo/a de mi cónyuge pero no mío)
-                // currentPerson es hijo/a de referencePerson.spouseId, pero referencePerson no es padre de currentPerson
                 if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
                     const refSpouse = familyData.get(referencePerson.spouseId);
                     if (refSpouse && Array.isArray(refSpouse.childrenIds) && refSpouse.childrenIds.includes(currentPersonId)) {
-                        // currentPerson es hijo de refSpouse
-                        // Ahora, verificar que referencePerson NO sea padre de currentPerson
                         if (!Array.isArray(currentPerson.parentIds) || !currentPerson.parentIds.includes(referencePersonId)) {
                             return currentIsMale ? 'Hijastro' : (currentIsFemale ? 'Hijastra' : 'Hijastro/a');
                         }
                     }
                 }
 
-                 // 4. Relaciones Colaterales - Hermanos (ya lo tienes, va antes de otras colaterales)
                 if (currentPerson.parentIds && referencePerson.parentIds) {
                     const commonParents = currentPerson.parentIds.filter(pId => referencePerson.parentIds.includes(pId));
-                    if (commonParents.length > 0) {
-                        // Si ya se ha manejado la relación directa (Padre, Hijo),
-                        // esta es la comprobación para hermanos.
-                        if (currentPersonId !== referencePersonId) { // Asegurarse de que no sea la misma persona
-                            return currentIsMale ? 'Hermano' : (currentIsFemale ? 'Hermana' : 'Hermano/a');
-                        }
+                    if (commonParents.length > 0 && currentPersonId !== referencePersonId) {
+                        return currentIsMale ? 'Hermano' : (currentIsFemale ? 'Hermana' : 'Hermano/a');
                     }
                 }
-                
-                // 5. Relaciones Políticas
-                // Estas se evalúan ANTES que las relaciones colaterales complejas porque son muy específicas.
 
-                // Cuñados: (Cónyuge de un hermano/a) O (Hermano/a de un cónyuge)
-                // Caso 1: currentPerson es cónyuge de un hermano/a de referencePerson
                 if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
                     const refParents = referencePerson.parentIds.map(id => familyData.get(id)).filter(p => p);
                     for (const refParent of refParents) {
@@ -982,7 +1860,7 @@
                         }
                     }
                 }
-                // Caso 2: currentPerson es hermano/a del cónyuge de referencePerson
+
                 if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
                     const refSpouse = familyData.get(referencePerson.spouseId);
                     if (refSpouse && currentPerson.parentIds && refSpouse.parentIds) {
@@ -991,18 +1869,9 @@
                             return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
                         }
                     }
-                }
-                
-                // Suegros: padre del cónyuge de referencePerson
-                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
-                    const refSpouse = familyData.get(referencePerson.spouseId);
                     if (refSpouse && refSpouse.parentIds && refSpouse.parentIds.includes(currentPersonId)) {
                         return currentIsMale ? 'Suegro' : (currentIsFemale ? 'Suegra' : 'Suegro/a');
                     }
-                }
-                // Abuelos Políticos: abuelo del cónyuge de referencePerson
-                if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
-                    const refSpouse = familyData.get(referencePerson.spouseId);
                     if (refSpouse) {
                         const refSpouseAncestors = getAncestorsWithDistance(refSpouse.id);
                         if (refSpouseAncestors.has(currentPersonId) && refSpouseAncestors.get(currentPersonId) === 2) {
@@ -1011,7 +1880,6 @@
                     }
                 }
                 
-                // Yerno/Nuera: cónyuge de hijo/hija de referencePerson
                 if (referencePerson.childrenIds) {
                     for (const childId of referencePerson.childrenIds) {
                         const child = familyData.get(childId);
@@ -1021,16 +1889,12 @@
                     }
                 }
 
-                // 6. Relaciones Colaterales con grados (Tíos, Sobrinos, Primos) - Se basa en el LCA
                 let lowestCommonAncestorId = null;
                 let minSumDistances = Infinity;
 
-                // Encontrar el LCA entre currentPerson y referencePerson
-                // Es importante que LCA no sea ni currentPerson ni referencePerson
                 for (let [idA, distA] of currentAncestorsWithDist.entries()) {
                     if (refAncestorsWithDist.has(idA)) {
                         const distB = refAncestorsWithDist.get(idA);
-                        // Asegurarse de que el LCA no es la persona de referencia ni la persona actual
                         if (idA !== currentPersonId && idA !== referencePersonId) {
                             if (distA + distB < minSumDistances) {
                                 minSumDistances = distA + distB;
@@ -1044,48 +1908,35 @@
                     const distCurrentToLCA = currentAncestorsWithDist.get(lowestCommonAncestorId) || 0;
                     const distRefToLCA = refAncestorsWithDist.get(lowestCommonAncestorId) || 0;
                     
-                    const collateralDegree = Math.min(distCurrentToLCA, distRefToLCA) - 1; // Grado del "hermano" del ancestro común
-                    const generationalDiff = Math.abs(distCurrentToLCA - distRefToLCA); // Diferencia de generaciones desde el LCA
+                    const collateralDegree = Math.min(distCurrentToLCA, distRefToLCA) - 1;
+                    const generationalDiff = Math.abs(distCurrentToLCA - distRefToLCA);
 
-                    // Tíos / Tías (ya manejado arriba, pero aquí en contexto de LCA)
-                    // Si el LCA es un padre de A (distancia 1) y de B (distancia > 1)
-                    if (distCurrentToLCA === 1 && distRefToLCA > 1 && distRefToLCA <= 5) { // current es padre del LCA, y LCA es abuelo de ref
-                         // Solo si currentPerson es el padre directo de un ancestro de referencePerson
+                    if (distCurrentToLCA === 1 && distRefToLCA > 1 && distRefToLCA <= 5) {
                          const isParentOfRefAnc = refAncestorsWithDist.has(lowestCommonAncestorId) && (currentPerson.childrenIds && currentPerson.childrenIds.includes(lowestCommonAncestorId));
                          if (isParentOfRefAnc) {
                              return currentIsMale ? 'Tío' : (currentIsFemale ? 'Tía' : 'Tío/a');
                          }
                     }
-                    // Sobrinos / Sobrinas (ya manejado arriba, pero aquí en contexto de LCA)
-                    if (distRefToLCA === 1 && distCurrentToLCA > 1 && distCurrentToLCA <= 5) { // ref es padre del LCA, y LCA es abuelo de current
-                        // Solo si referencePerson es el padre directo de un ancestro de currentPerson
+                    if (distRefToLCA === 1 && distCurrentToLCA > 1 && distCurrentToLCA <= 5) {
                         const isParentOfCurrentAnc = currentAncestorsWithDist.has(lowestCommonAncestorId) && (referencePerson.childrenIds && referencePerson.childrenIds.includes(lowestCommonAncestorId));
                         if (isParentOfCurrentAnc) {
                             return currentIsMale ? 'Sobrino' : (currentIsFemale ? 'Sobrina' : 'Sobrino/a');
                         }
                     }
 
-                     // Sobrino/a Político/a (pareja de mi sobrina)
-                    // currentPerson es el cónyuge de un sobrino/a de referencePerson
                     if (refDescendantsWithDist.has(currentPerson.spouseId) && refDescendantsWithDist.get(currentPerson.spouseId) === 2) {
-                        // currentPerson.spouseId es un sobrino de referencePerson
                         return currentIsMale ? 'Sobrino Político' : (currentIsFemale ? 'Sobrina Política' : 'Sobrino/a Político/a');
                     }
 
-                    // Primos (ambos están a la misma distancia generacional del LCA)
                     if (distCurrentToLCA === distRefToLCA && distCurrentToLCA > 1) {
-                        const degree = distCurrentToLCA - 1; // Grado del primo (Primo, Primo Segundo, etc.)
+                        const degree = distCurrentToLCA - 1;
                         return currentIsMale ? `Primo ${getOrdinal(degree)}` : (currentIsFemale ? `Prima ${getOrdinal(degree)}` : `Primo/a ${getOrdinal(degree)}`);
                     }
 
-                    // Relaciones con grados de separación generacional (Tíos Abuelos, Sobrinos Nietos)
                     if (generationalDiff > 0) {
-                        if (distCurrentToLCA < distRefToLCA) { // currentPerson es más viejo (Tío)
-                            // Tío Abuelo, Tío Bisabuelo, etc.
+                        if (distCurrentToLCA < distRefToLCA) {
                             return currentIsMale ? `Tío ${getOrdinal(generationalDiff)}` : (currentIsFemale ? `Tía ${getOrdinal(generationalDiff)}` : `Tío/a ${getOrdinal(generationalDiff)}`);
-                        } else { // currentPerson es más joven (Sobrino)
-                            // Sobrino Nieto, Sobrino Bisnieto, Tatarasobrino, etc.
-                            // Tatarasobrino: collateralDegree = 1 (hermanos), generationalDiff = 3 (hijo de bisnieto de hermano)
+                        } else {
                             if (collateralDegree === 1 && generationalDiff === 3) {
                                 return currentIsMale ? 'Tatarasobrino' : (currentIsFemale ? 'Tatarasobrina' : 'Tatarasobrino/a');
                             }
@@ -1094,28 +1945,8 @@
                     }
                 }
 
-                // 7. Sobrino/a Político/a: Cónyuge de un sobrino/a
-                // Primero encontrar los sobrinos de referencePerson
-                const refChildren = new Set(referencePerson.childrenIds);
-                let potentialNephews = new Set();
-                refChildren.forEach(childId => {
-                    const child = familyData.get(childId);
-                    if (child && child.parentIds) {
-                        const commonParents = child.parentIds.filter(pId => referencePerson.parentIds && referencePerson.parentIds.includes(pId));
-                        if (commonParents.length > 0) { // Si child es hermano de refPerson
-                            // No, refChildren ya son hijos directos de referencePerson.
-                            // Para sobrinos, necesitamos hijos de hermanos de referencePerson.
-                            // Esto se calcula más arriba en la lógica de sobrinos.
-                        }
-                    }
-                });
-
-                // Tío Político: Pareja de mi Tío/a biológico/a
-                // currentPerson es cónyuge de X, y X es Tío/a biológico/a de referencePerson
                 if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
                     const spouseOfCurrent = familyData.get(currentPerson.spouseId);
-                    // Si el cónyuge de currentPerson es tío/tía de referencePerson (ya sea directo o de grados superiores)
-                    // Usamos la misma lógica que para identificar Tíos biológicos
                     let lcaForSpouse = null;
                     let minSumDistancesForSpouseLCA = Infinity;
 
@@ -1133,46 +1964,26 @@
                         const distSpouseToLCA = getAncestorsWithDistance(spouseOfCurrent.id).get(lcaForSpouse) || 0;
                         const distRefToLCA = refAncestorsWithDist.get(lcaForSpouse) || 0;
                         
-                        // Condición para Tío/a biológico: (distancia cónyuge a LCA = 1) Y (distancia ref a LCA = 2)
-                        // O más general para tíos de grados superiores (ej. Tío abuelo)
-                        if (distSpouseToLCA < distRefToLCA) { // Spouse es más viejo que ref
-                            // Y si tienen un ancestro común
-                            // Para ser "Tío/a" (biológico), el cónyuge debe estar en una generación superior y colateral a referencePerson
-                            // Distancia de spouse a LCA es 1, 2, etc. (Ej. 1 = hermano del padre)
-                            // Distancia de ref a LCA es 2, 3, etc. (Ej. 2 = hijo de hermano del padre)
-                            if (distSpouseToLCA > 0 && distRefToLCA > 0 && distRefToLCA === distSpouseToLCA + 1) { // Spouse está a 1 generación por encima de ref colateral
+                        if (distSpouseToLCA < distRefToLCA) {
+                            if (distSpouseToLCA > 0 && distRefToLCA > 0 && distRefToLCA === distSpouseToLCA + 1) {
                                 return currentIsMale ? 'Tío Político' : (currentIsFemale ? 'Tía Política' : 'Tío/a Político/a');
                             }
-                            // Caso especial para tíos más lejanos (Tío Abuelo político, etc.)
                             if (distSpouseToLCA > 0 && distRefToLCA > distSpouseToLCA) {
                                 return currentIsMale ? `Tío Político ${getOrdinal(distRefToLCA - distSpouseToLCA)}` : (currentIsFemale ? `Tía Política ${getOrdinal(distRefToLCA - distSpouseToLCA)}` : `Tío/a Político/a ${getOrdinal(distRefToLCA - distSpouseToLCA)}`);
                             }
                         }
                     }
-                }
 
-                 // Cuñado (pareja de mi cuñada) / Cuñada (pareja de mi cuñado)
-                // Esto se refiere al cónyuge de tu hermano/a político/a.
-                // Es decir, currentPerson es el cónyuge de una persona X, donde X es cuñado/a de referencePerson.
-                // Para simplificar y evitar bucles, asumiremos que si currentPerson es cónyuge de alguien que ya es cuñado/a de referencePerson,
-                // entonces currentPerson es también un cuñado/a de referencePerson.
-                // Esta relación suele subsumirse bajo la categoría general de "Cuñado/a" si ya detectas al cuñado principal.
-                // Sin embargo, si quieres una etiqueta EXCLUSIVA para "pareja de mi cuñada":
-                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
-                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
-                    // Si spouseOfCurrent es hermano/a del cónyuge de referencePerson
                     if (referencePerson.spouseId && familyData.has(referencePerson.spouseId)) {
                         const refSpouse = familyData.get(referencePerson.spouseId);
                         if (refSpouse && spouseOfCurrent.parentIds && refSpouse.parentIds) {
                             const commonParentsWithRefSpouse = spouseOfCurrent.parentIds.filter(pId => refSpouse.parentIds.includes(pId));
                             if (commonParentsWithRefSpouse.length > 0 && spouseOfCurrent.id !== refSpouse.id) {
-                                // SpouseOfCurrent es hermano/a de refSpouse
-                                // Entonces currentPerson es el cónyuge del hermano/a de refSpouse
                                 return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
                             }
                         }
                     }
-                    // O si spouseOfCurrent es cónyuge de un hermano/a de referencePerson
+
                     if (referencePerson.parentIds && referencePerson.parentIds.length > 0) {
                         const refParents = referencePerson.parentIds.map(id => familyData.get(id)).filter(p => p);
                         for (const refParent of refParents) {
@@ -1181,51 +1992,19 @@
                                 for (const siblingId of siblingsOfRefPerson) {
                                     const sibling = familyData.get(siblingId);
                                     if (sibling && sibling.spouseId === spouseOfCurrent.id && spouseOfCurrent.spouseId === sibling.id) {
-                                        // SpouseOfCurrent es cónyuge de un hermano de referencePerson
-                                        // Entonces currentPerson es la pareja de mi cuñado/a
                                         return currentIsMale ? 'Cuñado' : (currentIsFemale ? 'Cuñada' : 'Cuñado/a');
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                 // Nieto Político (pareja de mi nieto/a biológico/a)
-                // currentPerson es el cónyuge de X, donde X es Nieto/a biológico/a de referencePerson
-                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
-                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
-                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id); // Distancia del cónyuge de currentPerson a referencePerson como descendiente
-                    
-                    if (distSpouseOfCurrentToRef === 2) { // Si el cónyuge de currentPerson es nieto/a de referencePerson
-                        return currentIsMale ? 'Nieto Político' : (currentIsFemale ? 'Nieta Política' : 'Nieto/a Político/a');
-                    }
-                }
-
-                // Bisnieto político (pareja de mi bisnieta)
-                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
-                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
                     const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id);
-                    
-                    if (distSpouseOfCurrentToRef === 3) { // Si el cónyuge de currentPerson es bisnieto/a de referencePerson
-                        return currentIsMale ? 'Bisnieto Político' : (currentIsFemale ? 'Bisnieta Política' : 'Bisnieto/a Político/a');
-                    }
+                    if (distSpouseOfCurrentToRef === 2) return currentIsMale ? 'Nieto Político' : (currentIsFemale ? 'Nieta Política' : 'Nieto/a Político/a');
+                    if (distSpouseOfCurrentToRef === 3) return currentIsMale ? 'Bisnieto Político' : (currentIsFemale ? 'Bisnieta Política' : 'Bisnieto/a Político/a');
+                    if (distSpouseOfCurrentToRef === 4) return currentIsMale ? 'Tataranieto Político' : (currentIsFemale ? 'Tataranieta Política' : 'Tataranieto/a Político/a');
                 }
 
-                // Tataranieto Político (pareja de mi tataranieta)
-                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) { 
-                    const spouseOfCurrent = familyData.get(currentPerson.spouseId);
-                    const distSpouseOfCurrentToRef = refDescendantsWithDist.get(spouseOfCurrent.id);
-                    
-                    if (distSpouseOfCurrentToRef === 4) { // Si el cónyuge de currentPerson es tataranieto/a de referencePerson
-                        return currentIsMale ? 'Tataranieto Político' : (currentIsFemale ? 'Tataranieta Política' : 'Tataranieto/a Político/a');
-                    }
-                }
-
-
-                // Si currentPerson es el cónyuge de un sobrino de referencePerson
-                // 1. Encuentra todos los sobrinos de referencePerson
-                // 2. Comprueba si currentPerson es el cónyuge de alguno de esos sobrinos
                 const refSiblings = Array.from(familyData.values()).filter(p => p.parentIds && referencePerson.parentIds && p.parentIds.some(rpId => referencePerson.parentIds.includes(rpId)) && p.id !== referencePersonId);
                 for (const sibling of refSiblings) {
                     const siblingChildren = Array.from(familyData.values()).filter(p => p.parentIds && p.parentIds.includes(sibling.id));
@@ -1236,56 +2015,26 @@
                     }
                 }
             
-                // Fallback a la relación de la DB si no se encuentra algo específico, o 'Familiar'
                 return currentPerson.relationship || 'Familiar';
             };
 
-            const birthDate = new Date(person.dob);
-                    
-            // Obtener la fecha actual en horario de Santiago de Chile
-            // Lógica para el gorrito de cumpleaños
             let birthdayClass = '';
-            if (person.dob && person.dob !== '0000-00-00') {
+            if (isValidDateStr(person.dob)) {
                 try {
-                    const dobParts = person.dob.split('-').map(Number); // [año, mes, día]
-                    const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] + 1 ));
-
+                    const dobParts = person.dob.split('-').map(Number);
+                    const birthDateUTC = new Date(Date.UTC(dobParts[0], dobParts[1] - 1, dobParts[2] + 1));
                     const now = new Date();
                     const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
                     const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
                     const birthMonthDay = new Intl.DateTimeFormat('es-CL', options).format(birthDateUTC);
-
-                    if (santiagoDate === birthMonthDay) {
-                        birthdayClass = ' birthday';
-                    }
-                } catch (e) {
-                    console.error("Error calculando cumpleaños de la persona principal", e);
-                }
+                    if (santiagoDate === birthMonthDay) birthdayClass = ' birthday';
+                } catch (e) {}
             }
 
-
-
-             let childIcon = '';
-            // Calcular la edad numérica para la comprobación de < 10 años
-            let actualAge = -1; // Inicializar con un valor que indique que no se ha calculado
-            if (person.dob && person.dob !== '0000-00-00') {
-                 try {
-                    const birthDate = new Date(person.dob);
-                    const today = new Date();
-                    // Solo si está viva, calculamos la edad actual. Si ha fallecido, no tiene "edad actual"
-                    if (!isDeceased && !isNaN(birthDate.getTime())) {
-                        actualAge = today.getFullYear() - birthDate.getFullYear();
-                        const m = today.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                            actualAge--;
-                        }
-                    } 
-                 } catch(e) { /* Error calculando edad, ignorar */ }
-            }
-
-            // Si la edad calculada es menor de 10 años (o si se murió antes de los 10 años)
-            if (actualAge >= 0 && actualAge < 10) { // Asegura que la edad es válida y menor de 10
-                childIcon = '<span class="icon-status icon-child">👶</span>'; // Bebé
+            let childIcon = '';
+            const actualAge = !isDeceased ? calculateYearsBetween(person.dob) : null;
+            if (actualAge !== null && actualAge < 10) {
+                childIcon = '<span class="icon-status icon-child">👶</span>';
             }
 
             const displayRelationship = calculateDynamicRelationship(person.id, selectedPersonId);
@@ -1307,79 +2056,42 @@
                 if (spouse && spouse.id !== person.id && spouse.spouseId === person.id && !renderedIds.has(spouse.id)) { 
                     renderedIds.add(spouse.id); 
                     
+                    const isSpouseDeceased = isValidDateStr(spouse.dod);
+                    const spouseIsMale = (spouse.gender === 'Masculino');
                     let spouseAgeInTree = '';
-                   if (spouse.dob && spouse.dob !== '0000-00-00') {
-                        try {
-                            const birthDate = new Date(spouse.dob);
-                            let endDate = new Date(); // Por defecto, hoy
 
-                            const hasDeathDate = spouse.dod && spouse.dod !== '0000-00-00';
-                            if (hasDeathDate) {
-                                endDate = new Date(spouse.dod);
-                            }
-
-                            if(!isNaN(birthDate.getTime()) && !isNaN(endDate.getTime())){
-                                let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
-                                const m = endDate.getMonth() - birthDate.getMonth();
-                                if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
-                                    ageDiff--;
-                                }
-                                if (ageDiff >= 0) {
-                                    spouseAgeInTree = `<div class="age">${ageDiff} años${hasDeathDate ? `${currentIsMale ? ' (fallecida)' : ' (fallecido)'}` : ''}</div>`;
-                                }
-                            }
-                        } catch(e) { console.error("Error calculating spouse age for tree node", e); }
+                    if (isValidDateStr(spouse.dob)) {
+                        const ageDiff = calculateYearsBetween(spouse.dob, isSpouseDeceased ? spouse.dod : null);
+                        if (ageDiff !== null) {
+                            spouseAgeInTree = `<div class="age">${ageDiff} años${isSpouseDeceased ? `${spouseIsMale ? ' (fallecido)' : ' (fallecida)'}` : ''}</div>`;
+                        }
                     }
 
                     const spouseDisplayRelationship = calculateDynamicRelationship(spouse.id, selectedPersonId);
                     const spouseShortName = getShortName(spouse.name);
                     const spouseProfilePic = getProfilePicHtml(spouse.photo, spouse.name);
-                    // Determinar si la pareja ha fallecido para añadir la clase 'deceased'
-                    const isSpouseDeceased = spouse.dod && spouse.dod !== '0000-00-00';
 
-
-                     let spouseBirthdayClass = '';
-                        if (spouse.dob && spouse.dob !== '0000-00-00') {
-                            try {
-                                // MODIFICACIÓN CLAVE AQUÍ PARA CÓNYUGE
-                                const dobPartsSpouse = spouse.dob.split('-').map(Number);
-                                const birthDateSpouseUTC = new Date(Date.UTC(dobPartsSpouse[0], dobPartsSpouse[1] - 1, dobPartsSpouse[2] +1 ));
-                                const now = new Date();
-                                const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
-                                const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
-                                const birthMonthDaySpouse = new Intl.DateTimeFormat('es-CL', options).format(birthDateSpouseUTC);
-
-                                if (santiagoDate === birthMonthDaySpouse) {
-                                    spouseBirthdayClass = ' birthday';
-                                }
-                            } catch(e) {
-                                console.error("Error calculating spouse birthday for tree node", e);
-                            }
-                        }
-
-
-                    let spouseChildIcon = '';
-                    let spouseActualAge = -1;
-                    if (spouse.dob && spouse.dob !== '0000-00-00') {
+                    let spouseBirthdayClass = '';
+                    if (isValidDateStr(spouse.dob)) {
                         try {
-                            const birthDate = new Date(spouse.dob);
-                            const today = new Date();
-                            if (!isSpouseDeceased && !isNaN(birthDate.getTime())) {
-                                spouseActualAge = today.getFullYear() - birthDate.getFullYear();
-                                const m = today.getMonth() - birthDate.getMonth();
-                                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                                    spouseActualAge--;
-                                }
-                            } 
-                        } catch(e) { /* Error calculando edad, ignorar */ }
+                            const dobPartsSpouse = spouse.dob.split('-').map(Number);
+                            const birthDateSpouseUTC = new Date(Date.UTC(dobPartsSpouse[0], dobPartsSpouse[1] - 1, dobPartsSpouse[2] + 1));
+                            const now = new Date();
+                            const options = { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' };
+                            const santiagoDate = new Intl.DateTimeFormat('es-CL', options).format(now);
+                            const birthMonthDaySpouse = new Intl.DateTimeFormat('es-CL', options).format(birthDateSpouseUTC);
+                            if (santiagoDate === birthMonthDaySpouse) spouseBirthdayClass = ' birthday';
+                        } catch(e) {}
                     }
 
-                    if (spouseActualAge >= 0 && spouseActualAge < 10) {
+                    let spouseChildIcon = '';
+                    const spouseActualAge = !isSpouseDeceased ? calculateYearsBetween(spouse.dob) : null;
+                    if (spouseActualAge !== null && spouseActualAge < 10) {
                         spouseChildIcon = `<span class="icon-status icon-child" id="${spouse.id}">👶</span>`;
                     }
 
                     const spouseHtml = `
-                        <div class="member ${isSpouseDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${currentIsMale ? 'female' : 'male'}" data-id="${spouse.id}">
+                        <div class="member ${isSpouseDeceased ? 'deceased' : ''} ${spouseBirthdayClass} ${spouseIsMale ? 'male' : 'female'}" data-id="${spouse.id}">
                             ${spouseChildIcon}
                             ${spouseProfilePic}
                             <div class="name">${spouseShortName}</div>
@@ -1403,7 +2115,6 @@
             nodeContent += '</div>';
 
             let childrenHtml = '';
-            
             const parentIdsOfCurrentUnit = new Set();
             parentIdsOfCurrentUnit.add(person.id);
             if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
@@ -1430,6 +2141,7 @@
         }
 
 
+        // --- PANEL LATERAL DE DETALLES COMPLETOS ---
         function showPersonDetails(personId) {
             selectedPersonId = personId; 
             const person = familyData.get(personId);
@@ -1444,123 +2156,122 @@
                 return;
             }
             
-            renderTree(); 
-
-            document.querySelectorAll('.member').forEach(el => el.classList.remove('selected', 'highlighted', 'ancestor-spouse-highlight'));
-            document.querySelectorAll('.tree li').forEach(li => li.classList.remove('highlighted-path'));
-            document.querySelectorAll('.node-content').forEach(nc => nc.classList.remove('highlighted-path'));
-
-            const currentSelectedMemberElement = document.querySelector(`.member[data-id="${personId}"]`);
-            if(currentSelectedMemberElement) {
-                currentSelectedMemberElement.classList.add('selected');
+            if (currentViewMode !== 'dynamic') {
+                renderCurrentView();
             }
 
-            let queue = [personId]; 
-            const visitedForHighlight = new Set(); 
-
-            while (queue.length > 0) {
-                const currentId = queue.shift(); 
-                
-                if (visitedForHighlight.has(currentId)) {
-                    continue; 
+            if (currentViewMode === 'dynamic') {
+                const stage = document.getElementById('dynamic-map-stage');
+                if (stage) {
+                    stage.querySelectorAll('.member').forEach(el => el.classList.remove('selected'));
+                    const targetCard = stage.querySelector(`.member[data-id="${personId}"]`);
+                    if (targetCard) targetCard.classList.add('selected');
+                    // Zoom automático suave hacia la persona seleccionada
+                    setTimeout(() => zoomToPersonInDynamicMap(personId, Math.max(mapZoom, 0.85)), 60);
                 }
-                visitedForHighlight.add(currentId); 
-
-                const currentPerson = familyData.get(currentId);
-                if (!currentPerson) {
-                    continue; 
-                }
-
-                const memberElement = document.querySelector(`.member[data-id="${currentPerson.id}"]`);
-                if (memberElement) {
-                    memberElement.classList.add('highlighted');
-                }
-
-                if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
-                    const spouse = familyData.get(currentPerson.spouseId);
-                    if (spouse && spouse.spouseId === currentPerson.id) { 
-                        const spouseElement = document.querySelector(`.member[data-id="${currentPerson.spouseId}"]`);
-                        if (spouseElement) {
-                            spouseElement.classList.add('ancestor-spouse-highlight');
-                        }
-                        const nodeContentElement = memberElement ? memberElement.closest('.node-content') : null;
-                        if (nodeContentElement) {
-                            nodeContentElement.classList.add('highlighted-path');
-                        }
-                    }
-                }
-                
-                const liElement = memberElement ? memberElement.closest('li') : null;
-                if (liElement) {
-                    liElement.classList.add('highlighted-path');
-                }
-
-                const parentsOfCurrentPerson = Array.from(familyData.values())
-                    .filter(p => p.childrenIds && p.childrenIds.includes(currentId));
-
-                parentsOfCurrentPerson.forEach(parent => {
-                    if (!visitedForHighlight.has(parent.id) && familyData.has(parent.id)) {
-                        queue.push(parent.id);
-                    }
-                });
             }
 
+            if (currentViewMode === 'tree') {
+                document.querySelectorAll('.member').forEach(el => el.classList.remove('selected', 'highlighted', 'ancestor-spouse-highlight'));
+                document.querySelectorAll('.tree li').forEach(li => li.classList.remove('highlighted-path'));
+                document.querySelectorAll('.node-content').forEach(nc => nc.classList.remove('highlighted-path'));
 
+                const currentSelectedMemberElement = document.querySelector(`.tree .member[data-id="${personId}"]`);
+                if(currentSelectedMemberElement) {
+                    currentSelectedMemberElement.classList.add('selected');
+                }
+
+                let queue = [personId]; 
+                const visitedForHighlight = new Set(); 
+
+                while (queue.length > 0) {
+                    const currentId = queue.shift(); 
+                    if (visitedForHighlight.has(currentId)) continue; 
+                    visitedForHighlight.add(currentId); 
+
+                    const currentPerson = familyData.get(currentId);
+                    if (!currentPerson) continue; 
+
+                    const memberElement = document.querySelector(`.tree .member[data-id="${currentPerson.id}"]`);
+                    if (memberElement) {
+                        memberElement.classList.add('highlighted');
+                    }
+
+                    if (currentPerson.spouseId && familyData.has(currentPerson.spouseId)) {
+                        const spouse = familyData.get(currentPerson.spouseId);
+                        if (spouse && spouse.spouseId === currentPerson.id) { 
+                            const spouseElement = document.querySelector(`.tree .member[data-id="${currentPerson.spouseId}"]`);
+                            if (spouseElement) {
+                                spouseElement.classList.add('ancestor-spouse-highlight');
+                            }
+                            const nodeContentElement = memberElement ? memberElement.closest('.node-content') : null;
+                            if (nodeContentElement) {
+                                nodeContentElement.classList.add('highlighted-path');
+                            }
+                        }
+                    }
+                    
+                    const liElement = memberElement ? memberElement.closest('li') : null;
+                    if (liElement) {
+                        liElement.classList.add('highlighted-path');
+                    }
+
+                    const parentsOfCurrentPerson = Array.from(familyData.values())
+                        .filter(p => p.childrenIds && p.childrenIds.includes(currentId));
+
+                    parentsOfCurrentPerson.forEach(parent => {
+                        if (!visitedForHighlight.has(parent.id) && familyData.has(parent.id)) {
+                            queue.push(parent.id);
+                        }
+                    });
+                }
+            }
+
+            // Cálculos cronológicos
+            const isDeceased = isValidDateStr(person.dod);
             let age = '';
             let ageAtDeath = '';
-            let ageAtMarriage = ''; // Variable para la edad al matrimonio
+            let timeSinceDeath = '';
+            let ageAtMarriage = '';
 
-            if(person.dob){
-                try {
-                    const birthDate = new Date(person.dob);
-                    const endDate = person.dod && person.dod !== '0000-00-00' ? new Date(person.dod) : new Date();
-                    if(!isNaN(birthDate.getTime())){
-                        let ageDiff = endDate.getFullYear() - birthDate.getFullYear();
-                        const m = endDate.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && endDate.getDate() < birthDate.getDate())) {
-                            ageDiff--;
-                        }
-                        if(person.dod && person.dod !== '0000-00-00') {
-                            ageAtDeath = `(falleció a los ${ageDiff} años)`;
-                        } else if (ageDiff >= 0) { 
-                            age = `${ageDiff} años`;
-                        }
+            if (isValidDateStr(person.dob)) {
+                const ageDiff = calculateYearsBetween(person.dob, isDeceased ? person.dod : null);
+                if (ageDiff !== null) {
+                    if (isDeceased) {
+                        ageAtDeath = `(falleció a los ${ageDiff} años)`;
+                    } else {
+                        age = `${ageDiff} años`;
                     }
-                } catch(e) { console.error("Error calculating age", e); }
+                }
             }
 
-            // Lógica para edad al matrimonio
-            if (person.dob && person.dom && person.dob !== '0000-00-00' && person.dom !== '0000-00-00') {
-                try {
-                    const birthDate = new Date(person.dob);
-                    const marriageDate = new Date(person.dom);
-                    if (!isNaN(birthDate.getTime()) && !isNaN(marriageDate.getTime())) {
-                        let ageDiff = marriageDate.getFullYear() - birthDate.getFullYear();
-                        const m = marriageDate.getMonth() - birthDate.getMonth();
-                        if (m < 0 || (m === 0 && marriageDate.getDate() < birthDate.getDate())) {
-                            ageDiff--;
-                        }
-                        if (ageDiff >= 0) {
-                            ageAtMarriage = `(se casó a los ${ageDiff} años)`;
-                        }
-                    }
-                } catch(e) { console.error("Error calculating age at marriage", e); }
+            if (isDeceased) {
+                const yearsAgo = calculateYearsBetween(person.dod);
+                if (yearsAgo !== null) {
+                    timeSinceDeath = yearsAgo === 0 ? ' · este año' : ` · hace ${yearsAgo} año${yearsAgo !== 1 ? 's' : ''}`;
+                }
             }
-            
+
+            if (isValidDateStr(person.dob) && isValidDateStr(person.dom)) {
+                const marriageAge = calculateYearsBetween(person.dob, person.dom);
+                if (marriageAge !== null) {
+                    ageAtMarriage = `(se casó a los ${marriageAge} años)`;
+                }
+            }
+
             const formatDate = (dateString) => {
-                if (!dateString || dateString === '0000-00-00') return 'No disponible';
+                if (!isValidDateStr(dateString)) return 'No disponible';
                 try {
-                    const date = new Date(dateString);
-                    const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000); 
-                    if(isNaN(adjustedDate.getTime())) return 'Fecha inválida';
-                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                    return adjustedDate.toLocaleDateString('es-ES', options);
+                    const [y, m, d] = dateString.split('-').map(Number);
+                    const adjustedDate = new Date(y, m - 1, d);
+                    if (isNaN(adjustedDate.getTime())) return 'Fecha inválida';
+                    return adjustedDate.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
                 } catch(e) {
                     return 'Fecha inválida';
                 }
             };
 
-            // Texto personalizado según género para el primer hijo/a
+            // 1. Primer hijo/a (Madre/Padre por 1ª vez)
             const firstChildInfo = getFirstChildInfo(person);
             let firstChildDetailHtml = '';
             if (firstChildInfo) {
@@ -1568,29 +2279,108 @@
                     ? 'Madre por 1ª vez' 
                     : (person.gender === 'Masculino' ? 'Padre por 1ª vez' : '1er hijo/a');
                 const childLabel = firstChildInfo.childGender === 'Femenino' ? 'hija' : 'hijo';
-                
-                firstChildDetailHtml = `<p><strong>${roleText}:</strong> A los ${firstChildInfo.age} años (${firstChildInfo.childName}, ${childLabel})</p>`;
+                firstChildDetailHtml = `<p><strong>${roleText}:</strong> A los ${firstChildInfo.age} años (<span class="family-link" onclick="selectPersonFromDetails(${firstChildInfo.childId})">${firstChildInfo.childName}</span>, ${childLabel})</p>`;
             }
 
-           detailsContent.innerHTML = `
+            // 2. Edad de sus padres al nacer
+            const parentsAges = getParentsAgeAtBirth(person);
+            const parentsAgeHtml = parentsAges.length > 0
+                ? `<p><strong>Edad de padres al nacer:</strong> ${parentsAges.join(' · ')}</p>`
+                : '';
+
+            // 3. Posición entre hermanos
+            const siblingPos = getSiblingPosition(person);
+            const siblingPosHtml = siblingPos
+                ? `<p><strong>Posición familiar:</strong> ${siblingPos}</p>`
+                : '';
+
+            // 4. Descendencia total (Hijos, Nietos, Bisnietos, Tataranietos)
+            const descendantsSummary = getDescendantsSummary(person);
+            const descendantsHtml = descendantsSummary
+                ? `<p><strong>Descendencia:</strong> ${descendantsSummary}</p>`
+                : '';
+
+            // 5. Signo zodiacal y generación
+            const zodiacGen = getZodiacAndGeneration(person.dob);
+            const zodiacGenHtml = zodiacGen
+                ? `<p><strong>Perfil:</strong> ${zodiacGen}</p>`
+                : '';
+
+            // 6. Próximo cumpleaños
+            const nextBday = getDaysUntilBirthday(person.dob, person.dod);
+            const nextBdayHtml = nextBday
+                ? `<p class="text-indigo-600 font-medium text-sm bg-indigo-50 px-2 py-1 rounded">${nextBday}</p>`
+                : '';
+
+            // 7. Detalles de matrimonio (años casados / diferencia con cónyuge)
+            const marriageDetails = getMarriageDetails(person);
+            const marriageExtraHtml = marriageDetails.length > 0
+                ? `<p class="text-xs text-gray-600 ml-2">↳ ${marriageDetails.join(' · ')}</p>`
+                : '';
+
+            // 8. Enlaces rápidos a familiares directos (Padres, Cónyuge, Hijos)
+            let familyLinksHtml = '';
+            const parentsLinks = (person.parentIds || [])
+                .map(id => familyData.get(id))
+                .filter(Boolean)
+                .map(p => `<span class="family-link" onclick="selectPersonFromDetails(${p.id})">${getShortName(p.name)}</span>`);
+
+            const spouseObj = (person.spouseId && familyData.has(person.spouseId)) ? familyData.get(person.spouseId) : null;
+            const spouseLink = spouseObj
+                ? `<span class="family-link" onclick="selectPersonFromDetails(${spouseObj.id})">${getShortName(spouseObj.name)}</span>`
+                : '';
+
+            const childrenLinks = (person.childrenIds || [])
+                .map(id => familyData.get(id))
+                .filter(Boolean)
+                .sort((a, b) => (a.dob || '9999').localeCompare(b.dob || '9999'))
+                .map(c => `<span class="family-link" onclick="selectPersonFromDetails(${c.id})">${getShortName(c.name)}</span>`);
+
+            if (parentsLinks.length > 0 || spouseLink || childrenLinks.length > 0) {
+                familyLinksHtml = `
+                    <div class="mt-4 pt-3 border-t border-gray-200 text-left space-y-1.5 text-sm">
+                        <p class="font-bold text-gray-700 text-xs uppercase tracking-wider mb-1">Núcleo Familiar (Clic para ir)</p>
+                        ${parentsLinks.length > 0 ? `<p><strong>Padres:</strong> ${parentsLinks.join(', ')}</p>` : ''}
+                        ${spouseLink ? `<p><strong>Cónyuge:</strong> ${spouseLink}</p>` : ''}
+                        ${childrenLinks.length > 0 ? `<p><strong>Hijos/as:</strong> ${childrenLinks.join(', ')}</p>` : ''}
+                    </div>
+                `;
+            }
+
+            detailsContent.innerHTML = `
                 <img src="${person.photo || 'https://placehold.co/120x120/E2E8F0/333333?text=Foto'}" alt="Foto de ${person.name}" class="w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/120x120/E2E8F0/333333?text=Foto';">
                 <h3 class="text-xl font-bold">${person.name}</h3>
-                <p class="text-sm text-gray-500 mb-4">${person.relationship || ''}</p>
-                <div class="text-left space-y-2">
+                <p class="text-sm text-gray-500 mb-3">${person.relationship || ''}</p>
+                ${nextBdayHtml}
+                <div class="text-left space-y-2 mt-3 text-sm">
                     <p><strong>Género:</strong> ${person.gender || 'No disponible'}</p>
                     <p><strong>RUT:</strong> ${person.rut || 'No disponible'}</p>
                     <p><strong>Nacimiento:</strong> ${formatDate(person.dob)}</p>
                     ${age ? `<p><strong>Edad:</strong> ${age}</p>` : ''}
+                    ${zodiacGenHtml}
+                    ${siblingPosHtml}
+                    ${parentsAgeHtml}
                     ${firstChildDetailHtml}
+                    ${descendantsHtml}
                     <p><strong>Matrimonio:</strong> ${formatDate(person.dom)} ${ageAtMarriage}</p>
-                    <p><strong>Fallecimiento:</strong> ${formatDate(person.dod)} ${ageAtDeath}</p>
+                    ${marriageExtraHtml}
+                    <p><strong>Fallecimiento:</strong> ${formatDate(person.dod)} ${ageAtDeath}${timeSinceDeath}</p>
                 </div>
+                ${familyLinksHtml}
             `;
             editButtons.classList.remove('hidden');
-
             editPersonLink.href = `editar.php?id=${personId}`;
+
+            // Actualizar botón flotante móvil con el nombre corto de la persona activa
+            const openMobileBtn = document.getElementById('open-mobile-details-btn');
+            const mobileBtnLabel = document.getElementById('mobile-selected-name-btn');
+            if (openMobileBtn && mobileBtnLabel) {
+                mobileBtnLabel.textContent = getShortName(person.name);
+                openMobileBtn.classList.remove('hidden');
+            }
         }
 
+        // --- LÓGICA DE MODALES ---
         const modal = document.getElementById('person-modal');
         const form = document.getElementById('person-form');
         const cancelBtn = document.getElementById('cancel-btn');
@@ -1605,7 +2395,6 @@
         const linkExistingParentBtn = document.getElementById('link-existing-parent-btn');
         const addNewChildBtn = document.getElementById('add-new-child-btn'); 
         const linkExistingChildBtn = document.getElementById('link-existing-child-btn');
-
         const closeRelationshipsModalBtn = document.getElementById('close-relationships-modal-btn');
 
         const selectPersonModal = document.getElementById('select-person-modal');
@@ -1613,7 +2402,6 @@
         const personSearchInput = document.getElementById('person-search-input');
         const personListContainer = document.getElementById('person-list-container');
         const cancelSelectPersonBtn = document.getElementById('cancel-select-person-btn');
-
 
         function openPersonModal(mode, personId = null) {
             modalMode = mode; 
@@ -1740,7 +2528,7 @@
             relationshipsModal.classList.remove('hidden');
         }
 
-         function openSelectPersonModal(mode, currentPersonId) {
+        function openSelectPersonModal(mode, currentPersonId) {
             selectPersonMode = mode;
             personToLinkToId = currentPersonId; 
 
@@ -1864,7 +2652,6 @@
             }
         });
 
-        
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
@@ -1969,102 +2756,224 @@
                     event.stopPropagation();
                     const personId = parseInt(event.currentTarget.dataset.id);
                     showPersonDetails(personId);
+                    openMobileDetailsPanel();
                 });
             });
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
-            loadFamilyData();
-
-            const detailsHeader = document.getElementById('details-header');
-            const mainLayout = document.getElementById('main-layout');
-
-           if (detailsHeader && mainLayout) {
-                detailsHeader.addEventListener('click', () => {
-                    // Alterna la clase 'aside-collapsed' en el contenedor padre
-                    mainLayout.classList.toggle('aside-collapsed');
-                });
-            }
-        });
-// ----------------------------------------------------------------------
-        // FUNCIÓN DE EXPORTACIÓN DEL ÁRBOL
-        // ----------------------------------------------------------------------
         function exportTree(format) {
-            // El selector '.tree' apunta al contenedor flexible interno que realmente se estira
-            const treeElement = document.querySelector('.tree'); 
-            
-            if (!treeElement) {
-                alert("No se encontró el contenido del árbol para exportar.");
+            const targetElement = currentViewMode === 'tree'
+                ? document.querySelector('#family-tree-container .tree')
+                : (currentViewMode === 'dynamic'
+                    ? document.getElementById('dynamic-map-stage')
+                    : document.getElementById('grouped-view-container'));
+
+            if (!targetElement) {
+                alert("No se encontró contenido para exportar.");
                 return;
             }
 
-            // Muestra un mensaje de carga (opcional, pero útil)
-            // const originalHtml = treeElement.innerHTML;
-            // treeElement.innerHTML = '<div class="text-center p-10">Generando exportación... Por favor, espere.</div>';
-
-            // Opciones para la captura de alta resolución
             const options = {
-                scale: 3, // Factor de escala para alta resolución (3x)
+                scale: 2,
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#f0f2f5' // El color de fondo de tu cuerpo
+                backgroundColor: '#ffffff'
             };
 
-            html2canvas(treeElement, options).then(canvas => {
-                // treeElement.innerHTML = originalHtml; // Restaura el contenido (si se usó mensaje de carga)
-                
+            html2canvas(targetElement, options).then(canvas => {
+                const fileSuffix = currentViewMode === 'tree'
+                    ? (selectedPersonId || 'completo')
+                    : `agrupado_${currentViewMode}`;
+
                 if (format === 'png') {
-                    // Exportar como PNG
                     const imageURL = canvas.toDataURL('image/png');
                     const link = document.createElement('a');
                     link.href = imageURL;
-                    link.download = `arbol_genealogico_${selectedPersonId || 'completo'}.png`;
+                    link.download = `arbol_genealogico_${fileSuffix}.png`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-
                 } else if (format === 'pdf') {
-                    // Exportar como PDF (maneja árboles grandes/anchos)
                     const { jsPDF } = window.jspdf;
-                    const imgData = canvas.toDataURL('image/jpeg', 1.0); // Calidad JPEG para PDF
-                    
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
                     const canvasWidth = canvas.width;
                     const canvasHeight = canvas.height;
+                    const pdfWidth = 297;
+                    const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth;
                     
-                    // Tamaño de la página PDF (ajustado para ser ancho)
-                    const pdfWidth = 297; // Ancho A4 en mm (se rotará)
-                    const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth; // Calcula la altura proporcional
-                    
-                    // Inicializa jsPDF en formato apaisado (landscape)
                     const pdf = new jsPDF({
-                        orientation: canvasWidth > canvasHeight ? 'l' : 'p', // 'l' = landscape (horizontal)
+                        orientation: canvasWidth > canvasHeight ? 'l' : 'p',
                         unit: 'mm',
-                        format: [pdfWidth, pdfHeight] // Usa el tamaño calculado para evitar el escalado.
+                        format: [pdfWidth, pdfHeight]
                     });
 
-                    // Añade la imagen al PDF, cubriendo toda el área.
                     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-                    pdf.save(`arbol_genealogico_${selectedPersonId || 'completo'}.pdf`);
+                    pdf.save(`arbol_genealogico_${fileSuffix}.pdf`);
                 }
             });
         }
 
-        // ----------------------------------------------------------------------
-        // CONECTAR BOTONES AL EVENT LISTENER
-        // ----------------------------------------------------------------------
         document.addEventListener('DOMContentLoaded', () => {
-            // ... (Tu código existente para loadFamilyData, etc.) ...
-            
-            // Conectar botones de exportación
+            loadFamilyData();
+
+            // Conectar botones de reorganización / agrupación
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setViewMode(btn.dataset.view);
+                });
+            });
+
+            const detailsHeader = document.getElementById('details-header');
+            const mainLayout = document.getElementById('main-layout');
+            const asideContainer = document.getElementById('aside-container');
+            const closeMobileDetailsBtn = document.getElementById('close-mobile-details-btn');
+            const openMobileDetailsBtn = document.getElementById('open-mobile-details-btn');
+
+            if (detailsHeader && mainLayout) {
+                detailsHeader.addEventListener('click', () => {
+                    if (window.innerWidth >= 1024) {
+                        mainLayout.classList.toggle('aside-collapsed');
+                    }
+                });
+            }
+
+            if (closeMobileDetailsBtn) {
+                closeMobileDetailsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeMobileDetailsPanel();
+                });
+            }
+
+            if (asideContainer) {
+                asideContainer.addEventListener('click', (e) => {
+                    if (e.target === asideContainer && window.innerWidth < 1024) {
+                        closeMobileDetailsPanel();
+                    }
+                });
+            }
+
+            if (openMobileDetailsBtn) {
+                openMobileDetailsBtn.addEventListener('click', () => {
+                    openMobileDetailsPanel();
+                });
+            }
+
+            // Cerrar panel móvil automáticamente si se abre alguno de los modales de edición/relaciones
+            ['add-descendant-btn', 'add-ancestor-btn', 'manage-relationships-btn'].forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.addEventListener('click', () => closeMobileDetailsPanel());
+                }
+            });
+
+
+            // Botón flotante de volver arriba / filtros
+            const backToTopBtn = document.getElementById('back-to-top-btn');
+            const filtersBar = document.getElementById('view-filters-bar');
+
+            if (backToTopBtn) {
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 250) {
+                        backToTopBtn.classList.remove('hidden');
+                    } else {
+                        backToTopBtn.classList.add('hidden');
+                    }
+                });
+
+                backToTopBtn.addEventListener('click', () => {
+                    if (filtersBar) {
+                        filtersBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+            }
+
+
+            // Controles de interacción del Mapa Dinámico (Zoom y Arrastre)
+            const mapWrapper = document.getElementById('dynamic-map-wrapper');
+            const mapStage = document.getElementById('dynamic-map-stage');
+            const zoomInBtn = document.getElementById('zoom-in-btn');
+            const zoomOutBtn = document.getElementById('zoom-out-btn');
+            const zoomFitBtn = document.getElementById('zoom-fit-btn');
+            const zoomFocusBtn = document.getElementById('zoom-focus-btn');
+
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    mapZoom = Math.min(2, mapZoom * 1.25);
+                    applyMapTransform();
+                });
+            }
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    mapZoom = Math.max(0.08, mapZoom / 1.25);
+                    applyMapTransform();
+                });
+            }
+            if (zoomFitBtn) {
+                zoomFitBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    fitDynamicMapToScreen();
+                });
+            }
+            if (zoomFocusBtn) {
+                zoomFocusBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (selectedPersonId) zoomToPersonInDynamicMap(selectedPersonId, 0.95);
+                });
+            }
+
+            if (mapWrapper && mapStage) {
+                let isDragging = false;
+                let startX = 0;
+                let startY = 0;
+
+                mapWrapper.addEventListener('wheel', (e) => {
+                    if (currentViewMode !== 'dynamic') return;
+                    e.preventDefault();
+                    const rect = mapWrapper.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    const prevZoom = mapZoom;
+                    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+                    mapZoom = Math.max(0.08, Math.min(2, mapZoom * factor));
+
+                    // Zoom centrado en la posición del cursor
+                    mapPanX = mouseX - (mouseX - mapPanX) * (mapZoom / prevZoom);
+                    mapPanY = mouseY - (mouseY - mapPanY) * (mapZoom / prevZoom);
+                    applyMapTransform();
+                }, { passive: false });
+
+                mapWrapper.addEventListener('pointerdown', (e) => {
+                    if (e.target.closest('button') || e.target.closest('.member')) return;
+                    isDragging = true;
+                    startX = e.clientX - mapPanX;
+                    startY = e.clientY - mapPanY;
+                    mapStage.classList.add('dragging');
+                });
+
+                window.addEventListener('pointermove', (e) => {
+                    if (!isDragging) return;
+                    mapPanX = e.clientX - startX;
+                    mapPanY = e.clientY - startY;
+                    applyMapTransform();
+                });
+
+                window.addEventListener('pointerup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        mapStage.classList.remove('dragging');
+                    }
+                });
+            }
+
             const exportPngBtn = document.getElementById('export-tree-png');
             const exportPdfBtn = document.getElementById('export-tree-pdf');
-
-            if (exportPngBtn) {
-                exportPngBtn.addEventListener('click', () => exportTree('png'));
-            }
-            if (exportPdfBtn) {
-                exportPdfBtn.addEventListener('click', () => exportTree('pdf'));
-            }
+            if (exportPngBtn) exportPngBtn.addEventListener('click', () => exportTree('png'));
+            if (exportPdfBtn) exportPdfBtn.addEventListener('click', () => exportTree('pdf'));
         });
     </script>
 </body>

@@ -1353,6 +1353,45 @@
                     return `Descendiente (${d}ª gen.)`;
                 }
 
+                // Descendientes del cónyuge (Hijastro/a, Nieto/a Político/a, Bisnieto/a Político/a, etc.)
+                if (centralPerson.spouseId && familyData.has(centralPerson.spouseId)) {
+                    const refSpouse = familyData.get(centralPerson.spouseId);
+                    if (refSpouse) {
+                        const spouseDescMap = getDescendantsWithDistance(refSpouse.id);
+                        if (spouseDescMap.has(targetId) && !descMap.has(targetId)) {
+                            const d = spouseDescMap.get(targetId);
+                            if (d === 1) return isMale ? 'Hijastro' : (isFemale ? 'Hijastra' : 'Hijastro/a');
+                            if (d === 2) return isMale ? 'Nieto Político' : (isFemale ? 'Nieta Política' : 'Nieto/a Político/a');
+                            if (d === 3) return isMale ? 'Bisnieto Político' : (isFemale ? 'Bisnieta Política' : 'Bisnieto/a Político/a');
+                            if (d === 4) return isMale ? 'Tataranieto Político' : (isFemale ? 'Tataranieta Política' : 'Tataranieto/a Político/a');
+                            return `Descendiente Político (${d}ª gen.)`;
+                        }
+                    }
+                }
+
+                // Yerno / Nuera (cónyuge de un hijo/a propio o del cónyuge)
+                const allUnitChildrenIds = new Set(centralPerson.childrenIds || []);
+                if (centralPerson.spouseId && familyData.has(centralPerson.spouseId)) {
+                    const refSpouse = familyData.get(centralPerson.spouseId);
+                    if (refSpouse && Array.isArray(refSpouse.childrenIds)) {
+                        refSpouse.childrenIds.forEach(cid => allUnitChildrenIds.add(cid));
+                    }
+                }
+                for (const childId of allUnitChildrenIds) {
+                    const child = familyData.get(childId);
+                    if (child && (child.spouseId === targetId || target.spouseId === child.id)) {
+                        return isMale ? 'Yerno' : (isFemale ? 'Nuera' : 'Yerno/Nuera');
+                    }
+                }
+
+                // Nieto/a Político/a, Bisnieto/a Político/a, Tataranieto/a Político/a
+                if (target.spouseId && familyData.has(target.spouseId)) {
+                    const distSpouse = descMap.get(target.spouseId);
+                    if (distSpouse === 2) return isMale ? 'Nieto Político' : (isFemale ? 'Nieta Política' : 'Nieto/a Político/a');
+                    if (distSpouse === 3) return isMale ? 'Bisnieto Político' : (isFemale ? 'Bisnieta Política' : 'Bisnieto/a Político/a');
+                    if (distSpouse === 4) return isMale ? 'Tataranieto Político' : (isFemale ? 'Tataranieta Política' : 'Tataranieto/a Político/a');
+                }
+
                 return target.relationship || 'Familiar';
             };
 

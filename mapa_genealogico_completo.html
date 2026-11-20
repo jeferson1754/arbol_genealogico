@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Genealógico Unificado — D3.js + Dagre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; overflow: hidden; }
+        #svg-canvas {
+            width: 100%;
+            height: 100%;
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 22px 22px;
+            cursor: grab;
+        }
+        #svg-canvas:active { cursor: grabbing; }
+        .link-marriage {
+            fill: none;
+            stroke: #f472b6;
+            stroke-width: 2px;
+            stroke-dasharray: 4 3;
+            opacity: 0.8;
+            transition: opacity 0.2s, stroke 0.2s, stroke-width 0.2s;
+        }
+        .link-descent {
+            fill: none;
+            stroke: #94a3b8;
+            stroke-width: 2px;
+            opacity: 0.8;
+            transition: opacity 0.2s, stroke 0.2s, stroke-width 0.2s;
+        }
+        .link-dimmed { opacity: 0.12 !important; }
+        .link-highlighted {
+            stroke: #10b981 !important;
+            stroke-width: 3.5px !important;
+            opacity: 1 !important;
+            stroke-dasharray: none !important;
+        }
+        .person-node { cursor: pointer; transition: opacity 0.2s; }
+        .person-node.dimmed { opacity: 0.18; }
+        .link-path-highlight {
+            stroke: #f59e0b !important;
+            stroke-width: 4.5px !important;
+            opacity: 1 !important;
+            stroke-dasharray: none !important;
+        }
+        .person-node.path-card rect.card-bg {
+            stroke: #f59e0b !important;
+            stroke-width: 3.5px !important;
+            filter: drop-shadow(0 6px 14px rgba(245, 158, 11, 0.35));
+        }
+        .person-node.selected-card rect.card-bg {
+            stroke: #10b981 !important;
+            stroke-width: 3.5px !important;
+            filter: drop-shadow(0 6px 12px rgba(16, 185, 129, 0.25));
+        }
+        .union-node { transition: opacity 0.2s; }
+        .union-node.dimmed { opacity: 0.18; }
+    </style>
+</head>
+<body class="h-screen flex flex-col text-gray-800">
+
+    <!-- Barra superior -->
+    <header class="bg-white border-b border-gray-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-sm z-20">
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg text-sm transition">
+                ← Volver al Árbol
+            </a>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <span>🧬 Mapa Genealógico Unificado</span>
+                    <span class="hidden sm:inline-block text-xs font-semibold bg-gradient-to-r from-indigo-100 to-emerald-100 text-indigo-800 px-2.5 py-0.5 rounded-full">
+                        D3.js SVG + Motor Dagre
+                    </span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Buscador instantáneo -->
+            <div class="relative">
+                <input type="text" id="search-person" placeholder="Buscar familiar..." class="bg-gray-100 border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-44 md:w-64 focus:outline-none focus:border-indigo-500">
+                <div id="search-results" class="hidden absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50"></div>
+            </div>
+
+            <!-- Controles de vista y exportación -->
+            <button id="btn-open-rel-modal" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition shadow-sm">
+                🔗 Relación entre 2 Personas
+            </button>
+            <button id="btn-fit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
+                ⛶ Ajustar Todo
+            </button>
+            <button id="btn-clear-highlight" class="hidden bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-sm font-semibold px-3 py-1.5 rounded-lg transition">
+                ✕ Mostrar Todos
+            </button>
+            <button id="btn-export-png" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
+                📷 PNG
+            </button>
+            <button id="btn-export-pdf" class="bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
+                📄 PDF
+            </button>
+            <span id="stats-badge" class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">Cargando...</span>
+        </div>
+    </header>
+
+    <!-- Lienzo principal + Panel Lateral -->
+    <div class="flex-1 flex relative overflow-hidden">
+        <div class="flex-1 relative">
+            <svg id="svg-canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+
+            <!-- Controles de zoom flotantes -->
+            <div class="absolute bottom-5 left-5 bg-white/95 backdrop-blur border border-gray-200 shadow-md rounded-xl p-1.5 flex items-center gap-1.5 z-10">
+                <button id="zoom-out" title="Alejar" class="w-8 h-8 rounded-lg hover:bg-gray-100 font-bold text-lg text-gray-700">−</button>
+                <span id="zoom-label" class="text-xs font-semibold text-gray-600 px-2 min-w-[48px] text-center">100%</span>
+                <button id="zoom-in" title="Acercar" class="w-8 h-8 rounded-lg hover:bg-gray-100 font-bold text-lg text-gray-700">+</button>
+                <div class="w-px h-5 bg-gray-200 mx-0.5"></div>
+                <button id="zoom-center-selected" title="Centrar persona seleccionada" class="hidden px-2.5 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs">
+                    🎯 Centrar
+                </button>
+            </div>
+
+            <!-- Leyenda -->
+            <div class="hidden md:flex absolute top-4 left-4 bg-white/90 backdrop-blur border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 items-center gap-4 shadow-sm pointer-events-none">
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm border-2 border-blue-500 bg-blue-50 inline-block"></span> Hombre</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm border-2 border-pink-500 bg-pink-50 inline-block"></span> Mujer</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full border-2 border-pink-500 bg-pink-100 inline-block"></span> Matrimonio / Unión</span>
+                <span class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-emerald-500 inline-block"></span> Linaje directo</span>
+            </div>
+        </div>
+
+        <!-- Panel lateral de ficha completa -->
+        <aside id="side-panel" class="fixed md:static inset-x-0 bottom-0 md:inset-auto max-h-[82vh] md:max-h-none w-full md:w-96 bg-white border-t md:border-t-0 md:border-l border-gray-200 rounded-t-2xl md:rounded-none p-5 overflow-y-auto shadow-2xl md:shadow-lg hidden z-30">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="font-bold text-lg text-gray-800">Ficha Familiar</h2>
+                <button id="close-panel" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold">✕</button>
+            </div>
+            <div id="panel-body"></div>
+        </aside>
+    </div>
+
+
+    <!-- Modal: Calculadora de Parentesco entre 2 Personas -->
+    <div id="relationship-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold">🔗 Buscador de Parentesco Familiar</h2>
+                    <p class="text-xs text-emerald-100">Selecciona dos personas del árbol para descubrir cómo están conectadas</p>
+                </div>
+                <button id="close-rel-modal" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold flex items-center justify-center">✕</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Persona A -->
+                    <div class="relative">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Persona 1 (Origen)</label>
+                        <input type="text" id="rel-input-a" placeholder="Escribe nombre..." autocomplete="off"
+                            class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-emerald-500">
+                        <input type="hidden" id="rel-id-a">
+                        <div id="rel-dropdown-a" class="hidden absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-50"></div>
+                    </div>
+
+                    <!-- Persona B -->
+                    <div class="relative">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Persona 2 (Destino)</label>
+                        <input type="text" id="rel-input-b" placeholder="Escribe nombre..." autocomplete="off"
+                            class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-emerald-500">
+                        <input type="hidden" id="rel-id-b">
+                        <div id="rel-dropdown-b" class="hidden absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-50"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <button type="button" id="btn-swap-persons" class="text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition">
+                        ⇄ Invertir orden
+                    </button>
+                    <button type="button" id="btn-calculate-rel" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-xl text-sm shadow transition">
+                        🔍 Analizar Relación
+                    </button>
+                </div>
+
+                <!-- Resultado -->
+                <div id="rel-result-box" class="hidden border-t pt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'api.php';
+        let peopleMap = new Map();
+        let svg, gMain, zoomBehavior;
+        let currentTransform = d3.zoomIdentity;
+        let nodePositions = new Map();
+        let selectedPersonId = null;
+
+        const getShortName = (fullName) => {
+            if (!fullName) return '';
+            const parts = fullName.trim().split(/\s+/);
+            if (parts.length <= 2) return parts.join(' ');
+            return `${parts[0]} ${parts[parts.length - 2]}`;
+        };
+
+        const getInitials = (fullName) => {
+            if (!fullName) return '?';
+            const parts = fullName.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0][0].toUpperCase();
+            return (parts[0][0] + parts[parts.length - 2][0]).toUpperCase();
+        };
+
+        const isValidDate = (d) => Boolean(d && d !== '0000-00-00');
+
+        function calcYears(startStr, endStr = null) {
+            if (!isValidDate(startStr)) return null;
+            const [sy, sm, sd] = startStr.split('-').map(Number);
+            let ey, em, ed;
+            if (endStr && isValidDate(endStr)) {
+                [ey, em, ed] = endStr.split('-').map(Number);
+            } else {
+                const now = new Date();
+                ey = now.getFullYear(); em = now.getMonth() + 1; ed = now.getDate();
+            }
+            let age = ey - sy;
+            if (em < sm || (em === sm && ed < sd)) age--;
+            return age >= 0 ? age : null;
+        }
+
+        function isBirthdayToday(dobStr) {
+            if (!isValidDate(dobStr)) return false;
+            try {
+                const [, m, d] = dobStr.split('-').map(Number);
+                const now = new Date();
+                const parts = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', month: 'numeric', day: 'numeric' }).formatToParts(now);
+                const curM = parseInt(parts.find(x => x.type === 'month').value, 10);
+                const curD = parseInt(parts.find(x => x.type === 'day').value, 10);
+                return m === curM && d === curD;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function init() {
+            try {
+                const res = await fetch(API_URL);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const rawData = await res.json();
+
+                rawData.forEach(p => {
+                    p.id = parseInt(p.id);
+                    p.spouseId = p.spouse_id !== null ? parseInt(p.spouse_id) : null;
+                    p.childrenIds = Array.isArray(p.children_ids) ? p.children_ids.map(Number) : [];
+                    p.parentIds = Array.isArray(p.parent_ids) ? p.parent_ids.map(Number) : [];
+                    peopleMap.set(p.id, p);
+                });
+
+                // Normalizar bidireccionalidad en memoria (padres <-> hijos y cónyuges) para no perder ninguna ruta
+                peopleMap.forEach(p => {
+                    p.parentIds.forEach(pid => {
+                        const parent = peopleMap.get(pid);
+                        if (parent && !parent.childrenIds.includes(p.id)) {
+                            parent.childrenIds.push(p.id);
+                        }
+                    });
+                    p.childrenIds.forEach(cid => {
+                        const child = peopleMap.get(cid);
+                        if (child && !child.parentIds.includes(p.id)) {
+                            child.parentIds.push(p.id);
+                        }
+                    });
+                    if (p.spouseId && peopleMap.has(p.spouseId)) {
+                        const sp = peopleMap.get(p.spouseId);
+                        if (!sp.spouseId) sp.spouseId = p.id;
+                    }
+                });
+
+                document.getElementById('stats-badge').textContent = `${peopleMap.size} personas conectadas`;
+                buildHybridGraph();
+                setupSearch();
+                setupRelationshipCalculator();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const idParam = urlParams.get('id') || urlParams.get('personId');
+                if (idParam && peopleMap.has(parseInt(idParam, 10))) {
+                    selectPerson(parseInt(idParam, 10));
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('stats-badge').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        function removeCycles(nodes, links) {
+            const adj = new Map();
+            nodes.forEach(n => adj.set(n.id, []));
+            const clean = [];
+            const hasPath = (src, dst, visited = new Set()) => {
+                if (src === dst) return true;
+                visited.add(src);
+                for (const nxt of (adj.get(src) || [])) {
+                    if (!visited.has(nxt) && hasPath(nxt, dst, visited)) return true;
+                }
+                return false;
+            };
+            for (const l of links) {
+                if (!hasPath(l.target, l.source)) {
+                    adj.get(l.source).push(l.target);
+                    clean.push(l);
+                }
+            }
+            return clean;
+        }
+
+        function buildHybridGraph() {
+            const nodesData = [];
+            const linksData = [];
+            const unionMap = new Map();
+
+            // 1. Nodos de personas (dimensiones para tarjetas enriquecidas con avatar)
+            peopleMap.forEach(p => {
+                nodesData.push({
+                    id: `P_${p.id}`,
+                    type: 'person',
+                    person: p,
+                    width: 196,
+                    height: 68
+                });
+            });
+
+            // 2. Nodos de unión familiar (matrimonios / parejas)
+            const getOrCreateUnion = (parentIds) => {
+                const validParents = parentIds.filter(id => peopleMap.has(id)).sort((a, b) => a - b);
+                if (validParents.length === 0) return null;
+                const key = validParents.join('_');
+                if (!unionMap.has(key)) {
+                    const uId = `U_${key}`;
+                    unionMap.set(key, uId);
+                    nodesData.push({
+                        id: uId,
+                        type: 'union',
+                        parents: validParents,
+                        width: 24,
+                        height: 24
+                    });
+                    validParents.forEach(pid => {
+                        linksData.push({ source: `P_${pid}`, target: uId, kind: 'marriage' });
+                    });
+                }
+                return unionMap.get(key);
+            };
+
+            peopleMap.forEach(p => {
+                if (p.spouseId && peopleMap.has(p.spouseId) && p.id < p.spouseId) {
+                    getOrCreateUnion([p.id, p.spouseId]);
+                }
+            });
+
+            peopleMap.forEach(child => {
+                if (child.parentIds && child.parentIds.length > 0) {
+                    const uId = getOrCreateUnion(child.parentIds);
+                    if (uId) {
+                        linksData.push({ source: uId, target: `P_${child.id}`, kind: 'descent' });
+                    }
+                }
+            });
+
+            const safeLinks = removeCycles(nodesData, linksData);
+
+            // 3. Cálculo matemático de coordenadas con Dagre
+            const g = new dagre.graphlib.Graph();
+            g.setGraph({
+                rankdir: 'TB',
+                ranksep: 90,
+                nodesep: 32,
+                edgesep: 15,
+                ranker: 'network-simplex'
+            });
+            g.setDefaultEdgeLabel(() => ({}));
+
+            nodesData.forEach(n => {
+                g.setNode(n.id, { width: n.width, height: n.height, meta: n });
+            });
+            safeLinks.forEach(l => {
+                g.setEdge(l.source, l.target, { kind: l.kind });
+            });
+
+            dagre.layout(g);
+
+            // 4. Renderizado SVG vectorial de alta nitidez con D3.js
+            svg = d3.select('#svg-canvas');
+            svg.selectAll('*').remove();
+
+            // Definiciones SVG (clipPath circular para avatares)
+            const defs = svg.append('defs');
+            defs.append('clipPath')
+                .attr('id', 'avatar-clip')
+                .append('circle')
+                .attr('cx', -66)
+                .attr('cy', 0)
+                .attr('r', 20);
+
+            zoomBehavior = d3.zoom()
+                .scaleExtent([0.05, 2.5])
+                .on('zoom', (event) => {
+                    currentTransform = event.transform;
+                    gMain.attr('transform', currentTransform);
+                    document.getElementById('zoom-label').textContent = `${Math.round(currentTransform.k * 100)}%`;
+                });
+
+            svg.call(zoomBehavior);
+            svg.on('click', () => clearHighlight());
+
+            gMain = svg.append('g');
+
+            // Aristas curvas suaves (d3.curveBasis)
+            const lineGen = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveBasis);
+
+            const edgesArray = g.edges().map(e => {
+                const edgeObj = g.edge(e);
+                return {
+                    source: e.v,
+                    target: e.w,
+                    kind: edgeObj.kind,
+                    points: edgeObj.points
+                };
+            });
+
+            gMain.append('g')
+                .attr('class', 'links-layer')
+                .selectAll('path')
+                .data(edgesArray)
+                .enter()
+                .append('path')
+                .attr('d', d => lineGen(d.points))
+                .attr('class', d => d.kind === 'marriage' ? 'link-marriage' : 'link-descent')
+                .attr('data-source', d => d.source)
+                .attr('data-target', d => d.target);
+
+            // Nodos
+            const positionedNodes = g.nodes().map(id => {
+                const n = g.node(id);
+                nodePositions.set(id, { x: n.x, y: n.y });
+                return { id, x: n.x, y: n.y, meta: n.meta };
+            });
+
+            const nodesGroup = gMain.append('g')
+                .attr('class', 'nodes-layer')
+                .selectAll('g')
+                .data(positionedNodes)
+                .enter()
+                .append('g')
+                .attr('transform', d => `translate(${d.x}, ${d.y})`);
+
+            nodesGroup.each(function(d) {
+                const meta = d.meta;
+                if (!meta) return;
+                const el = d3.select(this);
+
+                if (meta.type === 'union') {
+                    el.attr('class', 'union-node')
+                      .attr('data-union-id', d.id);
+
+                    el.append('circle')
+                      .attr('r', 10)
+                      .attr('fill', '#fce7f3')
+                      .attr('stroke', '#ec4899')
+                      .attr('stroke-width', 2);
+
+                    el.append('text')
+                      .attr('y', 3.5)
+                      .attr('text-anchor', 'middle')
+                      .attr('font-size', '10px')
+                      .attr('fill', '#db2777')
+                      .text('♥');
+                } else {
+                    const p = meta.person;
+                    const isMale = p.gender === 'Masculino';
+                    const isDeceased = isValidDate(p.dod);
+                    const isBday = isBirthdayToday(p.dob);
+                    const age = calcYears(p.dob, isDeceased ? p.dod : null);
+                    const birthYear = isValidDate(p.dob) ? p.dob.split('-')[0] : '';
+
+                    el.attr('class', 'person-node')
+                      .attr('data-person-id', p.id)
+                      .on('click', (event) => {
+                          event.stopPropagation();
+                          selectPerson(p.id);
+                      });
+
+                    // Fondo de tarjeta
+                    el.append('rect')
+                      .attr('class', 'card-bg')
+                      .attr('x', -98)
+                      .attr('y', -33)
+                      .attr('width', 196)
+                      .attr('height', 66)
+                      .attr('rx', 12)
+                      .attr('fill', isMale ? '#f0f7ff' : '#fdf2f8')
+                      .attr('stroke', isMale ? '#3b82f6' : '#ec4899')
+                      .attr('stroke-width', 2);
+
+                    // Círculo base del avatar con iniciales
+                    el.append('circle')
+                      .attr('cx', -66)
+                      .attr('cy', 0)
+                      .attr('r', 20)
+                      .attr('fill', isMale ? '#dbeafe' : '#fce7f3')
+                      .attr('stroke', isMale ? '#93c5fd' : '#f9a8d4')
+                      .attr('stroke-width', 1.5);
+
+                    el.append('text')
+                      .attr('x', -66)
+                      .attr('y', 4)
+                      .attr('text-anchor', 'middle')
+                      .attr('font-size', '12px')
+                      .attr('font-weight', '700')
+                      .attr('fill', isMale ? '#1d4ed8' : '#be185d')
+                      .text(getInitials(p.name));
+
+                    // Si tiene foto real, superponerla recortada en círculo
+                    if (p.photo && p.photo.trim() !== '') {
+                        el.append('image')
+                          .attr('href', p.photo)
+                          .attr('x', -86)
+                          .attr('y', -20)
+                          .attr('width', 40)
+                          .attr('height', 40)
+                          .attr('preserveAspectRatio', 'xMidYMid slice')
+                          .attr('clip-path', 'url(#avatar-clip)')
+                          .on('error', function() { d3.select(this).remove(); });
+                    }
+
+                    // Nombre corto (alineado a la izquierda junto al avatar)
+                    el.append('text')
+                      .attr('x', -38)
+                      .attr('y', -5)
+                      .attr('text-anchor', 'start')
+                      .attr('font-size', '12px')
+                      .attr('font-weight', '700')
+                      .attr('fill', '#1e293b')
+                      .text(getShortName(p.name));
+
+                    // Edad y año
+                    const sub = age !== null
+                        ? `${age} años (${birthYear})${isDeceased ? ' ✝' : ''}`
+                        : (isDeceased ? 'Fallecido/a ✝' : 'Sin fecha');
+
+                    el.append('text')
+                      .attr('x', -38)
+                      .attr('y', 13)
+                      .attr('text-anchor', 'start')
+                      .attr('font-size', '10px')
+                      .attr('fill', '#64748b')
+                      .text(sub);
+
+                    // Badge de fallecido en esquina superior izquierda
+                    if (isDeceased) {
+                        el.append('circle')
+                          .attr('cx', -94)
+                          .attr('cy', -30)
+                          .attr('r', 9)
+                          .attr('fill', '#4b5563');
+                        el.append('text')
+                          .attr('x', -94)
+                          .attr('y', -26.5)
+                          .attr('text-anchor', 'middle')
+                          .attr('font-size', '10px')
+                          .attr('fill', '#ffffff')
+                          .text('✝');
+                    }
+
+                    // Badge de cumpleaños hoy en esquina superior derecha
+                    if (isBday) {
+                        el.append('text')
+                          .attr('x', 92)
+                          .attr('y', -25)
+                          .attr('text-anchor', 'middle')
+                          .attr('font-size', '16px')
+                          .text('🎂');
+                    }
+                }
+            });
+
+            fitToScreen();
+        }
+
+        function fitToScreen() {
+            if (!gMain || !svg) return;
+            const bounds = gMain.node().getBBox();
+            const svgEl = svg.node();
+            const fullW = svgEl.clientWidth || window.innerWidth;
+            const fullH = svgEl.clientHeight || window.innerHeight;
+            if (!bounds.width || !bounds.height) return;
+
+            const scale = Math.max(0.05, Math.min(1, 0.92 / Math.max(bounds.width / fullW, bounds.height / fullH)));
+            const tx = (fullW - bounds.width * scale) / 2 - bounds.x * scale;
+            const ty = (fullH - bounds.height * scale) / 2 - bounds.y * scale;
+
+            svg.transition().duration(500).call(
+                zoomBehavior.transform,
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
+        }
+
+        function focusOnPerson(personId, scale = 1.05) {
+            const pos = nodePositions.get(`P_${personId}`);
+            if (!pos) return;
+            const svgEl = svg.node();
+            const fullW = svgEl.clientWidth || window.innerWidth;
+            const fullH = svgEl.clientHeight || window.innerHeight;
+            const tx = fullW / 2 - pos.x * scale;
+            const ty = fullH / 2 - pos.y * scale;
+
+            svg.transition().duration(500).call(
+                zoomBehavior.transform,
+                d3.zoomIdentity.translate(tx, ty).scale(scale)
+            );
+        }
+
+        function getLineageSet(personId) {
+            const relatedPeople = new Set([personId]);
+            const p = peopleMap.get(personId);
+            if (p && p.spouseId && peopleMap.has(p.spouseId)) {
+                relatedPeople.add(p.spouseId);
+            }
+
+            const qUp = [personId];
+            while (qUp.length) {
+                const curr = peopleMap.get(qUp.shift());
+                if (!curr) continue;
+                curr.parentIds.forEach(pid => {
+                    if (!relatedPeople.has(pid) && peopleMap.has(pid)) {
+                        relatedPeople.add(pid);
+                        qUp.push(pid);
+                    }
+                });
+            }
+
+            const qDown = [personId];
+            while (qDown.length) {
+                const curr = peopleMap.get(qDown.shift());
+                if (!curr) continue;
+                curr.childrenIds.forEach(cid => {
+                    if (!relatedPeople.has(cid) && peopleMap.has(cid)) {
+                        relatedPeople.add(cid);
+                        qDown.push(cid);
+                    }
+                });
+            }
+            return relatedPeople;
+        }
+
+        function selectPerson(personId) {
+            const p = peopleMap.get(personId);
+            if (!p) return;
+            selectedPersonId = personId;
+
+            const lineage = getLineageSet(personId);
+            document.getElementById('btn-clear-highlight').classList.remove('hidden');
+            document.getElementById('zoom-center-selected').classList.remove('hidden');
+
+            d3.selectAll('.person-node')
+                .classed('dimmed', d => !lineage.has(parseInt(d.id.replace('P_', ''), 10)))
+                .classed('selected-card', d => parseInt(d.id.replace('P_', ''), 10) === personId);
+
+            const activeUnions = new Set();
+            d3.selectAll('.links-layer path').each(function() {
+                const src = this.getAttribute('data-source');
+                const dst = this.getAttribute('data-target');
+                const srcId = src.startsWith('P_') ? parseInt(src.slice(2), 10) : null;
+                const dstId = dst.startsWith('P_') ? parseInt(dst.slice(2), 10) : null;
+                const isLit = (srcId && lineage.has(srcId)) || (dstId && lineage.has(dstId));
+
+                d3.select(this)
+                    .classed('link-highlighted', isLit)
+                    .classed('link-dimmed', !isLit);
+
+                if (isLit) {
+                    if (src.startsWith('U_')) activeUnions.add(src);
+                    if (dst.startsWith('U_')) activeUnions.add(dst);
+                }
+            });
+
+            d3.selectAll('.union-node').classed('dimmed', d => !activeUnions.has(d.id));
+
+            focusOnPerson(personId, Math.max(currentTransform.k, 0.95));
+            renderSidePanel(p);
+        }
+
+        function clearHighlight() {
+            d3.selectAll('.person-node').classed('dimmed selected-card path-card', false);
+            d3.selectAll('.union-node').classed('dimmed', false);
+            d3.selectAll('.links-layer path').classed('link-highlighted link-path-highlight link-dimmed', false);
+            document.getElementById('btn-clear-highlight').classList.add('hidden');
+        }
+
+        function renderSidePanel(p) {
+            const panel = document.getElementById('side-panel');
+            const body = document.getElementById('panel-body');
+            panel.classList.remove('hidden');
+
+            const defaultPhoto = 'https://placehold.co/100x100/E2E8F0/333333?text=Foto';
+            const isDeceased = isValidDate(p.dod);
+            const age = calcYears(p.dob, isDeceased ? p.dod : null);
+
+            // Edad al primer hijo/a
+            let firstChildHtml = '';
+            const validChildren = p.childrenIds.map(id => peopleMap.get(id)).filter(c => c && isValidDate(c.dob));
+            if (isValidDate(p.dob) && validChildren.length > 0) {
+                validChildren.sort((a, b) => a.dob.localeCompare(b.dob));
+                const firstC = validChildren[0];
+                const ageFirst = calcYears(p.dob, firstC.dob);
+                if (ageFirst !== null) {
+                    const role = p.gender === 'Femenino' ? 'Madre por 1ª vez' : 'Padre por 1ª vez';
+                    firstChildHtml = `<p><strong>${role}:</strong> A los ${ageFirst} años (<button onclick="selectPerson(${firstC.id})" class="text-indigo-600 hover:underline font-medium">${getShortName(firstC.name)}</button>)</p>`;
+                }
+            }
+
+            const parentsHtml = p.parentIds.map(id => peopleMap.get(id)).filter(Boolean)
+                .map(x => `<button onclick="selectPerson(${x.id})" class="text-indigo-600 hover:underline font-medium">${getShortName(x.name)}</button>`).join(', ') || 'No registrados';
+
+            const spouseObj = p.spouseId ? peopleMap.get(p.spouseId) : null;
+            const spouseHtml = spouseObj
+                ? `<button onclick="selectPerson(${spouseObj.id})" class="text-indigo-600 hover:underline font-medium">${getShortName(spouseObj.name)}</button>`
+                : 'No registrado';
+
+            const childrenHtml = p.childrenIds.map(id => peopleMap.get(id)).filter(Boolean)
+                .sort((a, b) => (a.dob || '9999').localeCompare(b.dob || '9999'))
+                .map(x => `<button onclick="selectPerson(${x.id})" class="text-indigo-600 hover:underline font-medium">${getShortName(x.name)}</button>`).join(', ') || 'Sin hijos registrados';
+
+            body.innerHTML = `
+                <div class="text-center mb-4">
+                    <img src="${p.photo || defaultPhoto}" onerror="this.src='${defaultPhoto}'" class="w-24 h-24 rounded-full mx-auto object-cover border-4 border-gray-100 shadow mb-3">
+                    <h3 class="text-lg font-bold text-gray-800">${p.name}</h3>
+                    <span class="inline-block mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full ${p.gender === 'Masculino' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}">
+                        ${p.gender || 'No especificado'}
+                    </span>
+                </div>
+                <div class="space-y-2 text-sm text-gray-700 border-t pt-3">
+                    <p><strong>RUT:</strong> ${p.rut || 'No disponible'}</p>
+                    <p><strong>Nacimiento:</strong> ${isValidDate(p.dob) ? p.dob : 'No disponible'}</p>
+                    ${age !== null ? `<p><strong>Edad:</strong> ${age} años ${isDeceased ? '(fallecido/a)' : ''}</p>` : ''}
+                    ${firstChildHtml}
+                    ${isValidDate(p.dom) ? `<p><strong>Matrimonio:</strong> ${p.dom}</p>` : ''}
+                    ${isDeceased ? `<p><strong>Fallecimiento:</strong> ${p.dod}</p>` : ''}
+                    <p><strong>Padres:</strong> ${parentsHtml}</p>
+                    <p><strong>Cónyuge:</strong> ${spouseHtml}</p>
+                    <p><strong>Hijos/as:</strong> ${childrenHtml}</p>
+                </div>
+                <div class="mt-5 pt-4 border-t flex flex-col gap-2">
+                    <a href="index.html?id=${p.id}" class="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                        🌳 Abrir en Árbol Individual
+                    </a>
+                    <a href="editar.php?id=${p.id}" class="w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                        ✏️ Editar Datos
+                    </a>
+                </div>
+            `;
+        }
+
+
+        // --- MOTOR DE CÁLCULO DE RELACIÓN ENTRE DOS PERSONAS CUALESQUIERA ---
+        function getOrdinalEs(n) {
+            const list = ["", "Segundo", "Tercer", "Cuarto", "Quinto", "Sexto", "Séptimo", "Octavo", "Noveno", "Décimo"];
+            return (n >= 1 && n <= list.length) ? list[n - 1] : `${n}º`;
+        }
+
+        function getAncestorsDist(personId) {
+            const map = new Map();
+            const q = [{ id: personId, d: 0 }];
+            while (q.length) {
+                const { id, d } = q.shift();
+                if (map.has(id) && map.get(id) <= d) continue;
+                map.set(id, d);
+                const p = peopleMap.get(id);
+                if (p) {
+                    p.parentIds.forEach(pid => {
+                        if (peopleMap.has(pid)) q.push({ id: pid, d: d + 1 });
+                    });
+                }
+            }
+            return map;
+        }
+
+        function describeDirectRelation(personBId, refAId, depth = 0) {
+            if (depth > 2) return null; // Evita cualquier bucle infinito entre cónyuges
+            if (personBId === refAId) return 'La misma persona';
+            const b = peopleMap.get(personBId);
+            const a = peopleMap.get(refAId);
+            if (!b || !a) return null;
+
+            const isM = b.gender === 'Masculino';
+            const isF = b.gender === 'Femenino';
+
+            if (a.spouseId === personBId || b.spouseId === refAId) {
+                return isM ? 'Esposo / Cónyuge' : (isF ? 'Esposa / Cónyuge' : 'Cónyuge');
+            }
+
+            const ancA = getAncestorsDist(refAId);
+            const ancB = getAncestorsDist(personBId);
+
+            // Línea recta ascendente (B es ancestro de A)
+            if (ancA.has(personBId)) {
+                const d = ancA.get(personBId);
+                if (d === 1) return isM ? 'Padre' : (isF ? 'Madre' : 'Progenitor/a');
+                if (d === 2) return isM ? 'Abuelo' : (isF ? 'Abuela' : 'Abuelo/a');
+                if (d === 3) return isM ? 'Bisabuelo' : (isF ? 'Bisabuela' : 'Bisabuelo/a');
+                if (d === 4) return isM ? 'Tatarabuelo' : (isF ? 'Tatarabuela' : 'Tatarabuelo/a');
+                if (d === 5) return isM ? 'Trastatarabuelo' : (isF ? 'Trastatarabuela' : 'Trastatarabuelo/a');
+                return isM ? `Ancestro (${d}ª gen.)` : (isF ? `Ancestra (${d}ª gen.)` : `Ancestro/a (${d}ª gen.)`);
+            }
+
+            // Línea recta descendente (B es descendiente de A)
+            if (ancB.has(refAId)) {
+                const d = ancB.get(refAId);
+                if (d === 1) return isM ? 'Hijo' : (isF ? 'Hija' : 'Hijo/a');
+                if (d === 2) return isM ? 'Nieto' : (isF ? 'Nieta' : 'Nieto/a');
+                if (d === 3) return isM ? 'Bisnieto' : (isF ? 'Bisnieta' : 'Bisnieto/a');
+                if (d === 4) return isM ? 'Tataranieto' : (isF ? 'Tataranieta' : 'Tataranieto/a');
+                if (d === 5) return isM ? 'Trastataranieto' : (isF ? 'Trastataranieta' : 'Trastataranieto/a');
+                return `Descendiente (${d}ª gen.)`;
+            }
+
+            // Ancestro común más cercano (LCA) -> Hermanos, Tíos, Sobrinos, Primos
+            let lca = null;
+            let minSum = Infinity;
+            for (const [id, dB] of ancB.entries()) {
+                if (ancA.has(id) && id !== personBId && id !== refAId) {
+                    const dA = ancA.get(id);
+                    if (dA + dB < minSum) {
+                        minSum = dA + dB;
+                        lca = id;
+                    }
+                }
+            }
+
+            if (lca !== null) {
+                const dB = ancB.get(lca);
+                const dA = ancA.get(lca);
+
+                if (dA === 1 && dB === 1) {
+                    return isM ? 'Hermano' : (isF ? 'Hermana' : 'Hermano/a');
+                }
+                if (dB === 1 && dA > 1) {
+                    if (dA === 2) return isM ? 'Tío' : (isF ? 'Tía' : 'Tío/a');
+                    if (dA === 3) return isM ? 'Tío Abuelo' : (isF ? 'Tía Abuela' : 'Tío/a Abuelo/a');
+                    if (dA === 4) return isM ? 'Tío Bisabuelo' : (isF ? 'Tía Bisabuela' : 'Tío/a Bisabuelo/a');
+                    return isM ? `Tío ${getOrdinalEs(dA - 1)}` : (isF ? `Tía ${getOrdinalEs(dA - 1)}` : `Tío/a ${getOrdinalEs(dA - 1)}`);
+                }
+                if (dA === 1 && dB > 1) {
+                    if (dB === 2) return isM ? 'Sobrino' : (isF ? 'Sobrina' : 'Sobrino/a');
+                    if (dB === 3) return isM ? 'Sobrino Nieto' : (isF ? 'Sobrina Nieta' : 'Sobrino/a Nieto/a');
+                    return isM ? `Sobrino ${getOrdinalEs(dB - 1)}` : (isF ? `Sobrina ${getOrdinalEs(dB - 1)}` : `Sobrino/a ${getOrdinalEs(dB - 1)}`);
+                }
+                if (dA === dB && dA > 1) {
+                    const deg = dA - 1;
+                    return isM ? `Primo ${getOrdinalEs(deg)}` : (isF ? `Prima ${getOrdinalEs(deg)}` : `Primo/a ${getOrdinalEs(deg)}`);
+                }
+                if (dA !== dB && dA > 1 && dB > 1) {
+                    const minD = Math.min(dA, dB) - 1;
+                    const diff = Math.abs(dA - dB);
+                    if (dB < dA) {
+                        return isM ? `Tío ${getOrdinalEs(diff)} (grado ${minD})` : (isF ? `Tía ${getOrdinalEs(diff)} (grado ${minD})` : `Tío/a ${getOrdinalEs(diff)}`);
+                    } else {
+                        return isM ? `Sobrino ${getOrdinalEs(diff)} (grado ${minD})` : (isF ? `Sobrina ${getOrdinalEs(diff)} (grado ${minD})` : `Sobrino/a ${getOrdinalEs(diff)}`);
+                    }
+                }
+            }
+
+            // Relaciones políticas a través del cónyuge de A (sp)
+            if (a.spouseId && peopleMap.has(a.spouseId)) {
+                const sp = peopleMap.get(a.spouseId);
+                if (sp.parentIds.includes(personBId) || a.parentIds.some(pid => peopleMap.get(pid)?.spouseId === personBId)) {
+                    return isM ? 'Suegro' : (isF ? 'Suegra' : 'Suegro/a');
+                }
+                if ((sp.childrenIds.includes(personBId) || b.parentIds.includes(sp.id)) && !a.childrenIds.includes(personBId)) {
+                    return isM ? 'Hijastro' : (isF ? 'Hijastra' : 'Hijastro/a');
+                }
+                // Descendientes del cónyuge de A (Nieto/a Político/a, Bisnieto/a Político/a)
+                if (ancB.has(sp.id) && !ancB.has(refAId)) {
+                    const dSp = ancB.get(sp.id);
+                    if (dSp === 2) return isM ? 'Nieto Político' : (isF ? 'Nieta Política' : 'Nieto/a Político/a');
+                    if (dSp === 3) return isM ? 'Bisnieto Político' : (isF ? 'Bisnieta Política' : 'Bisnieto/a Político/a');
+                    if (dSp === 4) return isM ? 'Tataranieto Político' : (isF ? 'Tataranieta Política' : 'Tataranieto/a Político/a');
+                }
+                if (depth === 0) {
+                    const relToSpouse = describeDirectRelation(personBId, sp.id, depth + 1);
+                    if (relToSpouse === 'Hermano' || relToSpouse === 'Hermana') {
+                        return isM ? 'Cuñado' : (isF ? 'Cuñada' : 'Cuñado/a');
+                    }
+                    if (relToSpouse && !relToSpouse.includes('Polític') && !relToSpouse.includes('Cónyuge')) {
+                        const suffix = isM ? 'Político' : (isF ? 'Política' : 'Político/a');
+                        return `${relToSpouse} ${suffix}`;
+                    }
+                }
+            }
+
+            // Relaciones políticas a través del cónyuge de B (spB)
+            if (b.spouseId && peopleMap.has(b.spouseId)) {
+                const spB = peopleMap.get(b.spouseId);
+                if (a.childrenIds.includes(spB.id) || spB.parentIds.includes(refAId)) {
+                    return isM ? 'Yerno' : (isF ? 'Nuera' : 'Yerno/Nuera');
+                }
+                if (a.parentIds.includes(spB.id) && !a.parentIds.includes(personBId)) {
+                    return isM ? 'Padrastro' : (isF ? 'Madrastra' : 'Padrastro/Madrastra');
+                }
+                if (depth === 0) {
+                    const spBRel = describeDirectRelation(spB.id, refAId, depth + 1);
+                    if (spBRel === 'Hermano' || spBRel === 'Hermana') {
+                        return isM ? 'Cuñado' : (isF ? 'Cuñada' : 'Cuñado/a');
+                    }
+                    if (spBRel === 'Tío' || spBRel === 'Tía') {
+                        return isM ? 'Tío Político' : (isF ? 'Tía Política' : 'Tío/a Político/a');
+                    }
+                    if (spBRel === 'Sobrino' || spBRel === 'Sobrina') {
+                        return isM ? 'Sobrino Político' : (isF ? 'Sobrina Política' : 'Sobrino/a Político/a');
+                    }
+                    if (spBRel === 'Nieto' || spBRel === 'Nieta') {
+                        return isM ? 'Nieto Político' : (isF ? 'Nieta Política' : 'Nieto/a Político/a');
+                    }
+                    if (spBRel === 'Hijastro' || spBRel === 'Hijastra') {
+                        return isM ? 'Yerno (político)' : (isF ? 'Nuera (política)' : 'Yerno/Nuera');
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function findShortestFamilyPath(idA, idB) {
+            if (idA === idB) return [{ id: idA, via: null, linkType: 'self' }];
+            const visited = new Set([idA]);
+            const queue = [[{ id: idA, via: null, linkType: 'start' }]];
+
+            while (queue.length > 0) {
+                const path = queue.shift();
+                const currId = path[path.length - 1].id;
+                const curr = peopleMap.get(currId);
+                if (!curr) continue;
+
+                const neighbors = [];
+                // Padres (consanguíneo)
+                curr.parentIds.forEach(pid => {
+                    if (peopleMap.has(pid)) {
+                        const p = peopleMap.get(pid);
+                        const lbl = p.gender === 'Masculino' ? 'su padre' : (p.gender === 'Femenino' ? 'su madre' : 'su progenitor/a');
+                        neighbors.push({ id: pid, via: lbl, linkType: 'blood' });
+                    }
+                });
+                // Hijos (consanguíneo)
+                curr.childrenIds.forEach(cid => {
+                    if (peopleMap.has(cid)) {
+                        const c = peopleMap.get(cid);
+                        const lbl = c.gender === 'Masculino' ? 'su hijo' : (c.gender === 'Femenino' ? 'su hija' : 'su hijo/a');
+                        neighbors.push({ id: cid, via: lbl, linkType: 'blood' });
+                    }
+                });
+                // Cónyuge (matrimonio/unión)
+                const spouseIds = new Set();
+                if (curr.spouseId && peopleMap.has(curr.spouseId)) spouseIds.add(curr.spouseId);
+                peopleMap.forEach(other => {
+                    if (other.spouseId === currId) spouseIds.add(other.id);
+                });
+                spouseIds.forEach(sid => {
+                    const s = peopleMap.get(sid);
+                    const lbl = s.gender === 'Masculino' ? 'su esposo/pareja' : (s.gender === 'Femenino' ? 'su esposa/pareja' : 'su cónyuge');
+                    neighbors.push({ id: sid, via: lbl, linkType: 'marriage' });
+                });
+
+                for (const next of neighbors) {
+                    if (visited.has(next.id)) continue;
+                    visited.add(next.id);
+                    const newPath = [...path, next];
+                    if (next.id === idB) return newPath;
+                    queue.push(newPath);
+                }
+            }
+            return null;
+        }
+
+        function classifyExtendedRelation(idA, idB, path) {
+            // Si ya tiene título directo (Padre, Primo, Yerno, Cuñado, etc.), lo usamos
+            const direct = describeDirectRelation(idB, idA);
+            if (direct) return direct;
+
+            const a = peopleMap.get(idA);
+            const b = peopleMap.get(idB);
+            if (!a || !b) return null;
+            const isM = b.gender === 'Masculino';
+            const isF = b.gender === 'Femenino';
+
+            // Detectar Consuegro/a (padre/madre del yerno o nuera)
+            for (const cid of a.childrenIds) {
+                const child = peopleMap.get(cid);
+                if (child && child.spouseId && peopleMap.has(child.spouseId)) {
+                    const childSpouse = peopleMap.get(child.spouseId);
+                    if (childSpouse.parentIds.includes(idB)) {
+                        return isM ? 'Consuegro' : (isF ? 'Consuegra' : 'Consuegro/a');
+                    }
+                }
+            }
+
+            // Detectar Concuñado/a (cónyuge del hermano/a de mi cónyuge, o hermano/a del cónyuge de mi hermano/a)
+            if (a.spouseId && peopleMap.has(a.spouseId)) {
+                const spA = peopleMap.get(a.spouseId);
+                const spASiblings = Array.from(peopleMap.values()).filter(p =>
+                    p.id !== spA.id && p.parentIds.some(pid => spA.parentIds.includes(pid))
+                );
+                for (const sib of spASiblings) {
+                    if (sib.spouseId === idB) {
+                        return isM ? 'Concuñado' : (isF ? 'Concuñada' : 'Concuñado/a');
+                    }
+                }
+            }
+
+            const marriageHops = path.filter(s => s.linkType === 'marriage').length;
+            if (marriageHops > 0) {
+                return `Pariente político lejano (${marriageHops} ${marriageHops === 1 ? 'unión' : 'uniones'} de por medio)`;
+            }
+            return 'Pariente consanguíneo lejano';
+        }
+
+        function highlightPathOnMap(path) {
+            if (!path || path.length === 0) return;
+            const pathPersonIds = new Set(path.map(step => step.id));
+            document.getElementById('btn-clear-highlight').classList.remove('hidden');
+
+            d3.selectAll('.person-node')
+                .classed('dimmed', d => !pathPersonIds.has(parseInt(d.id.replace('P_', ''), 10)))
+                .classed('selected-card', false)
+                .classed('path-card', d => pathPersonIds.has(parseInt(d.id.replace('P_', ''), 10)));
+
+            const activeUnions = new Set();
+            for (let i = 0; i < path.length - 1; i++) {
+                const u = path[i].id;
+                const v = path[i + 1].id;
+                d3.selectAll('.union-node').each(function(d) {
+                    const parents = d.meta?.parents || [];
+                    if (parents.includes(u) && parents.includes(v)) {
+                        activeUnions.add(d.id);
+                    }
+                    const pU = peopleMap.get(u);
+                    const pV = peopleMap.get(v);
+                    if (pU && pV && ((pV.parentIds.includes(u) && parents.includes(u)) || (pU.parentIds.includes(v) && parents.includes(v)))) {
+                        activeUnions.add(d.id);
+                    }
+                });
+            }
+
+            d3.selectAll('.links-layer path').each(function() {
+                const src = this.getAttribute('data-source');
+                const dst = this.getAttribute('data-target');
+                const isLit = (src.startsWith('P_') && pathPersonIds.has(parseInt(src.slice(2), 10)) && activeUnions.has(dst)) ||
+                              (activeUnions.has(src) && dst.startsWith('P_') && pathPersonIds.has(parseInt(dst.slice(2), 10)));
+
+                d3.select(this)
+                    .classed('link-path-highlight', isLit)
+                    .classed('link-highlighted', false)
+                    .classed('link-dimmed', !isLit);
+            });
+
+            d3.selectAll('.union-node').classed('dimmed', d => !activeUnions.has(d.id));
+
+            const coords = path.map(s => nodePositions.get(`P_${s.id}`)).filter(Boolean);
+            if (coords.length > 0) {
+                const minX = d3.min(coords, c => c.x) - 140;
+                const maxX = d3.max(coords, c => c.x) + 140;
+                const minY = d3.min(coords, c => c.y) - 90;
+                const maxY = d3.max(coords, c => c.y) + 90;
+                const svgEl = svg.node();
+                const fullW = svgEl.clientWidth || window.innerWidth;
+                const fullH = svgEl.clientHeight || window.innerHeight;
+                const scale = Math.max(0.15, Math.min(1.05, 0.88 / Math.max((maxX - minX) / fullW, (maxY - minY) / fullH)));
+                const tx = (fullW - (maxX - minX) * scale) / 2 - minX * scale;
+                const ty = (fullH - (maxY - minY) * scale) / 2 - minY * scale;
+
+                svg.transition().duration(600).call(
+                    zoomBehavior.transform,
+                    d3.zoomIdentity.translate(tx, ty).scale(scale)
+                );
+            }
+        }
+
+        function focusTwoUnrelatedOnMap(idA, idB) {
+            const ids = new Set([idA, idB]);
+            document.getElementById('btn-clear-highlight').classList.remove('hidden');
+
+            d3.selectAll('.person-node')
+                .classed('dimmed', d => !ids.has(parseInt(d.id.replace('P_', ''), 10)))
+                .classed('selected-card', false)
+                .classed('path-card', d => ids.has(parseInt(d.id.replace('P_', ''), 10)));
+
+            d3.selectAll('.union-node').classed('dimmed', true);
+            d3.selectAll('.links-layer path').classed('link-dimmed', true).classed('link-highlighted link-path-highlight', false);
+
+            const coords = [idA, idB].map(id => nodePositions.get(`P_${id}`)).filter(Boolean);
+            if (coords.length > 0) {
+                const minX = d3.min(coords, c => c.x) - 160;
+                const maxX = d3.max(coords, c => c.x) + 160;
+                const minY = d3.min(coords, c => c.y) - 100;
+                const maxY = d3.max(coords, c => c.y) + 100;
+                const svgEl = svg.node();
+                const fullW = svgEl.clientWidth || window.innerWidth;
+                const fullH = svgEl.clientHeight || window.innerHeight;
+                const scale = Math.max(0.12, Math.min(1.0, 0.85 / Math.max((maxX - minX) / fullW, (maxY - minY) / fullH)));
+                const tx = (fullW - (maxX - minX) * scale) / 2 - minX * scale;
+                const ty = (fullH - (maxY - minY) * scale) / 2 - minY * scale;
+
+                svg.transition().duration(600).call(
+                    zoomBehavior.transform,
+                    d3.zoomIdentity.translate(tx, ty).scale(scale)
+                );
+            }
+        }
+
+        function setupRelationshipCalculator() {
+            const modal = document.getElementById('relationship-modal');
+            const openBtn = document.getElementById('btn-open-rel-modal');
+            const closeBtn = document.getElementById('close-rel-modal');
+            const swapBtn = document.getElementById('btn-swap-persons');
+            const calcBtn = document.getElementById('btn-calculate-rel');
+            const resultBox = document.getElementById('rel-result-box');
+
+            const inputA = document.getElementById('rel-input-a');
+            const idA = document.getElementById('rel-id-a');
+            const dropA = document.getElementById('rel-dropdown-a');
+
+            const inputB = document.getElementById('rel-input-b');
+            const idB = document.getElementById('rel-id-b');
+            const dropB = document.getElementById('rel-dropdown-b');
+
+            const resolvePersonIdFromInput = (inputEl, hiddenEl) => {
+                if (hiddenEl.value && peopleMap.has(parseInt(hiddenEl.value, 10))) {
+                    return parseInt(hiddenEl.value, 10);
+                }
+                const txt = inputEl.value.trim().toLowerCase();
+                if (!txt) return null;
+                const all = Array.from(peopleMap.values());
+                const exact = all.find(p => p.name.trim().toLowerCase() === txt);
+                if (exact) {
+                    hiddenEl.value = exact.id;
+                    return exact.id;
+                }
+                const partial = all.find(p => p.name.toLowerCase().includes(txt));
+                if (partial) {
+                    inputEl.value = partial.name;
+                    hiddenEl.value = partial.id;
+                    return partial.id;
+                }
+                return null;
+            };
+
+            const runCalculation = () => {
+                dropA.classList.add('hidden');
+                dropB.classList.add('hidden');
+
+                const pAId = resolvePersonIdFromInput(inputA, idA);
+                const pBId = resolvePersonIdFromInput(inputB, idB);
+
+                if (!pAId || !pBId || !peopleMap.has(pAId) || !peopleMap.has(pBId)) {
+                    resultBox.classList.remove('hidden');
+                    resultBox.innerHTML = '<div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-sm">No se encontró alguna de las dos personas. Escribe y selecciona un nombre válido de la lista.</div>';
+                    return;
+                }
+
+                const personA = peopleMap.get(pAId);
+                const personB = peopleMap.get(pBId);
+                const path = findShortestFamilyPath(pAId, pBId);
+
+                resultBox.classList.remove('hidden');
+
+                // CASO 1: NO TIENEN NINGUNA RELACIÓN EN EL ÁRBOL
+                if (!path) {
+                    resultBox.innerHTML = `
+                        <div class="p-5 bg-red-50 border-2 border-red-200 rounded-2xl">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider bg-red-100 text-red-800 px-3 py-1 rounded-full">
+                                    🚫 Sin relación familiar
+                                </span>
+                                <button type="button" id="btn-locate-unrelated" class="bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition">
+                                    📍 Ubicar a ambos en el Mapa
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-800 mt-2">
+                                <strong>${getShortName(personA.name)}</strong> y <strong>${getShortName(personB.name)}</strong> 
+                                <span class="font-bold text-red-700">no tienen ningún parentesco ni conexión registrada</span> entre sí en el árbol genealógico.
+                            </p>
+                            <p class="text-xs text-gray-600 mt-1.5">
+                                Pertenecen a ramas familiares independientes que no se cruzan por sangre ni por matrimonio.
+                            </p>
+                        </div>
+                    `;
+
+                    document.getElementById('btn-locate-unrelated').addEventListener('click', () => {
+                        modal.classList.add('hidden');
+                        focusTwoUnrelatedOnMap(pAId, pBId);
+                    });
+                    return;
+                }
+
+                // CASO 2: SÍ EXISTE RELACIÓN (consanguínea, política cercana o vínculo mínimo/lejano)
+                const directTitle = classifyExtendedRelation(pAId, pBId, path);
+                const inverseTitle = classifyExtendedRelation(pBId, pAId, [...path].reverse());
+                const degrees = path.length - 1;
+                const marriageCount = path.filter(s => s.linkType === 'marriage').length;
+
+                let categoryBadge = '';
+                if (pAId === pBId) {
+                    categoryBadge = '<span class="text-xs font-bold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">👤 Misma persona</span>';
+                } else if (marriageCount === 0) {
+                    categoryBadge = '<span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">🩸 Vínculo de Sangre (Consanguíneo)</span>';
+                } else if (marriageCount === 1 && degrees <= 3) {
+                    categoryBadge = '<span class="text-xs font-bold bg-pink-100 text-pink-800 px-2.5 py-0.5 rounded-full">💍 Vínculo Político Directo</span>';
+                } else {
+                    categoryBadge = `<span class="text-xs font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">🔗 Conexión Mínima / Lejana (${degrees} pasos · ${marriageCount} ${marriageCount === 1 ? 'unión' : 'uniones'})</span>`;
+                }
+
+                const stepsHtml = path.map((step, idx) => {
+                    const p = peopleMap.get(step.id);
+                    const badge = idx === 0
+                        ? '<span class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Inicio</span>'
+                        : `<span class="text-[11px] ${step.linkType === 'marriage' ? 'bg-pink-100 text-pink-800' : 'bg-amber-100 text-amber-800'} font-semibold px-2 py-0.5 rounded-full">es ${step.via}</span>`;
+
+                    return `
+                        <div class="flex items-center gap-2.5 p-2 rounded-lg bg-gray-50 border border-gray-200">
+                            <span class="w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center shrink-0">${idx + 1}</span>
+                            <div class="flex-1 text-sm font-semibold text-gray-800">${getShortName(p.name)}</div>
+                            ${badge}
+                        </div>
+                    `;
+                }).join('<div class="text-center text-gray-400 text-xs leading-none my-0.5">↓</div>');
+
+                resultBox.innerHTML = `
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                            <div class="flex flex-wrap items-center gap-2">
+                                ${categoryBadge}
+                                <span class="text-xs font-semibold text-gray-500">(${degrees} ${degrees === 1 ? 'salto' : 'saltos'})</span>
+                            </div>
+                            <button type="button" id="btn-show-path-on-map" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition">
+                                ✨ Ver Ruta en el Mapa
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-800">
+                            <strong>${getShortName(personB.name)}</strong> es 
+                            <span class="font-bold text-emerald-800 underline">${directTitle}</span> 
+                            de <strong>${getShortName(personA.name)}</strong>.
+                        </p>
+                        ${inverseTitle && pAId !== pBId ? `<p class="text-xs text-gray-600 mt-1">A la inversa: <strong>${getShortName(personA.name)}</strong> es <strong>${inverseTitle}</strong> de <strong>${getShortName(personB.name)}</strong>.</p>` : ''}
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Camino más corto que los une:</p>
+                        <div class="space-y-1">${stepsHtml}</div>
+                    </div>
+                `;
+
+                document.getElementById('btn-show-path-on-map').addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    highlightPathOnMap(path);
+                });
+            };
+
+            const bindAutocomplete = (inputEl, hiddenEl, dropEl) => {
+                inputEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        runCalculation();
+                    }
+                });
+
+                inputEl.addEventListener('input', () => {
+                    hiddenEl.value = '';
+                    resultBox.classList.add('hidden');
+                    const q = inputEl.value.trim().toLowerCase();
+                    if (!q) {
+                        dropEl.classList.add('hidden');
+                        return;
+                    }
+                    const matches = Array.from(peopleMap.values())
+                        .filter(p => p.name.toLowerCase().includes(q))
+                        .slice(0, 12);
+
+                    if (matches.length === 0) {
+                        dropEl.innerHTML = '<div class="p-2.5 text-xs text-gray-500">Sin coincidencias</div>';
+                    } else {
+                        dropEl.innerHTML = matches.map(p => `
+                            <div data-pick-id="${p.id}" class="px-3 py-2 text-sm hover:bg-emerald-50 cursor-pointer border-b last:border-none">
+                                <div class="font-semibold text-gray-800">${p.name}</div>
+                                <div class="text-xs text-gray-500">${isValidDate(p.dob) ? p.dob.split('-')[0] : 'Sin año'}</div>
+                            </div>
+                        `).join('');
+                    }
+                    dropEl.classList.remove('hidden');
+                });
+
+                dropEl.addEventListener('click', (e) => {
+                    const item = e.target.closest('[data-pick-id]');
+                    if (!item) return;
+                    const pid = parseInt(item.dataset.pickId, 10);
+                    const p = peopleMap.get(pid);
+                    if (p) {
+                        inputEl.value = p.name;
+                        hiddenEl.value = p.id;
+                        dropEl.classList.add('hidden');
+                        // Si ya están elegidas ambas personas, calcular automáticamente
+                        if (idA.value && idB.value) {
+                            runCalculation();
+                        }
+                    }
+                });
+            };
+
+            bindAutocomplete(inputA, idA, dropA);
+            bindAutocomplete(inputB, idB, dropB);
+
+            openBtn.addEventListener('click', () => {
+                if (selectedPersonId && peopleMap.has(selectedPersonId)) {
+                    const sel = peopleMap.get(selectedPersonId);
+                    inputA.value = sel.name;
+                    idA.value = sel.id;
+                }
+                modal.classList.remove('hidden');
+            });
+
+            closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+
+            swapBtn.addEventListener('click', () => {
+                const tmpName = inputA.value;
+                const tmpId = idA.value;
+                inputA.value = inputB.value;
+                idA.value = idB.value;
+                inputB.value = tmpName;
+                idB.value = tmpId;
+                if (idA.value && idB.value) runCalculation();
+            });
+
+            calcBtn.addEventListener('click', runCalculation);
+        }
+
+        function setupSearch() {
+            const input = document.getElementById('search-person');
+            const results = document.getElementById('search-results');
+
+            input.addEventListener('input', () => {
+                const q = input.value.trim().toLowerCase();
+                if (!q) {
+                    results.classList.add('hidden');
+                    return;
+                }
+                const matches = Array.from(peopleMap.values())
+                    .filter(p => p.name.toLowerCase().includes(q))
+                    .slice(0, 15);
+
+                if (matches.length === 0) {
+                    results.innerHTML = '<div class="p-3 text-xs text-gray-500">Sin resultados</div>';
+                } else {
+                    results.innerHTML = matches.map(p => `
+                        <div class="px-3 py-2 text-sm hover:bg-indigo-50 cursor-pointer border-b last:border-none" onclick="selectFromSearch(${p.id})">
+                            <div class="font-semibold text-gray-800">${p.name}</div>
+                            <div class="text-xs text-gray-500">${isValidDate(p.dob) ? p.dob.split('-')[0] : 'Sin año'}</div>
+                        </div>
+                    `).join('');
+                }
+                results.classList.remove('hidden');
+            });
+
+            window.selectFromSearch = (id) => {
+                results.classList.add('hidden');
+                input.value = peopleMap.get(id)?.name || '';
+                selectPerson(id);
+            };
+        }
+
+        // Exportación vectorial SVG -> Canvas -> PNG / PDF de alta resolución sin recortes
+        function exportFullGraph(format) {
+            if (!gMain || !svg) return;
+            const bounds = gMain.node().getBBox();
+            if (!bounds.width || !bounds.height) return;
+
+            const pad = 40;
+            const fullW = Math.ceil(bounds.width + pad * 2);
+            const fullH = Math.ceil(bounds.height + pad * 2);
+
+            const clonedSvg = svg.node().cloneNode(true);
+            clonedSvg.setAttribute('width', fullW);
+            clonedSvg.setAttribute('height', fullH);
+            clonedSvg.setAttribute('viewBox', `${bounds.x - pad} ${bounds.y - pad} ${fullW} ${fullH}`);
+
+            // Resetear transform de gMain en el clon y quitar imágenes externas para evitar taint CORS en canvas
+            const clonedG = clonedSvg.querySelector('g');
+            if (clonedG) clonedG.removeAttribute('transform');
+            clonedSvg.querySelectorAll('image').forEach(img => img.remove());
+
+            // Inyectar estilos inline necesarios
+            const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+            styleEl.textContent = `
+                text { font-family: Arial, sans-serif; }
+                .link-marriage { fill: none; stroke: #f472b6; stroke-width: 2px; stroke-dasharray: 4 3; }
+                .link-descent { fill: none; stroke: #94a3b8; stroke-width: 2px; }
+                .link-highlighted { stroke: #10b981; stroke-width: 3.5px; stroke-dasharray: none; }
+            `;
+            clonedSvg.insertBefore(styleEl, clonedSvg.firstChild);
+
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(clonedSvg);
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            const img = new Image();
+            img.onload = () => {
+                // Limitar escala máxima para no exceder límites de memoria de canvas en árboles de 325+ personas
+                const scale = Math.min(2, 8000 / Math.max(fullW, fullH));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(fullW * scale);
+                canvas.height = Math.round(fullH * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(url);
+
+                if (format === 'png') {
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = 'mapa_genealogico_completo.png';
+                    link.click();
+                } else {
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+                    const pdfW = 420; // A3 ancho en mm
+                    const pdfH = (canvas.height * pdfW) / canvas.width;
+                    const pdf = new jsPDF({
+                        orientation: canvas.width > canvas.height ? 'l' : 'p',
+                        unit: 'mm',
+                        format: [pdfW, pdfH]
+                    });
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+                    pdf.save('mapa_genealogico_completo.pdf');
+                }
+            };
+            img.src = url;
+        }
+
+        document.getElementById('btn-fit').addEventListener('click', fitToScreen);
+        document.getElementById('btn-clear-highlight').addEventListener('click', clearHighlight);
+        document.getElementById('close-panel').addEventListener('click', () => document.getElementById('side-panel').classList.add('hidden'));
+        document.getElementById('zoom-in').addEventListener('click', () => svg.transition().duration(250).call(zoomBehavior.scaleBy, 1.3));
+        document.getElementById('zoom-out').addEventListener('click', () => svg.transition().duration(250).call(zoomBehavior.scaleBy, 1 / 1.3));
+        document.getElementById('zoom-center-selected').addEventListener('click', () => selectedPersonId && focusOnPerson(selectedPersonId, 1.05));
+        document.getElementById('btn-export-png').addEventListener('click', () => exportFullGraph('png'));
+        document.getElementById('btn-export-pdf').addEventListener('click', () => exportFullGraph('pdf'));
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

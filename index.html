@@ -151,16 +151,14 @@
         }
 
         /* 2. RAMA DESCENDENTE Y MAPA DINÁMICO (Padres arriba -> Hijos abajo) */
-        .tree-down ul,
-        #dynamic-map-stage ul {
+        .tree-down ul {
             position: relative;
             padding-top: 20px;
             display: flex;
             justify-content: center;
         }
 
-        .tree-down li,
-        #dynamic-map-stage li {
+        .tree-down li {
             list-style-type: none;
             position: relative;
             padding: 20px 5px 0 5px;
@@ -170,8 +168,7 @@
             align-items: center;
         }
 
-        .tree-down li::before, .tree-down li::after,
-        #dynamic-map-stage li::before, #dynamic-map-stage li::after {
+        .tree-down li::before, .tree-down li::after::before, #dynamic-map-stage li::after {
             content: '';
             position: absolute;
             top: 0;
@@ -181,41 +178,34 @@
             height: 20px;
         }
 
-        .tree-down li::after,
-        #dynamic-map-stage li::after {
+        .tree-down li::after::after {
             right: auto;
             left: 50%;
             border-left: 2px solid #ccc;
         }
 
-        .tree-down li:only-child::after, .tree-down li:only-child::before,
-        #dynamic-map-stage li:only-child::after, #dynamic-map-stage li:only-child::before {
+        .tree-down li:only-child::after, .tree-down li:only-child::before:only-child::after, #dynamic-map-stage li:only-child::before {
             display: none;
         }
 
-        .tree-down li:only-child,
-        #dynamic-map-stage li:only-child {
+        .tree-down li:only-child:only-child {
             padding-top: 0;
         }
 
-        .tree-down li:first-child::before, .tree-down li:last-child::after,
-        #dynamic-map-stage li:first-child::before, #dynamic-map-stage li:last-child::after {
+        .tree-down li:first-child::before, .tree-down li:last-child::after:first-child::before, #dynamic-map-stage li:last-child::after {
             border: 0 none;
         }
 
-        .tree-down li:last-child::before,
-        #dynamic-map-stage li:last-child::before {
+        .tree-down li:last-child::before:last-child::before {
             border-right: 2px solid #ccc;
             border-radius: 0 5px 0 0;
         }
 
-        .tree-down li:first-child::after,
-        #dynamic-map-stage li:first-child::after {
+        .tree-down li:first-child::after:first-child::after {
             border-radius: 5px 0 0 0;
         }
 
-        .tree-down ul ul::before,
-        #dynamic-map-stage ul ul::before {
+        .tree-down ul ul::before ul::before {
             content: '';
             position: absolute;
             top: 0;
@@ -223,11 +213,6 @@
             border-left: 2px solid #ccc;
             width: 0;
             height: 20px;
-        }
-
-        .dynamic-tree-branch > ul > li::before,
-        .dynamic-tree-branch > ul > li::after {
-            display: none;
         }
 
         .node-content {
@@ -486,49 +471,6 @@
         }
 
 
-        /* --- VISTA DINÁMICA CON ZOOM AUTOMÁTICO (MAPA COMPLETO) --- */
-        #dynamic-map-wrapper {
-            position: relative;
-            width: 100%;
-            height: 74vh;
-            min-height: 500px;
-            overflow: hidden;
-            background-color: #f8fafc;
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 20px 20px;
-            border-radius: 0.75rem;
-            border: 1px solid #e2e8f0;
-            cursor: grab;
-            user-select: none;
-            touch-action: none;
-        }
-        #dynamic-map-wrapper:active {
-            cursor: grabbing;
-        }
-        #dynamic-map-stage {
-            transform-origin: 0 0;
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: inline-flex;
-            flex-direction: column;
-            gap: 2.5rem;
-            padding: 3rem;
-            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        #dynamic-map-stage.dragging {
-            transition: none;
-        }
-        .dynamic-tree-branch {
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px dashed #cbd5e1;
-            border-radius: 1rem;
-            padding: 1.5rem 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
         /* Estilos para la barra de agrupación */
         .view-btn {
             transition: all 0.2s ease;
@@ -553,8 +495,12 @@
                     <p class="text-gray-600 mt-2">Un vistazo a nuestras raíces y nuestra historia.</p>
                 </div>
 
-                <div class="flex-grow text-center md:text-right">
-                    <a href="dashboard.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 mr-2 inline-block">
+                <div class="flex-grow text-center md:text-right flex flex-wrap justify-center md:justify-end gap-2">
+                    <a id="open-full-map-link" href="mapa_genealogico_completo.html" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 inline-flex items-center gap-1.5 shadow-sm">
+                        <span>🧬</span>
+                        <span>Mapa Completo (325)</span>
+                    </a>
+                    <a href="dashboard.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 inline-block">
                         Ver Dashboard
                     </a>
                     <a href="buscar.html" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg whitespace-nowrap transition duration-300 ease-in-out transform hover:-translate-y-1 inline-block">Buscar Personas</a>
@@ -568,9 +514,6 @@
                 <span class="text-sm font-semibold text-gray-600 mr-1">Organizar vista por:</span>
                 <button type="button" data-view="tree" class="view-btn active px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
                     🌳 Árbol Familiar
-                </button>
-                <button type="button" data-view="dynamic" class="view-btn px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
-                    🔭 Vista Dinámica (Todos)
                 </button>
                 <button type="button" data-view="zodiac" class="view-btn px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100">
                     ♈ Signo Zodiacal
@@ -598,28 +541,6 @@
                 </div>
                 <!-- Vista Agrupada (Signo, Generación, Década, Género) -->
                 <div id="grouped-view-container" class="hidden space-y-6"></div>
-                <!-- Vista Dinámica Completa con Zoom Automático -->
-                <div id="dynamic-view-container" class="hidden">
-                    <div id="dynamic-map-wrapper">
-                        <div id="dynamic-map-stage" class="tree"></div>
-                        <!-- Controles flotantes de Zoom -->
-                        <div class="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 bg-white/95 backdrop-blur border border-gray-200 shadow-md rounded-xl p-1.5">
-                            <button type="button" id="zoom-out-btn" title="Alejar (-)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 font-bold text-gray-700 text-lg">−</button>
-                            <span id="zoom-level-label" class="text-xs font-semibold text-gray-600 px-2 min-w-[46px] text-center">100%</span>
-                            <button type="button" id="zoom-in-btn" title="Acercar (+)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 font-bold text-gray-700 text-lg">+</button>
-                            <div class="w-px h-5 bg-gray-200 mx-0.5"></div>
-                            <button type="button" id="zoom-fit-btn" title="Ajustar todas las personas a la pantalla" class="px-2.5 h-8 flex items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs">
-                                ⛶ Ajustar Todo
-                            </button>
-                            <button type="button" id="zoom-focus-btn" title="Hacer zoom en la persona seleccionada" class="px-2.5 h-8 flex items-center justify-center rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs">
-                                🎯 Centrar Persona
-                            </button>
-                        </div>
-                        <div class="absolute top-3 left-3 z-20 bg-white/90 backdrop-blur border border-gray-200 text-gray-600 text-xs px-3 py-1.5 rounded-lg shadow-sm pointer-events-none">
-                            Arrastra para mover · Rueda del ratón para zoom · Clic para enfocar
-                        </div>
-                    </div>
-                </div>
             </main>
             <aside id="aside-container" class="w-full details-panel-container">
                 <div id="details-panel" class="bg-white p-6 rounded-lg shadow-lg sticky-lg">
@@ -775,10 +696,7 @@
     <script type="module">
         let familyData = new Map();
         let selectedPersonId = null;
-        let currentViewMode = 'tree'; // 'tree', 'dynamic', 'zodiac', 'generation', 'decade', 'gender'
-        let mapZoom = 1;
-        let mapPanX = 0;
-        let mapPanY = 0;
+        let currentViewMode = 'tree'; // 'tree', 'zodiac', 'generation', 'decade', 'gender'
 
         let modalMode = ''; 
         let relatedPersonId = null; 
@@ -858,6 +776,11 @@
                     selectedPersonId = null;
                 }
 
+                const fullMapLink = document.getElementById('open-full-map-link');
+                if (fullMapLink) {
+                    const labelSpan = fullMapLink.querySelector('span:last-child');
+                    if (labelSpan) labelSpan.textContent = `Mapa Completo (${familyData.size})`;
+                }
                 renderCurrentView();
                 
                 if (selectedPersonId) {
@@ -972,21 +895,15 @@
         function renderCurrentView() {
             const treeContainer = document.getElementById('family-tree-container');
             const groupedContainer = document.getElementById('grouped-view-container');
-            const dynamicContainer = document.getElementById('dynamic-view-container');
             const badge = document.getElementById('view-counter-badge');
 
             treeContainer.classList.add('hidden');
             groupedContainer.classList.add('hidden');
-            dynamicContainer.classList.add('hidden');
 
             if (currentViewMode === 'tree') {
                 treeContainer.classList.remove('hidden');
                 badge.textContent = `Vista jerárquica · ${familyData.size} personas`;
                 renderTree();
-            } else if (currentViewMode === 'dynamic') {
-                dynamicContainer.classList.remove('hidden');
-                badge.textContent = `Mapa dinámico completo · ${familyData.size} personas`;
-                renderDynamicAllView();
             } else {
                 groupedContainer.classList.remove('hidden');
                 renderGroupedView(currentViewMode);
@@ -1114,197 +1031,6 @@
             addClickListeners();
         }
 
-
-        // --- VISTA DINÁMICA CON TODAS LAS PERSONAS Y ZOOM AUTOMÁTICO ---
-        function applyMapTransform() {
-            const stage = document.getElementById('dynamic-map-stage');
-            const label = document.getElementById('zoom-level-label');
-            if (stage) {
-                stage.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
-            }
-            if (label) {
-                label.textContent = `${Math.round(mapZoom * 100)}%`;
-            }
-        }
-
-        function fitDynamicMapToScreen() {
-            const wrapper = document.getElementById('dynamic-map-wrapper');
-            const stage = document.getElementById('dynamic-map-stage');
-            if (!wrapper || !stage) return;
-
-            const wRect = wrapper.getBoundingClientRect();
-            const contentW = stage.scrollWidth;
-            const contentH = stage.scrollHeight;
-            if (!contentW || !contentH || !wRect.width || !wRect.height) return;
-
-            const scaleX = (wRect.width - 40) / contentW;
-            const scaleY = (wRect.height - 40) / contentH;
-            mapZoom = Math.max(0.08, Math.min(1, Math.min(scaleX, scaleY)));
-
-            mapPanX = (wRect.width - contentW * mapZoom) / 2;
-            mapPanY = Math.max(20, (wRect.height - contentH * mapZoom) / 2);
-            applyMapTransform();
-        }
-
-        function zoomToPersonInDynamicMap(personId, targetScale = 0.95) {
-            const wrapper = document.getElementById('dynamic-map-wrapper');
-            const stage = document.getElementById('dynamic-map-stage');
-            if (!wrapper || !stage) return;
-
-            const targetEl = stage.querySelector(`.member[data-id="${personId}"]`);
-            if (!targetEl) {
-                fitDynamicMapToScreen();
-                return;
-            }
-
-            // Calcular posición relativa del nodo dentro de #dynamic-map-stage
-            let offsetLeft = 0;
-            let offsetTop = 0;
-            let el = targetEl;
-            while (el && el !== stage) {
-                offsetLeft += el.offsetLeft;
-                offsetTop += el.offsetTop;
-                el = el.offsetParent;
-            }
-
-            const wRect = wrapper.getBoundingClientRect();
-            mapZoom = targetScale;
-            const nodeCenterX = offsetLeft + targetEl.offsetWidth / 2;
-            const nodeCenterY = offsetTop + targetEl.offsetHeight / 2;
-
-            mapPanX = (wRect.width / 2) - (nodeCenterX * mapZoom);
-            mapPanY = (wRect.height / 2) - (nodeCenterY * mapZoom);
-            applyMapTransform();
-        }
-
-
-        // Renderizador ligero y ultra rápido para la Vista Dinámica Completa (300+ personas sin congelar el navegador)
-        function generateFastDynamicPersonHtml(person, renderedIds = new Set()) {
-            if (!person || renderedIds.has(person.id)) return '';
-            renderedIds.add(person.id);
-
-            const defaultPhoto = 'https://placehold.co/60x60/E2E8F0/333333?text=Foto';
-
-            const buildCard = (p) => {
-                const isMale = p.gender === 'Masculino';
-                const isDeceased = isValidDateStr(p.dod);
-                const photoSrc = (p.photo && p.photo.trim() !== '') ? p.photo : defaultPhoto;
-
-                let ageHtml = '';
-                if (isValidDateStr(p.dob)) {
-                    const years = calculateYearsBetween(p.dob, isDeceased ? p.dod : null);
-                    const birthYear = p.dob.split('-')[0];
-                    if (years !== null) {
-                        ageHtml = `<div class="age">${years} años (${birthYear})${isDeceased ? ' ✝' : ''}</div>`;
-                    }
-                }
-
-                return `
-                    <div class="member ${isDeceased ? 'deceased' : ''} ${isMale ? 'male' : 'female'}" data-id="${p.id}">
-                        <img src="${photoSrc}" loading="lazy" alt="Foto de ${p.name}" class="profile-pic" onerror="this.onerror=null;this.src='${defaultPhoto}';">
-                        <div class="name">${getShortName(p.name)}</div>
-                        ${ageHtml}
-                    </div>
-                `;
-            };
-
-            let nodeContent = '<div class="node-content">';
-            const mainHtml = buildCard(person);
-
-            if (person.spouseId && familyData.has(person.spouseId)) {
-                const spouse = familyData.get(person.spouseId);
-                if (spouse && spouse.id !== person.id && spouse.spouseId === person.id && !renderedIds.has(spouse.id)) {
-                    renderedIds.add(spouse.id);
-                    const spouseHtml = buildCard(spouse);
-                    const spouseLine = '<div class="spouse-line"></div>';
-                    nodeContent += (person.id < spouse.id)
-                        ? (mainHtml + spouseLine + spouseHtml)
-                        : (spouseHtml + spouseLine + mainHtml);
-                } else {
-                    nodeContent += mainHtml;
-                }
-            } else {
-                nodeContent += mainHtml;
-            }
-            nodeContent += '</div>';
-
-            const parentIdsOfUnit = new Set([person.id]);
-            if (person.spouseId && familyData.has(person.spouseId) && familyData.get(person.spouseId).spouseId === person.id) {
-                parentIdsOfUnit.add(person.spouseId);
-            }
-
-            const childrenOfUnit = Array.from(familyData.values())
-                .filter(child => (child.parentIds || []).some(pId => parentIdsOfUnit.has(pId)))
-                .filter(child => !renderedIds.has(child.id))
-                .sort((a, b) => (a.dob || '9999').localeCompare(b.dob || '9999'));
-
-            let childrenHtml = '';
-            if (childrenOfUnit.length > 0) {
-                childrenHtml = '<ul>' + childrenOfUnit.map(c => generateFastDynamicPersonHtml(c, renderedIds)).join('') + '</ul>';
-            }
-
-            return `<li>${nodeContent}${childrenHtml}</li>`;
-        }
-
-        function renderDynamicAllView() {
-            const stage = document.getElementById('dynamic-map-stage');
-            if (!stage) return;
-
-            if (familyData.size === 0) {
-                stage.innerHTML = '<p class="text-gray-500">No hay personas registradas aún.</p>';
-                return;
-            }
-
-            const allPeople = Array.from(familyData.values());
-            // Encontrar todas las personas raíz (sin padres registrados en familyData)
-            const rootCandidates = allPeople
-                .filter(p => !p.parentIds || p.parentIds.filter(pid => familyData.has(pid)).length === 0)
-                .sort((a, b) => a.id - b.id);
-
-            const renderedIds = new Set();
-            const branchesHtml = [];
-
-            // 1. Renderizar cada árbol familiar completo a partir de sus raíces
-            rootCandidates.forEach(root => {
-                if (renderedIds.has(root.id)) return;
-                // Evitar renderizar por separado al cónyuge si su pareja también es raíz y se renderizará junto a él
-                if (root.spouseId && familyData.has(root.spouseId)) {
-                    const spouse = familyData.get(root.spouseId);
-                    const spouseHasParents = spouse.parentIds && spouse.parentIds.some(pid => familyData.has(pid));
-                    if (!spouseHasParents && spouse.id < root.id && !renderedIds.has(spouse.id)) {
-                        return;
-                    }
-                }
-                const treeHtml = generateFastDynamicPersonHtml(root, renderedIds);
-                if (treeHtml) {
-                    branchesHtml.push(`<div class="dynamic-tree-branch"><ul>${treeHtml}</ul></div>`);
-                }
-            });
-
-            // 2. Asegurar que si quedó algún nodo aislado o ciclo sin renderizar, también aparezca
-            allPeople.forEach(p => {
-                if (!renderedIds.has(p.id)) {
-                    const extraHtml = generateFastDynamicPersonHtml(p, renderedIds);
-                    if (extraHtml) {
-                        branchesHtml.push(`<div class="dynamic-tree-branch"><ul>${extraHtml}</ul></div>`);
-                    }
-                }
-            });
-
-            stage.innerHTML = branchesHtml.join('');
-            addClickListeners();
-
-            // Resaltar persona seleccionada si existe
-            if (selectedPersonId) {
-                const sel = stage.querySelector(`.member[data-id="${selectedPersonId}"]`);
-                if (sel) sel.classList.add('selected');
-            }
-
-            // Zoom automático inicial para encuadrar a TODAS las personas en pantalla
-            requestAnimationFrame(() => {
-                fitDynamicMapToScreen();
-            });
-        }
 
         function renderTree() {
             const container = document.querySelector('.tree');
@@ -2195,20 +1921,7 @@
                 return;
             }
             
-            if (currentViewMode !== 'dynamic') {
-                renderCurrentView();
-            }
-
-            if (currentViewMode === 'dynamic') {
-                const stage = document.getElementById('dynamic-map-stage');
-                if (stage) {
-                    stage.querySelectorAll('.member').forEach(el => el.classList.remove('selected'));
-                    const targetCard = stage.querySelector(`.member[data-id="${personId}"]`);
-                    if (targetCard) targetCard.classList.add('selected');
-                    // Zoom automático suave hacia la persona seleccionada
-                    setTimeout(() => zoomToPersonInDynamicMap(personId, Math.max(mapZoom, 0.85)), 60);
-                }
-            }
+            renderCurrentView();
 
             if (currentViewMode === 'tree') {
                 document.querySelectorAll('.member').forEach(el => el.classList.remove('selected', 'highlighted', 'ancestor-spouse-highlight'));
@@ -2409,6 +2122,10 @@
             `;
             editButtons.classList.remove('hidden');
             editPersonLink.href = `editar.php?id=${personId}`;
+            const fullMapLink = document.getElementById('open-full-map-link');
+            if (fullMapLink) {
+                fullMapLink.href = `mapa_genealogico_completo.html?id=${personId}`;
+            }
 
             // Actualizar botón flotante móvil con el nombre corto de la persona activa
             const openMobileBtn = document.getElementById('open-mobile-details-btn');
@@ -2803,9 +2520,7 @@
         function exportTree(format) {
             const targetElement = currentViewMode === 'tree'
                 ? document.querySelector('#family-tree-container .tree')
-                : (currentViewMode === 'dynamic'
-                    ? document.getElementById('dynamic-map-stage')
-                    : document.getElementById('grouped-view-container'));
+                : document.getElementById('grouped-view-container');
 
             if (!targetElement) {
                 alert("No se encontró contenido para exportar.");
@@ -2928,86 +2643,6 @@
                 });
             }
 
-
-            // Controles de interacción del Mapa Dinámico (Zoom y Arrastre)
-            const mapWrapper = document.getElementById('dynamic-map-wrapper');
-            const mapStage = document.getElementById('dynamic-map-stage');
-            const zoomInBtn = document.getElementById('zoom-in-btn');
-            const zoomOutBtn = document.getElementById('zoom-out-btn');
-            const zoomFitBtn = document.getElementById('zoom-fit-btn');
-            const zoomFocusBtn = document.getElementById('zoom-focus-btn');
-
-            if (zoomInBtn) {
-                zoomInBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    mapZoom = Math.min(2, mapZoom * 1.25);
-                    applyMapTransform();
-                });
-            }
-            if (zoomOutBtn) {
-                zoomOutBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    mapZoom = Math.max(0.08, mapZoom / 1.25);
-                    applyMapTransform();
-                });
-            }
-            if (zoomFitBtn) {
-                zoomFitBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    fitDynamicMapToScreen();
-                });
-            }
-            if (zoomFocusBtn) {
-                zoomFocusBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (selectedPersonId) zoomToPersonInDynamicMap(selectedPersonId, 0.95);
-                });
-            }
-
-            if (mapWrapper && mapStage) {
-                let isDragging = false;
-                let startX = 0;
-                let startY = 0;
-
-                mapWrapper.addEventListener('wheel', (e) => {
-                    if (currentViewMode !== 'dynamic') return;
-                    e.preventDefault();
-                    const rect = mapWrapper.getBoundingClientRect();
-                    const mouseX = e.clientX - rect.left;
-                    const mouseY = e.clientY - rect.top;
-
-                    const prevZoom = mapZoom;
-                    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-                    mapZoom = Math.max(0.08, Math.min(2, mapZoom * factor));
-
-                    // Zoom centrado en la posición del cursor
-                    mapPanX = mouseX - (mouseX - mapPanX) * (mapZoom / prevZoom);
-                    mapPanY = mouseY - (mouseY - mapPanY) * (mapZoom / prevZoom);
-                    applyMapTransform();
-                }, { passive: false });
-
-                mapWrapper.addEventListener('pointerdown', (e) => {
-                    if (e.target.closest('button') || e.target.closest('.member')) return;
-                    isDragging = true;
-                    startX = e.clientX - mapPanX;
-                    startY = e.clientY - mapPanY;
-                    mapStage.classList.add('dragging');
-                });
-
-                window.addEventListener('pointermove', (e) => {
-                    if (!isDragging) return;
-                    mapPanX = e.clientX - startX;
-                    mapPanY = e.clientY - startY;
-                    applyMapTransform();
-                });
-
-                window.addEventListener('pointerup', () => {
-                    if (isDragging) {
-                        isDragging = false;
-                        mapStage.classList.remove('dragging');
-                    }
-                });
-            }
 
             const exportPngBtn = document.getElementById('export-tree-png');
             const exportPdfBtn = document.getElementById('export-tree-pdf');
